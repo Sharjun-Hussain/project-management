@@ -88,9 +88,9 @@ export default function InteractiveOrdersPage() {
   const { data: ordersResponse, isLoading, mutate } = useSWR(
     session?.accessToken
       ? [
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/orders?page=${currentPage}&per_page=${itemsPerPage}&search=${searchTerm}&status=${activeTab !== "All" ? activeTab.toLowerCase() : ""}`,
-          session?.accessToken,
-        ]
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/orders?page=${currentPage}&per_page=${itemsPerPage}&search=${searchTerm}&status=${activeTab !== "All" ? activeTab.toLowerCase() : ""}`,
+        session?.accessToken,
+      ]
       : null,
     ([url]) => globalFetcher(url, session?.accessToken),
     { revalidateOnFocus: false }
@@ -99,9 +99,9 @@ export default function InteractiveOrdersPage() {
   const { data: orderDetailsResponse, isLoading: isDetailsLoading } = useSWR(
     session?.accessToken && selectedOrder?.id
       ? [
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/orders/${selectedOrder.id}`,
-          session?.accessToken,
-        ]
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/orders/${selectedOrder.id}`,
+        session?.accessToken,
+      ]
       : null,
     ([url]) => globalFetcher(url, session?.accessToken)
   );
@@ -296,7 +296,7 @@ export default function InteractiveOrdersPage() {
       <div class="meta"><span class="meta-label">Date:</span><strong>${new Date(order.created_at).toLocaleDateString()}</strong></div>
       <div class="meta"><span class="meta-label">Items:</span><strong>${totalQty} Units</strong></div>
       <div class="meta"><span class="meta-label">Status:</span><span class="badge">${paymentStatus}</span></div>
-      ${order.payments?.[0] ? `<div class="meta"><span class="meta-label">Payment:</span><strong>${(order.payments[0].payment_method || "").replace(/_/g," ")}</strong></div>` : ""}
+      ${order.payments?.[0] ? `<div class="meta"><span class="meta-label">Payment:</span><strong>${(order.payments[0].payment_method || "").replace(/_/g, " ")}</strong></div>` : ""}
     </div>
   </div>
 
@@ -350,7 +350,7 @@ export default function InteractiveOrdersPage() {
 
       toast.success("Payment verified successfully");
       mutate(); // Refresh the list
-      
+
       // Update local state for immediate feedback
       if (selectedOrder?.id === orderId) {
         setSelectedOrder(prev => ({
@@ -398,7 +398,7 @@ export default function InteractiveOrdersPage() {
       mutate(); // Refresh the list
       setShowShipmentModal(false);
       setShowCancellationModal(false);
-      
+
       // Update local state for immediate feedback
       if (selectedOrder) {
         setSelectedOrder((prev) => ({
@@ -476,9 +476,7 @@ export default function InteractiveOrdersPage() {
           <button className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white transition-colors shadow-sm">
             <Download className="w-4 h-4" /> Export
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-600/20 active:scale-95">
-            <Package className="w-4 h-4" /> Create Order
-          </button>
+
         </div>
       </div>
 
@@ -659,16 +657,16 @@ export default function InteractiveOrdersPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
-                {isLoading ? (
-                  <tr>
-                    <td colSpan="8" className="text-center py-20">
-                      <div className="flex flex-col items-center justify-center text-slate-400">
-                        <Loader2 className="w-8 h-8 mb-2 animate-spin" />
-                        <p className="text-sm font-medium">Loading orders...</p>
-                      </div>
-                    </td>
-                  </tr>
-                ) : paginatedOrders.length > 0 ? (
+              {isLoading ? (
+                <tr>
+                  <td colSpan="8" className="text-center py-20">
+                    <div className="flex flex-col items-center justify-center text-slate-400">
+                      <Loader2 className="w-8 h-8 mb-2 animate-spin" />
+                      <p className="text-sm font-medium">Loading orders...</p>
+                    </div>
+                  </td>
+                </tr>
+              ) : paginatedOrders.length > 0 ? (
                 paginatedOrders.map((order) => (
                   <tr
                     key={order.id}
@@ -1019,7 +1017,7 @@ export default function InteractiveOrdersPage() {
                         {orderDetails.items.map((item) => (
                           <div key={item.id} className="p-4 flex gap-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
                             <div className="w-16 h-16 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 overflow-hidden shrink-0">
-                              <img 
+                              <img
                                 src={`${process.env.NEXT_PUBLIC_API_BASE_URL?.replace("/api/v1", "")}/${item.product?.primary_image_path}`}
                                 className="w-full h-full object-cover"
                                 alt=""
@@ -1087,19 +1085,19 @@ export default function InteractiveOrdersPage() {
                 </div>
 
                 <div className="flex bg-slate-100 dark:bg-slate-700 p-1 rounded-xl gap-1">
-                  <button 
+                  <button
                     onClick={() => setPrintSize("a4")}
                     className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all ${printSize === "a4" ? "bg-white dark:bg-slate-600 text-indigo-600 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
                   >
                     A4
                   </button>
-                  <button 
+                  <button
                     onClick={() => setPrintSize("a5")}
                     className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all ${printSize === "a5" ? "bg-white dark:bg-slate-600 text-indigo-600 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
                   >
                     A5
                   </button>
-                  <button 
+                  <button
                     onClick={() => setPrintSize("thermal")}
                     className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all ${printSize === "thermal" ? "bg-white dark:bg-slate-600 text-indigo-600 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
                   >
