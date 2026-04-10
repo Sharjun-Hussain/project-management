@@ -16,6 +16,9 @@ import {
   X,
   Check,
   User as UserIcon,
+  Landmark,
+  Banknote,
+  CreditCard as CardIcon,
 } from "lucide-react";
 import useSWR from "swr";
 import { useSession } from "next-auth/react";
@@ -648,6 +651,9 @@ export default function InteractiveOrdersPage() {
                   Total
                 </th>
                 <th className="p-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                  Method
+                </th>
+                <th className="p-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                   Payment
                 </th>
                 <th className="p-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
@@ -659,7 +665,7 @@ export default function InteractiveOrdersPage() {
             <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
               {isLoading ? (
                 <tr>
-                  <td colSpan="8" className="text-center py-20">
+                  <td colSpan="9" className="text-center py-20">
                     <div className="flex flex-col items-center justify-center text-slate-400">
                       <Loader2 className="w-8 h-8 mb-2 animate-spin" />
                       <p className="text-sm font-medium">Loading orders...</p>
@@ -712,6 +718,19 @@ export default function InteractiveOrdersPage() {
                       LKR {parseFloat(order.total_amount).toLocaleString()}
                     </td>
                     <td className="p-4">
+                      <div className="flex items-center gap-2">
+                        {(() => {
+                          const method = (order.latest_payment?.payment_method || order.payments?.[0]?.payment_method || "").toLowerCase();
+                          if (method.includes("bank")) return <Landmark className="w-3.5 h-3.5 text-blue-500" />;
+                          if (method.includes("cash") || method.includes("cod")) return <Banknote className="w-3.5 h-3.5 text-emerald-500" />;
+                          return <CardIcon className="w-3.5 h-3.5 text-indigo-500" />;
+                        })()}
+                        <span className="text-xs font-medium text-slate-600 dark:text-slate-400 capitalize whitespace-nowrap">
+                          {(order.latest_payment?.payment_method || order.payments?.[0]?.payment_method || "N/A").replace(/_/g, " ")}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="p-4">
                       <span
                         className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${getPaymentColor(order.latest_payment?.payment_status)}`}
                       >
@@ -734,7 +753,7 @@ export default function InteractiveOrdersPage() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="8" className="text-center py-20">
+                  <td colSpan="9" className="text-center py-20">
                     <div className="flex flex-col items-center justify-center text-slate-400">
                       <Search className="w-8 h-8 mb-2 opacity-50" />
                       <p className="text-sm font-medium text-slate-400 dark:text-slate-500">
