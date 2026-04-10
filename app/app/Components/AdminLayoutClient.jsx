@@ -206,6 +206,11 @@ export default function AdminLayoutClient({ children, sidebar, initialCollapsed 
           {children}
         </main>
 
+        {/* FOOTER */}
+        <footer className="py-6 px-4 sm:px-6 lg:px-8 border-t border-slate-200 dark:border-slate-700 text-center text-xs font-medium text-slate-500 dark:text-slate-400">
+          © 2026 Igen LK. All rights reserved. | Powered by Inzeedo (PVT) Ltd
+        </footer>
+
       </div >
     </div>
   );

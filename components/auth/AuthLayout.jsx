@@ -59,7 +59,7 @@ const AuthLayout = ({
 
         {/* Footer */}
         <div className="animate-slide-up delay-500 text-sm text-slate-500">
-          {footerText}
+          © 2026 Igen LK. All rights reserved. | Powered by Inzeedo (PVT) Ltd
         </div>
       </div>
 
