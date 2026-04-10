@@ -329,11 +329,11 @@ export default function SettingsPage() {
             {[
               { id: "store", label: "General Store", icon: Store },
               { id: "profile", label: "Profile Settings", icon: Users },
-              { id: "payments", label: "Payment Methods", icon: CreditCard },
-              { id: "notifications", label: "Notifications", icon: AlertCircle },
-              { id: "integrations", label: "WhatsApp & API", icon: Smartphone },
+              // { id: "payments", label: "Payment Methods", icon: CreditCard },
+              // { id: "notifications", label: "Notifications", icon: AlertCircle },
+              // { id: "integrations", label: "WhatsApp & API", icon: Smartphone },
               { id: "data", label: "Import / Export", icon: Database }, // New Item
-              { id: "smtp", label: "SMTP Email", icon: Mail },
+              // { id: "smtp", label: "SMTP Email", icon: Mail },
             ].map((item) => (
               <button
                 key={item.id}
@@ -630,6 +630,7 @@ export default function SettingsPage() {
           </section>
 
           {/* A2. CURRENCY SETTINGS */}
+          {/* 
           <section className="animate-section">
              <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-8">
               <SectionHeader
@@ -661,7 +662,6 @@ export default function SettingsPage() {
                   <option value="gbp">British Pound (GBP)</option>
                 </select>
               </div>
-              {/* Section Save */}
               <div className="flex justify-end mt-6 pt-5 border-t border-slate-100 dark:border-slate-700">
                 <SaveBtn
                   sectionKey="currency"
@@ -677,10 +677,11 @@ export default function SettingsPage() {
               </div>
             </div>
           </section>
+          */}
 
           {/* B. PAYMENT METHODS */}
+          {/* 
           <section id="payments" className="animate-section scroll-mt-32">
-            {/* ... (Existing Payments Code) ... */}
             <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-8">
               <SectionHeader
                 icon={CreditCard}
@@ -717,7 +718,6 @@ export default function SettingsPage() {
                   </label>
                 </div>
               </div>
-              {/* Section Save */}
               <div className="flex justify-end mt-6 pt-5 border-t border-slate-100 dark:border-slate-700">
                 <SaveBtn
                   sectionKey="payments"
@@ -733,8 +733,10 @@ export default function SettingsPage() {
               </div>
             </div>
           </section>
+          */}
 
           {/* C. NOTIFICATIONS */}
+          {/* 
           <section id="notifications" className="animate-section scroll-mt-32">
             <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-8">
               <SectionHeader
@@ -745,7 +747,6 @@ export default function SettingsPage() {
               />
               
               <div className="space-y-6">
-                {/* Admin Order Notifications */}
                 <div className="flex items-center justify-between p-4 rounded-xl border border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50">
                   <div className="flex-1">
                     <h3 className="text-sm font-bold text-slate-900 dark:text-white">Admin Order Notifications</h3>
@@ -780,7 +781,6 @@ export default function SettingsPage() {
                   </label>
                 </div>
 
-                {/* Customer Order Notifications */}
                 <div className="flex items-center justify-between p-4 rounded-xl border border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50">
                   <div>
                     <h3 className="text-sm font-bold text-slate-900 dark:text-white">Customer Order Notifications</h3>
@@ -800,7 +800,6 @@ export default function SettingsPage() {
                   </label>
                 </div>
 
-                {/* Low Stock Alerts */}
                 <div className="flex items-center justify-between p-4 rounded-xl border border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50">
                   <div>
                     <h3 className="text-sm font-bold text-slate-900 dark:text-white">Low Stock Alerts</h3>
@@ -821,7 +820,6 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              {/* Section Save */}
               <div className="flex justify-end mt-6 pt-5 border-t border-slate-100 dark:border-slate-700">
                 <SaveBtn
                   sectionKey="notifications"
@@ -840,10 +838,11 @@ export default function SettingsPage() {
               </div>
             </div>
           </section>
+          */}
 
           {/* D. INTEGRATIONS */}
+          {/*
           <section id="integrations" className="animate-section scroll-mt-32">
-            {/* ... (Existing Integrations Code) ... */}
             <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-8">
               <SectionHeader
                 icon={Smartphone}
@@ -865,7 +864,6 @@ export default function SettingsPage() {
                   className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm dark:text-white focus:bg-white dark:focus:bg-slate-800 focus:border-green-500 outline-none transition-all font-medium font-mono"
                 />
               </div>
-              {/* Section Save */}
               <div className="flex justify-end mt-6 pt-5 border-t border-slate-100 dark:border-slate-700">
                 <SaveBtn
                   sectionKey="integrations"
@@ -881,6 +879,7 @@ export default function SettingsPage() {
               </div>
             </div>
           </section>
+          */}
 
           {/* D. BULK DATA MANAGEMENT (NEW SECTION) */}
           <section id="data" className="animate-section scroll-mt-32">
@@ -1005,8 +1004,8 @@ export default function SettingsPage() {
           </section>
 
           {/* E. SMTP EMAIL */}
+          {/*
           <section id="smtp" className="animate-section scroll-mt-32">
-            {/* ... (Existing SMTP Code) ... */}
             <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-8">
               <SectionHeader
                 icon={Mail}
@@ -1031,7 +1030,6 @@ export default function SettingsPage() {
                   />
                 </div>
               </div>
-              {/* Section Save */}
               <div className="flex justify-end mt-6 pt-5 border-t border-slate-100 dark:border-slate-700">
                 <SaveBtn
                   sectionKey="smtp"
@@ -1049,6 +1047,7 @@ export default function SettingsPage() {
               </div>
             </div>
           </section>
+          */}
 
         </div>
       </div>
