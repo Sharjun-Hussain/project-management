@@ -91,7 +91,7 @@ export default function InteractiveOrdersPage() {
   const { data: ordersResponse, isLoading, mutate } = useSWR(
     session?.accessToken
       ? [
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/orders?page=${currentPage}&per_page=${itemsPerPage}&search=${searchTerm}&status=${activeTab !== "All" ? activeTab.toLowerCase() : ""}`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/orders?page=${currentPage}&per_page=${itemsPerPage}`,
         session?.accessToken,
       ]
       : null,
@@ -116,9 +116,53 @@ export default function InteractiveOrdersPage() {
   const totalPages = ordersResponse?.data?.last_page || 1;
 
   // --- FILTER LOGIC ---
-  const filteredOrders = orders; // Filtering is handled by API
+  const filteredOrders = useMemo(() => {
+    return orders.filter((order) => {
+      // 1. Search filter (Order Number or Customer Name)
+      const matchesSearch = searchTerm
+        ? order.order_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          order.user?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+        : true;
 
-  const paginatedOrders = orders;
+      // 2. Active Tab (Fulfillment Status)
+      const matchesTab =
+        activeTab === "All" ||
+        order.order_status?.toLowerCase() === activeTab.toLowerCase();
+
+      // 3. Date Range Filter
+      let matchesDate = true;
+      if (dateRange.days !== null) {
+        const orderDate = new Date(order.created_at);
+        const now = new Date();
+        const diffTime = Math.abs(now - orderDate);
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+        if (dateRange.days === 0) {
+          // Today: Check if it's the same calendar day
+          matchesDate = orderDate.toDateString() === now.toDateString();
+        } else {
+          // Last X days
+          matchesDate = diffDays <= dateRange.days;
+        }
+      }
+
+      // 4. More Filters (Payment & Fulfillment statuses from menu)
+      let matchesStatusFilters = true;
+      if (statusFilters.length > 0) {
+        const pStatus = (order.latest_payment?.payment_status || order.payment_status || "").toLowerCase();
+        const fStatus = (order.order_status || "").toLowerCase();
+        
+        matchesStatusFilters = statusFilters.some((filter) => {
+          const f = filter.toLowerCase();
+          return pStatus === f || fStatus === f || (f === "fulfilled" && fStatus === "completed");
+        });
+      }
+
+      return matchesSearch && matchesTab && matchesDate && matchesStatusFilters;
+    });
+  }, [orders, searchTerm, activeTab, dateRange, statusFilters]);
+
+  const paginatedOrders = filteredOrders;
 
   // Reset page when filters change
   useEffect(
