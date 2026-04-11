@@ -14,16 +14,16 @@ import {
   Layers,
   Sun,
   Moon,
-  LayoutDashboard, 
-  ShoppingBag, 
-  Users, 
-  ShoppingCart, 
-  Settings, 
-  BarChart3, 
-  Tag, 
-  MessageSquare, 
-  Monitor, 
-  ShieldCheck, 
+  LayoutDashboard,
+  ShoppingBag,
+  Users,
+  ShoppingCart,
+  Settings,
+  BarChart3,
+  Tag,
+  MessageSquare,
+  Monitor,
+  ShieldCheck,
   History,
   Lock,
   Mail
@@ -31,6 +31,7 @@ import {
 
 import { useGlobalSettings } from "../app/context/GlobalSettingsContext";
 import { setCookie } from "@/lib/cookies";
+import { User } from "lucide-react";
 
 const IconMap = {
   LayoutDashboard,
@@ -52,7 +53,7 @@ const IconMap = {
 // --- FLOATING TOOLTIP COMPONENT ---
 const FloatingTooltip = ({ text, top, visible }) => {
   return (
-    <div 
+    <div
       className={`fixed left-20 ml-3 px-2.5 py-1.5 bg-slate-900 dark:bg-slate-800 text-white text-[10px] font-bold rounded-lg pointer-events-none z-9999 shadow-2xl border border-slate-700 dark:border-slate-700/50 transition-all duration-150 ease-out ${visible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}
       style={{ top: `${top}px`, transform: 'translateY(-50%)' }}
     >
@@ -100,13 +101,6 @@ export default function SidebarClient({ menuGroups, initialCollapsed, session, t
   const logoutOverlayRef = useRef(null);
   const logoutContentRef = useRef(null);
 
-  // --- COMPUTE USER IMAGE ---
-  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.replace("/api/v1", "");
-  const userImage = session?.user?.image
-    ? session.user.image.startsWith("http")
-      ? session.user.image
-      : `${baseUrl}/${session.user.image}`
-    : "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=200";
 
   // Handle hydration mismatch
   useEffect(() => {
@@ -159,9 +153,9 @@ export default function SidebarClient({ menuGroups, initialCollapsed, session, t
 
   const toggleSubmenu = (title) => {
     if (isCollapsed) {
-        handleToggleCollapse();
-        setOpenSubmenu(title);
-        return;
+      handleToggleCollapse();
+      setOpenSubmenu(title);
+      return;
     }
     setOpenSubmenu(openSubmenu === title ? "" : title);
   };
@@ -245,8 +239,8 @@ export default function SidebarClient({ menuGroups, initialCollapsed, session, t
       >
         {/* 1. BRAND LOGO */}
         <div className={`h-20 flex items-center px-4 border-b border-slate-200 dark:border-slate-800 shrink-0 transition-all duration-300 ${isCollapsed ? "justify-center" : "justify-between sticky top-0 z-10 bg-white dark:bg-slate-900"}`}>
-          <Link 
-            href="/app" 
+          <Link
+            href="/app"
             onMouseEnter={(e) => showTooltip(e, dashboardTitle || "IGEN")}
             onMouseLeave={hideTooltip}
             className="flex items-center gap-3 group overflow-hidden shrink-0"
@@ -265,15 +259,15 @@ export default function SidebarClient({ menuGroups, initialCollapsed, session, t
               </div>
             )}
           </Link>
-          
+
           {!isCollapsed && (
             <div className="flex items-center gap-1">
-                <button
-                    onClick={() => setIsOpen(false)}
-                    className="lg:hidden p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
-                >
-                    <X className="w-5 h-5" />
-                </button>
+              <button
+                onClick={() => setIsOpen(false)}
+                className="lg:hidden p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
           )}
         </div>
@@ -288,7 +282,7 @@ export default function SidebarClient({ menuGroups, initialCollapsed, session, t
                 </h3>
               )}
               {isCollapsed && <div className="h-px bg-slate-100 dark:bg-slate-800 mx-4 mb-4"></div>}
-              
+
               <div className="space-y-1">
                 {group.items.map((item, index) => {
                   const isActive = pathname === item.href;
@@ -308,10 +302,9 @@ export default function SidebarClient({ menuGroups, initialCollapsed, session, t
                           onMouseLeave={hideTooltip}
                           className={`w-full flex items-center rounded-xl text-sm font-medium transition-all duration-200 group
                             ${isCollapsed ? "justify-center p-3" : "justify-between px-3 py-2.5"}
-                            ${
-                              isSubmenuOpen || isParentActive
-                                ? "bg-slate-100 dark:bg-slate-800/50 text-slate-900 dark:text-white"
-                                : "hover:bg-slate-50 dark:hover:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                            ${isSubmenuOpen || isParentActive
+                              ? "bg-slate-100 dark:bg-slate-800/50 text-slate-900 dark:text-white"
+                              : "hover:bg-slate-50 dark:hover:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                             }`}
                         >
                           <div className="flex items-center gap-3">
@@ -322,11 +315,10 @@ export default function SidebarClient({ menuGroups, initialCollapsed, session, t
                           </div>
                           {!isCollapsed && (
                             <ChevronRight
-                              className={`w-4 h-4 transition-transform duration-300 ${
-                                isSubmenuOpen
+                              className={`w-4 h-4 transition-transform duration-300 ${isSubmenuOpen
                                   ? "rotate-90 text-indigo-600 dark:text-indigo-400"
                                   : "text-slate-400"
-                              }`}
+                                }`}
                             />
                           )}
                         </button>
@@ -337,10 +329,9 @@ export default function SidebarClient({ menuGroups, initialCollapsed, session, t
                           onMouseLeave={hideTooltip}
                           className={`relative flex items-center rounded-xl text-sm font-medium transition-all duration-200 group
                             ${isCollapsed ? "justify-center p-3" : "justify-between px-3 py-2.5"}
-                            ${
-                              isActive
-                                ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/20"
-                                : "hover:bg-slate-50 dark:hover:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                            ${isActive
+                              ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/20"
+                              : "hover:bg-slate-50 dark:hover:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                             }`}
                         >
                           <div className="flex items-center gap-3">
@@ -357,7 +348,7 @@ export default function SidebarClient({ menuGroups, initialCollapsed, session, t
                             </span>
                           )}
                           {isCollapsed && item.badge && (
-                              <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-indigo-600 rounded-full border border-white dark:border-slate-950"></span>
+                            <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-indigo-600 rounded-full border border-white dark:border-slate-950"></span>
                           )}
                         </Link>
                       )}
@@ -365,11 +356,10 @@ export default function SidebarClient({ menuGroups, initialCollapsed, session, t
                       {/* Submenu Items */}
                       {hasSubmenu && !isCollapsed && (
                         <div
-                          className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                            isSubmenuOpen
+                          className={`overflow-hidden transition-all duration-300 ease-in-out ${isSubmenuOpen
                               ? "max-h-120 opacity-100 mt-1"
                               : "max-h-0 opacity-0"
-                          }`}
+                            }`}
                         >
                           <div className="pl-[1.35rem] ml-2.5 border-l border-slate-200 dark:border-slate-800 space-y-1 my-1">
                             {item.submenu.map((sub, idx) => (
@@ -377,10 +367,9 @@ export default function SidebarClient({ menuGroups, initialCollapsed, session, t
                                 key={idx}
                                 href={sub.href}
                                 className={`block px-4 py-2 rounded-lg text-sm transition-colors relative
-                                  ${
-                                    pathname === sub.href
-                                      ? "text-indigo-600 dark:text-white font-medium bg-slate-50 dark:bg-slate-800/50 before:absolute before:left-[-11px] before:top-1/2 before:-translate-y-1/2 before:w-1.5 before:h-1.5 before:rounded-full before:bg-indigo-600 dark:before:bg-indigo-500"
-                                      : "text-slate-500 dark:text-slate-500 hover:text-slate-900 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900/50"
+                                  ${pathname === sub.href
+                                    ? "text-indigo-600 dark:text-white font-medium bg-slate-50 dark:bg-slate-800/50 before:absolute before:left-[-11px] before:top-1/2 before:-translate-y-1/2 before:w-1.5 before:h-1.5 before:rounded-full before:bg-indigo-600 dark:before:bg-indigo-500"
+                                    : "text-slate-500 dark:text-slate-500 hover:text-slate-900 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900/50"
                                   }`}
                               >
                                 {sub.title}
@@ -399,37 +388,32 @@ export default function SidebarClient({ menuGroups, initialCollapsed, session, t
 
         {/* 3. USER FOOTER & THEME TOGGLE */}
         <div className={`p-3 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shrink-0 ${isCollapsed ? '' : 'sticky bottom-0 z-10'}`}>
-          <div 
+          <div
             onMouseEnter={(e) => showTooltip(e, session?.user?.name || "Admin User")}
             onMouseLeave={hideTooltip}
             className={`group flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 hover:border-indigo-500/30 transition-all cursor-pointer mb-3 ${isCollapsed ? "p-2 justify-center" : "p-3"}`}
           >
-            <div className="relative shrink-0">
-                <img
-                    src={userImage}
-                    alt="Admin"
-                    loading="lazy"
-                    className="w-8 h-8 rounded-lg object-cover"
-                />
-                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white dark:border-slate-900"></span>
+            <div className="relative shrink-0 w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center border border-indigo-100 dark:border-indigo-900/50 group-hover:bg-indigo-100 dark:group-hover:bg-indigo-900/50 transition-colors">
+              <User className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white dark:border-slate-900"></span>
             </div>
             {!isCollapsed && (
-                <>
-                    <div className="flex-1 min-w-0 animate-in fade-in slide-in-from-left-2 duration-300">
-                        <p className="text-xs font-bold text-slate-900 dark:text-white truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                            {session?.user?.name || "Admin User"}
-                        </p>
-                        <p className="text-[10px] text-slate-500 truncate">
-                            {session?.user?.email || "admin@igen.com"}
-                        </p>
-                    </div>
-                    <button
-                        onClick={openLogoutWithAnim}
-                        className="text-slate-400 hover:text-red-500 transition-colors"
-                    >
-                        <LogOut className="w-4 h-4" />
-                    </button>
-                </>
+              <>
+                <div className="flex-1 min-w-0 animate-in fade-in slide-in-from-left-2 duration-300">
+                  <p className="text-xs font-bold text-slate-900 dark:text-white truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                    {session?.user?.name || "Admin User"}
+                  </p>
+                  <p className="text-[10px] text-slate-500 truncate">
+                    {session?.user?.email || "admin@igen.com"}
+                  </p>
+                </div>
+                <button
+                  onClick={openLogoutWithAnim}
+                  className="text-slate-400 hover:text-red-500 transition-colors"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
+              </>
             )}
           </div>
 
@@ -440,12 +424,12 @@ export default function SidebarClient({ menuGroups, initialCollapsed, session, t
             className={`w-full flex items-center justify-center gap-2 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors ${isCollapsed ? "h-10" : ""}`}
           >
             <div className="flex items-center gap-2">
-                {theme === "dark" ? (
+              {theme === "dark" ? (
                 <Moon className="w-4 h-4" />
-                ) : (
+              ) : (
                 <Sun className="w-4 h-4" />
-                )}
-                {!isCollapsed && <span className="animate-in fade-in duration-300">{theme === "dark" ? "Dark Mode" : "Light Mode"}</span>}
+              )}
+              {!isCollapsed && <span className="animate-in fade-in duration-300">{theme === "dark" ? "Dark Mode" : "Light Mode"}</span>}
             </div>
           </button>
         </div>
@@ -464,20 +448,20 @@ export default function SidebarClient({ menuGroups, initialCollapsed, session, t
           >
             {/* Background Decoration */}
             <div className="absolute top-0 left-0 w-full h-24 bg-linear-to-b from-indigo-50/50 to-transparent dark:from-indigo-900/10 pointer-events-none" />
-            
+
             <div className="relative text-center">
               <div className="w-16 h-16 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl shadow-red-500/10 rotate-3 transform transition-transform hover:rotate-6">
                 <LogOut className="w-8 h-8" />
               </div>
-              
+
               <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2 tracking-tight">
                 Sign Out?
               </h3>
-              
+
               <p className="text-slate-500 dark:text-slate-400 text-sm font-medium leading-relaxed mb-8">
                 Are you sure you want to end your session? You'll need to log in again to access the dashboard.
               </p>
-              
+
               <div className="flex gap-3">
                 <button
                   onClick={closeLogoutWithAnim}
