@@ -20,8 +20,6 @@ import {
   Mail,
   Phone,
   MapPin,
-  MessageCircle,
-  Send,
   MoreHorizontal,
   Calendar,
   ShieldAlert,
@@ -780,16 +778,16 @@ export default function CustomersPage() {
       {/* --- DETAILS DRAWER --- */}
       {selectedCustomer && (
         <div
-          className="fixed inset-0 z-50 overflow-hidden"
+          className="fixed inset-0 z-[100]"
           onClick={() => setShowActionsMenu(false)}
         >
           <div
             ref={overlayRef}
-            className="absolute inset-0 bg-slate-900/30 dark:bg-slate-950/50 backdrop-blur-sm transition-opacity"
+            className="fixed inset-0 bg-slate-900/30 dark:bg-slate-950/50 backdrop-blur-sm transition-opacity"
             onClick={handleCloseDrawer}
           />
 
-          <div className="absolute inset-y-0 right-0 flex max-w-full pl-0 sm:pl-16">
+          <div className="fixed inset-y-0 right-0 flex max-w-full pl-0 sm:pl-16 z-[101]">
             <div
               ref={drawerRef}
               className="w-screen max-w-xl bg-white dark:bg-slate-800 shadow-2xl flex flex-col h-full border-l border-slate-100 dark:border-slate-700"
@@ -831,34 +829,7 @@ export default function CustomersPage() {
 
               {/* Content */}
               <div className="flex-1 overflow-y-auto px-8 pb-8 space-y-6">
-                {/* Action Bar */}
-                <div className="grid grid-cols-3 gap-3">
-                  <button
-                    onClick={() =>
-                      window.open(
-                        `https://wa.me/?text=Hello ${selectedCustomer.name}`,
-                      )
-                    }
-                    className="flex flex-col items-center justify-center p-3 rounded-xl bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/40 border border-green-200 dark:border-green-800/50 transition-all active:scale-95"
-                  >
-                    <MessageCircle className="w-5 h-5 mb-1" />
-                    <span className="text-[10px] font-bold uppercase">
-                      WhatsApp
-                    </span>
-                  </button>
-                  <button className="flex flex-col items-center justify-center p-3 rounded-xl bg-sky-50 dark:bg-sky-900/20 text-sky-700 dark:text-sky-400 hover:bg-sky-100 dark:hover:bg-sky-900/40 border border-sky-200 dark:border-sky-800/50 transition-all active:scale-95">
-                    <Send className="w-5 h-5 mb-1" />
-                    <span className="text-[10px] font-bold uppercase">
-                      Telegram
-                    </span>
-                  </button>
-                  <button className="flex flex-col items-center justify-center p-3 rounded-xl bg-slate-50 dark:bg-slate-900/50 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition-all active:scale-95">
-                    <Mail className="w-5 h-5 mb-1" />
-                    <span className="text-[10px] font-bold uppercase">
-                      Email
-                    </span>
-                  </button>
-                </div>
+
 
                 {/* Contact Info */}
                 <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5">
