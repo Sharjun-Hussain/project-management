@@ -14,11 +14,15 @@ export const metadata = {
  * Optimized Server-Side Login Page
  * Handles immediate server-side redirection if already authenticated.
  */
-export default async function LoginPage() {
+export default async function LoginPage(props) {
   const session = await getServerSession(authOptions);
+  
+  // Extract search params - in Next.js 16/15 they are a promise
+  const params = await props.searchParams;
+  const isExpired = params?.expired === "1";
 
-  // Redirect if already authenticated
-  if (session) {
+  // Redirect if already authenticated, UNLESS the session just expired in the backend
+  if (session && !isExpired) {
     redirect("/app");
   }
 
@@ -61,3 +65,4 @@ export default async function LoginPage() {
     </AuthLayout>
   );
 }
+

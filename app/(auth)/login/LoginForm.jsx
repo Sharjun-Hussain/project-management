@@ -23,8 +23,15 @@ const LoginForm = () => {
         duration: 5000,
         id: "session-expired", // prevent duplicate toasts
       });
+      
+      // Clear the stale NextAuth session from the client cookies
+      // redirect: false ensures we stay on the login page
+      import("next-auth/react").then(({ signOut }) => {
+        signOut({ redirect: false });
+      });
     }
   }, [searchParams]);
+
 
   async function onSubmit(e) {
     e.preventDefault();

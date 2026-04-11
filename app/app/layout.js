@@ -1,6 +1,6 @@
 import AdminLayoutClient from "./Components/AdminLayoutClient";
 import SidebarServer from "../Components/SidebarServer";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../../lib/auth";
 import { redirect } from "next/navigation";
@@ -44,8 +44,12 @@ export async function generateMetadata() {
   };
 }
 
+
 export default async function AdminLayout({ children }) {
   const session = await getServerSession(authOptions);
+  const headersList = await headers();
+  const currentUrl = headersList.get("x-url");
+  const callbackUrl = currentUrl ? encodeURIComponent(currentUrl) : "";
 
   // Validate the token on the server before rendering the dashboard pages
   if (session?.accessToken) {
@@ -60,15 +64,18 @@ export default async function AdminLayout({ children }) {
       
       // If the token is invalid/expired according to Laravel, force a redirect
       if (res.status === 401 || res.status === 419) {
-        redirect("/login?expired=1");
+        redirect(`/login?expired=1${callbackUrl ? `&callbackUrl=${callbackUrl}` : ""}`);
       }
     } catch (err) {
       console.error("Error validating token server-side:", err);
+      // If it's a redirect error triggered by Next.js, we must re-throw it
+      if (err.digest?.startsWith("NEXT_REDIRECT")) throw err;
     }
   } else {
-    // No session token at all, probably NextAuth middleware caught it, but just in case
-    redirect("/login");
+    // No session token at all, redirect to login with callbackUrl
+    redirect(`/login${callbackUrl ? `?callbackUrl=${callbackUrl}` : ""}`);
   }
+
 
   const cookieStore = await cookies();
   const isCollapsed = cookieStore.get("sidebar_collapsed")?.value === "true";
