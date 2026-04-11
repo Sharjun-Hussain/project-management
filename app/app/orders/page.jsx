@@ -19,22 +19,20 @@ import {
   Landmark,
   Banknote,
   CreditCard as CardIcon,
+  Package,
+  Loader2,
+  User,
+  MapPin,
+  Send,
+  CreditCard,
+  RotateCcw,
+  Ban,
 } from "lucide-react";
 import useSWR from "swr";
 import { useSession } from "next-auth/react";
 import { fetcher as globalFetcher } from "../../../lib/fetcher";
 import { getImageUrl } from "../../../lib/utils";
 import { toast } from "sonner";
-import { Package } from "lucide-react";
-import { Loader2 } from "lucide-react";
-import { User } from "lucide-react";
-import { MapPin } from "lucide-react";
-import { MessageCircle } from "lucide-react";
-import { Send } from "lucide-react";
-import { Mail } from "lucide-react";
-import { CreditCard } from "lucide-react";
-import { RotateCcw } from "lucide-react";
-import { Ban } from "lucide-react";
 import PackingSlip from "../../components/PackingSlip";
 
 const getAvatarUrl = (user) => {
@@ -970,34 +968,6 @@ export default function InteractiveOrdersPage() {
                     </div>
                   </div>
 
-                  {/* COMMUNICATION ACTIONS */}
-                  <div className="grid grid-cols-3 gap-3 border-t border-slate-100 dark:border-slate-700 pt-4">
-                    <button
-                      onClick={() =>
-                        window.open(
-                          `https://wa.me/${selectedOrder.customer?.phone}?text=Order ${selectedOrder.order_number} Update`,
-                        )
-                      }
-                      className="flex flex-col items-center justify-center gap-1 p-3 rounded-xl bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/40 border border-green-200 dark:border-green-800/50 transition-all active:scale-95"
-                    >
-                      <MessageCircle className="w-5 h-5" />
-                      <span className="text-[10px] font-bold uppercase">
-                        WhatsApp
-                      </span>
-                    </button>
-                    <button className="flex flex-col items-center justify-center gap-1 p-3 rounded-xl bg-sky-50 dark:bg-sky-900/20 text-sky-700 dark:text-sky-400 hover:bg-sky-100 dark:hover:bg-sky-900/40 border border-sky-200 dark:border-sky-800/50 transition-all active:scale-95">
-                      <Send className="w-5 h-5" />
-                      <span className="text-[10px] font-bold uppercase">
-                        Telegram
-                      </span>
-                    </button>
-                    <button className="flex flex-col items-center justify-center gap-1 p-3 rounded-xl bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition-all active:scale-95">
-                      <Mail className="w-5 h-5" />
-                      <span className="text-[10px] font-bold uppercase">
-                        Email
-                      </span>
-                    </button>
-                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
