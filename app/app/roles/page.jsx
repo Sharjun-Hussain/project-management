@@ -727,7 +727,7 @@ export default function RolesPage() {
               </div>
 
               {/* Drawer Body */}
-              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-tiny-scrollbar">
                 <div className="space-y-4">
                   <div>
                     <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-2">
@@ -940,7 +940,7 @@ export default function RolesPage() {
               </div>
 
               {/* Drawer Body */}
-              <div className="flex-1 overflow-y-auto p-6 space-y-8">
+              <div className="flex-1 overflow-y-auto p-6 space-y-8 custom-tiny-scrollbar">
                 {/* Role Info Card */}
                 <div className="bg-slate-50 dark:bg-slate-900/50 rounded-2xl p-5 border border-slate-100 dark:border-slate-700">
                   <div className="flex items-center gap-4 mb-4">

@@ -686,7 +686,7 @@ function CategoriesContent() {
               </div>
 
               {/* Drawer Body */}
-              <div className="flex-1 overflow-y-auto p-8 space-y-6">
+              <div className="flex-1 overflow-y-auto p-8 space-y-6 custom-tiny-scrollbar">
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">

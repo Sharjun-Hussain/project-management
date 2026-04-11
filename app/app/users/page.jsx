@@ -756,7 +756,7 @@ export default function UsersPage() {
                   </p>
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-6 space-y-5">
+                <div className="flex-1 overflow-y-auto p-6 space-y-5 custom-tiny-scrollbar">
                   {/* Profile Image Upload */}
                   <div className="flex flex-col items-center mb-6">
                     <div className="relative group cursor-pointer" onClick={() => fileInputRef.current.click()}>

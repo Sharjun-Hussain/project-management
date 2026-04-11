@@ -828,7 +828,7 @@ export default function CustomersPage() {
               </div>
 
               {/* Content */}
-              <div className="flex-1 overflow-y-auto px-8 pb-8 space-y-6">
+              <div className="flex-1 overflow-y-auto px-8 pb-8 space-y-6 custom-tiny-scrollbar">
 
 
                 {/* Contact Info */}

@@ -526,7 +526,7 @@ export default function SubCategoryManagementPage() {
               </div>
 
               {/* Drawer Body */}
-              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-tiny-scrollbar">
                 
                 <div className="space-y-4">
                   <div>

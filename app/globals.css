@@ -150,6 +150,37 @@
   .delay-300 { animation-delay: 300ms; }
   .delay-400 { animation-delay: 400ms; }
   .delay-500 { animation-delay: 500ms; }
+  
+  /* Custom Tiny Scrollbar Utility */
+  .custom-tiny-scrollbar::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  .custom-tiny-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-tiny-scrollbar::-webkit-scrollbar-thumb {
+    background: #e2e8f0;
+    border-radius: 10px;
+  }
+  .dark .custom-tiny-scrollbar::-webkit-scrollbar-thumb {
+    background: #334155;
+  }
+  .custom-tiny-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #cbd5e1;
+  }
+  .dark .custom-tiny-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #475569;
+  }
+  
+  /* Firefox support */
+  .custom-tiny-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #e2e8f0 transparent;
+  }
+  .dark .custom-tiny-scrollbar {
+    scrollbar-color: #334155 transparent;
+  }
 
   @keyframes fadeIn {
     from { opacity: 0; }

@@ -942,7 +942,7 @@ export default function InteractiveOrdersPage() {
               </div>
 
               {/* Drawer Content */}
-              <div className="flex-1 overflow-y-auto p-6 bg-slate-50/30 dark:bg-slate-900/30">
+              <div className="flex-1 overflow-y-auto p-6 bg-slate-50/30 dark:bg-slate-900/30 custom-tiny-scrollbar">
                 {/* CUSTOMER PROFILE CARD */}
                 <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-5 mb-6">
                   <div className="flex justify-between items-start mb-4">
