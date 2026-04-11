@@ -169,7 +169,7 @@ export default function SettingsPage() {
         // Sync global context fields too
         updateSettings({
           businessName: data.site_name || businessName,
-          logoUrl: data.site_logo || logoUrl,
+          logoUrl: formatUrl(data.site_logo) || logoUrl,
           footerText: data.footer_text || footerText,
           adminEmail: data.shop_email || adminEmail,
           adminName: data.admin_name || adminName,
