@@ -50,11 +50,10 @@ const Checkbox = ({ checked, onChange, indeterminate = false }) => {
         e.stopPropagation();
         onChange(!checked);
       }}
-      className={`w-5 h-5 rounded-md border-2 transition-all flex items-center justify-center ${
-        checked || indeterminate
+      className={`w-5 h-5 rounded-md border-2 transition-all flex items-center justify-center ${checked || indeterminate
           ? "bg-indigo-600 border-indigo-600 shadow-lg shadow-indigo-600/20"
           : "border-slate-300 dark:border-slate-600 hover:border-indigo-400"
-      }`}
+        }`}
     >
       {checked && !indeterminate && <Check className="w-3.5 h-3.5 text-white stroke-3" />}
       {indeterminate && <div className="w-2 h-0.5 bg-white rounded-full" />}
@@ -77,7 +76,7 @@ export default function UsersPage() {
 
   const hasPermission = (permissionName) => {
     if (isAdmin) return true;
-    return userRoles.some(role => 
+    return userRoles.some(role =>
       role.permissions?.some(p => p.name === permissionName)
     );
   };
@@ -193,24 +192,18 @@ export default function UsersPage() {
   const handleImageChange = async (e) => {
     const file = e.target.files[0];
     if (file) {
-      // 1. Basic validation
       if (!file.type.startsWith("image/")) {
         toast.error("Please upload an image file");
         return;
       }
-
       if (file.size > 5 * 1024 * 1024) {
         toast.error("File is too large. Max 5MB allowed.");
         return;
       }
-
       setLoading(true);
       try {
-        // 2. Compress image
         const compressedFile = await compressImage(file);
         setFormData({ ...formData, profile_image: compressedFile });
-
-        // 3. Preview
         const reader = new FileReader();
         reader.onloadend = () => {
           setImagePreview(reader.result);
@@ -224,6 +217,7 @@ export default function UsersPage() {
       }
     }
   };
+
 
   useEffect(() => {
     if (usersData) {
@@ -278,10 +272,24 @@ export default function UsersPage() {
     tl.fromTo(".user-item", { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, stagger: 0.05, clearProps: "all" }, "-=0.3");
   }, { scope: containerRef, dependencies: [users, viewMode] });
 
+  // Handle Form Drawer Entrance Animation
+  useGSAP(() => {
+    if (isFormOpen && formContentRef.current) {
+      gsap.fromTo(formOverlayRef.current, { opacity: 0 }, { opacity: 1, duration: 0.4, ease: "power2.out" });
+      gsap.fromTo(formContentRef.current, { x: "100%" }, { x: 0, duration: 0.6, ease: "power4.out" });
+    }
+  }, [isFormOpen]);
+
+  // Handle Delete Modal Entrance Animation
+  useGSAP(() => {
+    if (isDeleteOpen && deleteContentRef.current) {
+      gsap.fromTo(deleteOverlayRef.current, { opacity: 0 }, { opacity: 1, duration: 0.3 });
+      gsap.fromTo(deleteContentRef.current, { scale: 0.9, opacity: 0, y: 20 }, { scale: 1, opacity: 1, y: 0, duration: 0.4, ease: "back.out(1.4)" });
+    }
+  }, [isDeleteOpen]);
+
   const openFormWithAnim = () => {
     setIsFormOpen(true);
-    gsap.fromTo(formOverlayRef.current, { opacity: 0 }, { opacity: 1, duration: 0.4 });
-    gsap.fromTo(formContentRef.current, { x: "100%" }, { x: 0, duration: 0.6, ease: "power4.out" });
   };
 
   const closeFormWithAnim = () => {
@@ -348,7 +356,7 @@ export default function UsersPage() {
           body.append(key, value);
         }
       });
-      
+
       if (formMode === "edit") {
         body.append("_method", "PUT");
       }
@@ -406,7 +414,7 @@ export default function UsersPage() {
         {/* 1. HEADER */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
           <div className="animate-header">
-            
+
             <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">
               Users
             </h1>
@@ -656,7 +664,7 @@ export default function UsersPage() {
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
-              
+
               <div className="flex items-center gap-1 mx-1">
                 {[...Array(Math.min(5, lastPage))].map((_, i) => {
                   const pageNum = i + 1;
@@ -666,16 +674,15 @@ export default function UsersPage() {
                     if (currentPage > 3) displayNum = currentPage - 2 + i;
                     if (displayNum > lastPage) return null;
                   }
-                  
+
                   return (
                     <button
                       key={displayNum}
                       onClick={() => setCurrentPage(displayNum)}
-                      className={`w-9 h-9 rounded-xl text-xs font-bold transition-all flex items-center justify-center ${
-                        currentPage === displayNum 
-                          ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/20" 
+                      className={`w-9 h-9 rounded-xl text-xs font-bold transition-all flex items-center justify-center ${currentPage === displayNum
+                          ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/20"
                           : "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-indigo-500 hover:text-indigo-600 transition-all active:scale-90"
-                      }`}
+                        }`}
                     >
                       {displayNum}
                     </button>
@@ -705,7 +712,7 @@ export default function UsersPage() {
               </div>
               <span className="text-[11px] font-semibold whitespace-nowrap">Selected</span>
             </div>
-            
+
             <div className="h-4 w-px bg-white/10" />
 
             <div className="flex items-center gap-1">
@@ -716,11 +723,11 @@ export default function UsersPage() {
                 Clear
               </button>
               <button
-                 onClick={() => {
-                   toast.success(`Bulk delete initiated for ${selectedIds.length} users`);
-                   setSelectedIds([]);
-                 }}
-                 className="bg-red-500 hover:bg-red-600 px-3 py-1 rounded-full text-[11px] font-bold flex items-center gap-1.5 transition-all active:scale-95 shadow-lg shadow-red-500/20 whitespace-nowrap"
+                onClick={() => {
+                  toast.success(`Bulk delete initiated for ${selectedIds.length} users`);
+                  setSelectedIds([]);
+                }}
+                className="bg-red-500 hover:bg-red-600 px-3 py-1 rounded-full text-[11px] font-bold flex items-center gap-1.5 transition-all active:scale-95 shadow-lg shadow-red-500/20 whitespace-nowrap"
               >
                 <Trash2 className="w-3 h-3" />
                 Delete
@@ -757,29 +764,31 @@ export default function UsersPage() {
                 </div>
 
                 <div className="flex-1 overflow-y-auto p-6 space-y-5 custom-tiny-scrollbar">
-                  {/* Profile Image Upload */}
-                  <div className="flex flex-col items-center mb-6">
-                    <div className="relative group cursor-pointer" onClick={() => fileInputRef.current.click()}>
-                      <div className="w-20 h-20 rounded-2xl bg-slate-100 dark:bg-slate-900 border-2 border-dashed border-slate-200 dark:border-slate-700 overflow-hidden flex items-center justify-center group-hover:border-indigo-500 transition-all">
-                        {imagePreview ? (
-                          <img src={imagePreview} className="w-full h-full object-cover" alt="Preview" />
-                        ) : (
-                          <Camera className="w-6 h-6 text-slate-400 group-hover:text-indigo-500 transition-colors" />
-                        )}
+                  {/* Profile Image Upload - Only for Edit Mode */}
+                  {formMode === "edit" && (
+                    <div className="flex flex-col items-center mb-6">
+                      <div className="relative group cursor-pointer" onClick={() => fileInputRef.current.click()}>
+                        <div className="w-20 h-20 rounded-2xl bg-slate-100 dark:bg-slate-900 border-2 border-dashed border-slate-200 dark:border-slate-700 overflow-hidden flex items-center justify-center group-hover:border-indigo-500 transition-all">
+                          {imagePreview ? (
+                            <img src={imagePreview} className="w-full h-full object-cover" alt="Preview" />
+                          ) : (
+                            <Camera className="w-6 h-6 text-slate-400 group-hover:text-indigo-500 transition-colors" />
+                          )}
+                        </div>
+                        <div className="absolute -bottom-1 -right-1 p-1.5 bg-indigo-600 rounded-lg shadow-lg text-white group-hover:scale-110 transition-transform">
+                          <Plus className="w-3.5 h-3.5" />
+                        </div>
                       </div>
-                      <div className="absolute -bottom-1 -right-1 p-1.5 bg-indigo-600 rounded-lg shadow-lg text-white group-hover:scale-110 transition-transform">
-                        <Plus className="w-3.5 h-3.5" />
-                      </div>
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleImageChange}
+                        className="hidden"
+                        accept="image/*"
+                      />
+                      <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mt-3 text-center">Update Photo</p>
                     </div>
-                    <input
-                      type="file"
-                      ref={fileInputRef}
-                      onChange={handleImageChange}
-                      className="hidden"
-                      accept="image/*"
-                    />
-                    <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mt-3 text-center">Profile Member</p>
-                  </div>
+                  )}
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1.5">
@@ -864,15 +873,13 @@ export default function UsersPage() {
                           key={role.id}
                           type="button"
                           onClick={() => setFormData({ ...formData, role: role.id })}
-                          className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all ${
-                            formData.role === role.id
+                          className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all ${formData.role === role.id
                               ? "border-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 shadow-sm"
                               : "border-slate-100 dark:border-slate-700 hover:border-slate-200 dark:hover:border-slate-600 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900"
-                          }`}
+                            }`}
                         >
-                          <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                             formData.role === role.id ? "border-indigo-600" : "border-slate-300 dark:border-slate-600"
-                          }`}>
+                          <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${formData.role === role.id ? "border-indigo-600" : "border-slate-300 dark:border-slate-600"
+                            }`}>
                             {formData.role === role.id && <div className="w-2 h-2 bg-indigo-600 rounded-full" />}
                           </div>
                           <span className="text-xs font-semibold">{role.name}</span>
