@@ -891,12 +891,12 @@ export default function InteractiveOrdersPage() {
       {/* --- ORDER DETAILS DRAWER --- */}
       {selectedOrder && (
         <div
-          className="fixed inset-0 z-50 overflow-hidden"
+          className="fixed inset-0 z-[100]"
           onClick={() => setShowActionsMenu(false)}
         >
           <div
             ref={overlayRef}
-            className="absolute inset-0 bg-slate-900/30 dark:bg-slate-950/50 backdrop-blur-sm transition-opacity"
+            className="fixed inset-0 bg-slate-900/30 dark:bg-slate-950/50 backdrop-blur-sm transition-opacity"
             onClick={handleCloseDrawer}
           />
 
