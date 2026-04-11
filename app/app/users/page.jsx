@@ -113,6 +113,7 @@ export default function UsersPage() {
     role: "", // Changed from role_id to role
     profile_image: null,
   });
+  const [validationErrors, setValidationErrors] = useState({});
   const [imagePreview, setImagePreview] = useState(null);
   const fileInputRef = useRef(null);
 
@@ -317,6 +318,7 @@ export default function UsersPage() {
       profile_image: null,
     });
     setImagePreview(null);
+    setValidationErrors({});
     openFormWithAnim();
   };
 
@@ -329,10 +331,11 @@ export default function UsersPage() {
       username: user.username || "",
       password: "",
       password_confirmation: "",
-      role: user.roles?.[0]?.name || "", // Assuming role name is needed
+      role: user.roles?.[0]?.id || "", // Assuming role ID is needed for selection
       profile_image: null,
     });
     setImagePreview(user.image || null);
+    setValidationErrors({});
     openFormWithAnim();
   };
 
@@ -343,11 +346,13 @@ export default function UsersPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+
     try {
+      setValidationErrors({});
       const url = formMode === "edit"
         ? `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/users/${selectedUser.id}`
         : `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/users`;
-      const method = formMode === "edit" ? "POST" : "POST"; // Use POST with _method=PUT for multipart if needed, or just POST for create
 
       const body = new FormData();
       Object.keys(formData).forEach(key => {
@@ -361,19 +366,56 @@ export default function UsersPage() {
         body.append("_method", "PUT");
       }
 
-      const data = await globalFetcher(url, session?.accessToken, {
+      console.log(`[UserInvite] URL: ${url}`);
+      console.log("[UserInvite] Payload:", Object.fromEntries(body.entries()));
+
+      // Direct fetch for maximum transparency
+      const response = await fetch(url, {
         method: "POST",
-        body,
+        headers: {
+          "Authorization": `Bearer ${session?.accessToken}`,
+          "Accept": "application/json",
+        },
+        body: body,
       });
-      if (data && data.status === "success") {
-        toast.success(formMode === "edit" ? "User updated" : "Invitation sent");
+
+      console.log("[UserInvite] Raw Response Status:", response.status);
+      const data = await response.json();
+      console.log("[UserInvite] Parsed JSON Response:", data);
+
+      if (response.ok) {
+        toast.success(formMode === "edit" ? "User updated successfully" : "Invitation sent successfully");
         closeFormWithAnim();
         refreshUsers();
       } else {
-        toast.error(data?.message || "Operation failed");
+        // Handle validation errors specifically for 422
+        if (response.status === 422) {
+          console.error("[UserInvite] Validation Failed:", data.errors);
+          
+          // Map API error format to our state
+          const errorsMap = {};
+          if (Array.isArray(data.errors)) {
+            data.errors.forEach(err => {
+              errorsMap[err.field] = err.messages[0];
+            });
+          } else if (typeof data.errors === 'object') {
+            // Backup for standard Laravel object-style errors
+            Object.keys(data.errors).forEach(key => {
+              errorsMap[key] = Array.isArray(data.errors[key]) ? data.errors[key][0] : data.errors[key];
+            });
+          }
+          
+          setValidationErrors(errorsMap);
+          toast.error(data.message || "Please correct the errors below.");
+        } else {
+          toast.error(data.message || "Something went wrong. Please check your inputs.");
+        }
       }
     } catch (error) {
-      toast.error("An unexpected error occurred");
+      console.error("[UserInvite] Request Error:", error);
+      toast.error("Network error. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -798,11 +840,20 @@ export default function UsersPage() {
                         <input
                           type="text"
                           value={formData.name}
-                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                          className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl pl-11 pr-4 py-2.5 text-sm font-medium dark:text-white focus:bg-white dark:focus:bg-slate-800 focus:border-indigo-500 outline-none transition-all"
+                          onChange={(e) => {
+                            setFormData({ ...formData, name: e.target.value });
+                            if (validationErrors.name) setValidationErrors({ ...validationErrors, name: null });
+                          }}
+                          className={`w-full bg-slate-50 dark:bg-slate-900 border rounded-xl pl-11 pr-4 py-2.5 text-sm font-medium dark:text-white focus:bg-white dark:focus:bg-slate-800 outline-none transition-all ${validationErrors.name ? "border-red-500 focus:border-red-500" : "border-slate-200 dark:border-slate-700 focus:border-indigo-500"}`}
                           placeholder="John Doe"
                         />
                       </div>
+                      {validationErrors.name && (
+                        <p className="text-[10px] text-red-500 mt-1 font-medium ml-1 flex items-center gap-1">
+                          <AlertCircle className="w-3 h-3" />
+                          {validationErrors.name}
+                        </p>
+                      )}
                     </div>
 
                     <div className="space-y-1.5">
@@ -812,11 +863,20 @@ export default function UsersPage() {
                         <input
                           type="text"
                           value={formData.username}
-                          onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                          className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl pl-11 pr-4 py-2.5 text-sm font-medium dark:text-white focus:bg-white dark:focus:bg-slate-800 focus:border-indigo-500 outline-none transition-all"
+                          onChange={(e) => {
+                            setFormData({ ...formData, username: e.target.value });
+                            if (validationErrors.username) setValidationErrors({ ...validationErrors, username: null });
+                          }}
+                          className={`w-full bg-slate-50 dark:bg-slate-900 border rounded-xl pl-11 pr-4 py-2.5 text-sm font-medium dark:text-white focus:bg-white dark:focus:bg-slate-800 outline-none transition-all ${validationErrors.username ? "border-red-500 focus:border-red-500" : "border-slate-200 dark:border-slate-700 focus:border-indigo-500"}`}
                           placeholder="johndoe123"
                         />
                       </div>
+                      {validationErrors.username && (
+                        <p className="text-[10px] text-red-500 mt-1 font-medium ml-1 flex items-center gap-1">
+                          <AlertCircle className="w-3 h-3" />
+                          {validationErrors.username}
+                        </p>
+                      )}
                     </div>
                   </div>
 
@@ -827,12 +887,21 @@ export default function UsersPage() {
                       <input
                         type="email"
                         value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl pl-11 pr-4 py-2.5 text-sm font-medium dark:text-white focus:bg-white dark:focus:bg-slate-800 focus:border-indigo-500 outline-none transition-all"
+                        onChange={(e) => {
+                          setFormData({ ...formData, email: e.target.value });
+                          if (validationErrors.email) setValidationErrors({ ...validationErrors, email: null });
+                        }}
+                        className={`w-full bg-slate-50 dark:bg-slate-900 border rounded-xl pl-11 pr-4 py-2.5 text-sm font-medium dark:text-white focus:bg-white dark:focus:bg-slate-800 outline-none transition-all ${validationErrors.email ? "border-red-500 focus:border-red-500" : "border-slate-200 dark:border-slate-700 focus:border-indigo-500"}`}
                         placeholder="john@example.com"
                         disabled={formMode === "edit"}
                       />
                     </div>
+                    {validationErrors.email && (
+                      <p className="text-[10px] text-red-500 mt-1 font-medium ml-1 flex items-center gap-1">
+                        <AlertCircle className="w-3 h-3" />
+                        {validationErrors.email}
+                      </p>
+                    )}
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
@@ -843,11 +912,20 @@ export default function UsersPage() {
                         <input
                           type="password"
                           value={formData.password}
-                          onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                          className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl pl-11 pr-4 py-2.5 text-sm font-medium dark:text-white focus:bg-white dark:focus:bg-slate-800 focus:border-indigo-500 outline-none transition-all"
+                          onChange={(e) => {
+                            setFormData({ ...formData, password: e.target.value });
+                            if (validationErrors.password) setValidationErrors({ ...validationErrors, password: null });
+                          }}
+                          className={`w-full bg-slate-50 dark:bg-slate-900 border rounded-xl pl-11 pr-4 py-2.5 text-sm font-medium dark:text-white focus:bg-white dark:focus:bg-slate-800 outline-none transition-all ${validationErrors.password ? "border-red-500 focus:border-red-500" : "border-slate-200 dark:border-slate-700 focus:border-indigo-500"}`}
                           placeholder="••••••••"
                         />
                       </div>
+                      {validationErrors.password && (
+                        <p className="text-[10px] text-red-500 mt-1 font-medium ml-1 flex items-center gap-1">
+                          <AlertCircle className="w-3 h-3" />
+                          {validationErrors.password}
+                        </p>
+                      )}
                     </div>
 
                     <div className="space-y-1.5">
@@ -857,7 +935,9 @@ export default function UsersPage() {
                         <input
                           type="password"
                           value={formData.password_confirmation}
-                          onChange={(e) => setFormData({ ...formData, password_confirmation: e.target.value })}
+                          onChange={(e) => {
+                            setFormData({ ...formData, password_confirmation: e.target.value });
+                          }}
                           className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl pl-11 pr-4 py-2.5 text-sm font-medium dark:text-white focus:bg-white dark:focus:bg-slate-800 focus:border-indigo-500 outline-none transition-all"
                           placeholder="••••••••"
                         />
@@ -872,13 +952,18 @@ export default function UsersPage() {
                         <button
                           key={role.id}
                           type="button"
-                          onClick={() => setFormData({ ...formData, role: role.id })}
+                          onClick={() => {
+                            setFormData({ ...formData, role: role.id });
+                            if (validationErrors.role) setValidationErrors({ ...validationErrors, role: null });
+                          }}
                           className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all ${formData.role === role.id
                               ? "border-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 shadow-sm"
-                              : "border-slate-100 dark:border-slate-700 hover:border-slate-200 dark:hover:border-slate-600 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900"
+                              : validationErrors.role 
+                                ? "border-red-200 dark:border-red-900/40 bg-red-50/10" 
+                                : "border-slate-100 dark:border-slate-700 hover:border-slate-200 dark:hover:border-slate-600 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900"
                             }`}
                         >
-                          <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${formData.role === role.id ? "border-indigo-600" : "border-slate-300 dark:border-slate-600"
+                          <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${formData.role === role.id ? "border-indigo-600" : validationErrors.role ? "border-red-400" : "border-slate-300 dark:border-slate-600"
                             }`}>
                             {formData.role === role.id && <div className="w-2 h-2 bg-indigo-600 rounded-full" />}
                           </div>
@@ -886,6 +971,12 @@ export default function UsersPage() {
                         </button>
                       ))}
                     </div>
+                    {validationErrors.role && (
+                      <p className="text-[10px] text-red-500 mt-1 font-medium ml-1 flex items-center gap-1">
+                        <AlertCircle className="w-3 h-3" />
+                        {validationErrors.role}
+                      </p>
+                    )}
                   </div>
                 </div>
 
