@@ -925,62 +925,11 @@ export default function SettingsPage() {
               <SectionHeader
                 icon={Database}
                 title="Bulk Data Management"
-                description="Import products or export order history."
+                description="Import products and manage system data."
                 colorClass="bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400"
               />
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* 1. EXPORT DATA */}
-                <div className="space-y-4">
-                  <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                    <Download className="w-4 h-4 text-slate-500 dark:text-slate-400" /> Export Data
-                  </h3>
-                  <div className="p-5 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50/50 dark:bg-slate-900/50">
-                    <div className="space-y-4">
-                      <div>
-                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1.5 block">
-                          Select Data Type
-                        </label>
-                        <select className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2.5 text-sm font-medium outline-none focus:ring-2 focus:ring-amber-500/20">
-                          <option className="dark:bg-slate-800">Products Inventory</option>
-                          <option className="dark:bg-slate-800">Orders (Last 30 Days)</option>
-                          <option className="dark:bg-slate-800">All Orders (History)</option>
-                          <option className="dark:bg-slate-800">Customer List</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1.5 block">
-                          Format
-                        </label>
-                        <div className="flex gap-2">
-                          <label className="flex items-center gap-2 px-3 py-2 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg cursor-pointer hover:border-amber-500 transition-colors">
-                            <input
-                              type="radio"
-                              name="format"
-                              className="accent-amber-600"
-                              defaultChecked
-                            />
-                            <span className="text-sm font-medium dark:text-slate-300">CSV</span>
-                          </label>
-                          <label className="flex items-center gap-2 px-3 py-2 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg cursor-pointer hover:border-amber-500 transition-colors">
-                            <input
-                              type="radio"
-                              name="format"
-                              className="accent-amber-600"
-                            />
-                            <span className="text-sm font-medium dark:text-slate-300">
-                              Excel (.xlsx)
-                            </span>
-                          </label>
-                        </div>
-                      </div>
-                      <button className="w-full py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-sm rounded-lg flex items-center justify-center gap-2 transition-all">
-                        <Download className="w-4 h-4" /> Download File
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
+              <div className="max-w-2xl">
                 {/* 2. IMPORT DATA */}
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
@@ -1006,35 +955,6 @@ export default function SettingsPage() {
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                       Supports CSV or Excel (Max 5MB)
                     </p>
-                  </div>
-
-                  {/* Recent Activity Mini-Log */}
-                  <div className="pt-2">
-                    <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
-                      Recent Activity
-                    </p>
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-3 text-xs">
-                        <Check className="w-3 h-3 text-green-500" />
-                        <span className="text-slate-600 dark:text-slate-400">
-                          Imported{" "}
-                          <span className="font-bold text-slate-900 dark:text-white">
-                            products_v2.csv
-                          </span>
-                        </span>
-                        <span className="text-slate-400 ml-auto">2h ago</span>
-                      </div>
-                      <div className="flex items-center gap-3 text-xs">
-                        <Download className="w-3 h-3 text-blue-500" />
-                        <span className="text-slate-600 dark:text-slate-400">
-                          Exported{" "}
-                          <span className="font-bold text-slate-900 dark:text-white">
-                            orders_jan.xlsx
-                          </span>
-                        </span>
-                        <span className="text-slate-400 ml-auto">1d ago</span>
-                      </div>
-                    </div>
                   </div>
                 </div>
               </div>
