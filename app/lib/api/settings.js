@@ -35,3 +35,29 @@ export async function saveSettings(token, formData) {
     if (!res.ok) throw new Error(json.message || "Failed to save settings");
     return json.data;
 }
+
+/**
+ * GET /api/v1/admin/system/database-export
+ * Returns: Blob (SQL file)
+ */
+export async function exportDatabaseBackup(token) {
+    const res = await fetch(`${API_BASE}/admin/system/database-export`, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: "application/sql", // Or application/octet-stream
+        },
+    });
+    
+    if (!res.ok) {
+        let errorMsg = "Failed to export database";
+        try {
+            const json = await res.json();
+            errorMsg = json.message || errorMsg;
+        } catch (e) {
+            // Not JSON
+        }
+        throw new Error(errorMsg);
+    }
+    
+    return await res.blob();
+}

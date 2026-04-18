@@ -24,7 +24,7 @@ import { useCurrency } from "../context/CurrencyContext";
 import { useGlobalSettings } from "../context/GlobalSettingsContext";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
-import { getSettings, saveSettings } from "../../lib/api/settings";
+import { getSettings, saveSettings, exportDatabaseBackup } from "../../lib/api/settings";
 
 // --- SUB-COMPONENTS ---
 const SaveBtn = ({ sectionKey, onClick, isSaving }) => (
@@ -87,6 +87,7 @@ export default function SettingsPage() {
   const [hasChanges, setHasChanges] = useState(false);
   const [loading, setLoading] = useState(false);
   const [sectionSaving, setSectionSaving] = useState({});
+  const [isBackingUp, setIsBackingUp] = useState(false);
 
   // Logo & Favicon file refs for upload
   const logoFileRef = useRef(null);
@@ -301,6 +302,43 @@ export default function SettingsPage() {
       toast.error(error.message || `Failed to save ${sectionKey} settings`);
     } finally {
       setSectionSaving((prev) => ({ ...prev, [sectionKey]: false }));
+    }
+  };
+
+  const handleBackupDownload = async () => {
+    if (!session?.accessToken) {
+      toast.error("Authentication required.");
+      return;
+    }
+
+    setIsBackingUp(true);
+    const downloadToastId = toast.loading("Preparing database backup...");
+
+    try {
+      const blob = await exportDatabaseBackup(session.accessToken);
+      
+      // Create a link to download the blob
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      
+      // Filename with timestamp
+      const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+      link.setAttribute("download", `igen_backup_${timestamp}.sql`);
+      
+      document.body.appendChild(link);
+      link.click();
+      
+      // Cleanup
+      link.parentNode.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      toast.success("Database backup downloaded successfully!", { id: downloadToastId });
+    } catch (error) {
+      console.error("[Backup] Download error:", error);
+      toast.error(error.message || "Failed to download backup.", { id: downloadToastId });
+    } finally {
+      setIsBackingUp(false);
     }
   };
 
@@ -998,6 +1036,40 @@ export default function SettingsPage() {
                       </div>
                     </div>
                   </div>
+                </div>
+              </div>
+
+              {/* 3. SYSTEM DATABASE BACKUP */}
+              <div className="mt-10 pt-10 border-t border-slate-100 dark:border-slate-700">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 p-6 rounded-2xl bg-indigo-50/50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-900/30">
+                  <div className="flex items-start gap-4">
+                    <div className="p-3 rounded-xl bg-white dark:bg-slate-800 shadow-sm text-indigo-600 dark:text-indigo-400">
+                      <Shield className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-slate-900 dark:text-white">Full System Backup</h3>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-md">
+                        Download a complete SQL dump of your database including products, orders, customers, and system settings.
+                      </p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={handleBackupDownload}
+                    disabled={isBackingUp}
+                    className="flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-indigo-600/20 active:scale-95 whitespace-nowrap"
+                  >
+                    {isBackingUp ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        Generating...
+                      </>
+                    ) : (
+                      <>
+                        <Download className="w-4 h-4" />
+                        Start Database Backup
+                      </>
+                    )}
+                  </button>
                 </div>
               </div>
             </div>
