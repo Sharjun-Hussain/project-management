@@ -130,6 +130,11 @@ export default function AdminLayoutClient({ children, sidebar, initialCollapsed 
           </div>
 
           <div className="flex items-center gap-3 sm:gap-4">
+            {/* Search Bar */}
+            <div className="hidden md:block">
+              <GlobalSearch />
+            </div>
+
             {/* Quick Create Dropdown */}
             <div className="relative" ref={dropdownRef}>
               <button
@@ -141,8 +146,8 @@ export default function AdminLayoutClient({ children, sidebar, initialCollapsed 
               </button>
 
               {quickCreateOpen && (
-                <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 py-2 z-50 animate-in fade-in zoom-in-95 duration-200">
-                  <p className="px-4 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                <div className="absolute right-0 mt-2 w-56 max-h-[360px] overflow-y-auto custom-tiny-scrollbar bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 py-2 z-50 animate-in fade-in zoom-in-95 duration-200">
+                  <p className="px-4 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest sticky top-0 bg-white dark:bg-slate-800 z-10">
                     Create New
                   </p>
                   <Link
@@ -187,11 +192,6 @@ export default function AdminLayoutClient({ children, sidebar, initialCollapsed 
                   </Link>
                 </div>
               )}
-            </div>
-
-            {/* Search Bar */}
-            <div className="hidden md:block">
-              <GlobalSearch />
             </div>
 
 
