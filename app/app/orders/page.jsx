@@ -74,6 +74,7 @@ export default function InteractiveOrdersPage() {
     tracking_number: "",
     courier_phone: "",
     estimated_delivery_at: "",
+    shipping_cost: "",
     shipping_notes: "",
   });
   const [cancellationReason, setCancellationReason] = useState("");
@@ -1283,6 +1284,25 @@ export default function InteractiveOrdersPage() {
                   />
                 </div>
               </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-500 uppercase">
+                    Shipping Cost
+                  </label>
+                  <input
+                    type="number"
+                    value={shippingData.shipping_cost}
+                    onChange={(e) =>
+                      setShippingData({
+                        ...shippingData,
+                        shipping_cost: e.target.value,
+                      })
+                    }
+                    className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-indigo-500 transition-colors"
+                    placeholder="e.g. 1200"
+                  />
+                </div>
+              </div>
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-slate-500 uppercase">
                   Shipping Notes (Optional)
@@ -1310,7 +1330,10 @@ export default function InteractiveOrdersPage() {
                 Cancel
               </button>
               <button
-                onClick={() => handleUpdateOrderStatus("shipped", shippingData)}
+                onClick={() => handleUpdateOrderStatus("shipped", {
+                  ...shippingData,
+                  shipping_cost: shippingData.shipping_cost ? Number(shippingData.shipping_cost) : 0
+                })}
                 disabled={
                   isSubmitting ||
                   !shippingData.courier_name ||
