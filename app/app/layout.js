@@ -62,14 +62,16 @@ export default async function AdminLayout({ children }) {
         cache: 'no-store',
       });
       
-      // If the token is invalid/expired according to Laravel, force a redirect
-      if (res.status === 401 || res.status === 419) {
-        redirect(`/login?expired=1${callbackUrl ? `&callbackUrl=${callbackUrl}` : ""}`);
+      // Previously we redirected to /login?expired=1 here.
+      // However, since the homepage is open for everyone and permissions are handled 
+      // by the sidebar, we will only log the status and stay in the dashboard.
+      if (!res.ok) {
+        console.error(`Session check failed for ${session.user?.email} (Status: ${res.status})`);
       }
     } catch (err) {
-      console.error("Error validating token server-side:", err);
       // If it's a redirect error triggered by Next.js, we must re-throw it
       if (err.digest?.startsWith("NEXT_REDIRECT")) throw err;
+      console.error("Error validating token server-side:", err);
     }
   } else {
     // No session token at all, redirect to login with callbackUrl

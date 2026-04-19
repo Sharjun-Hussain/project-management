@@ -11,7 +11,7 @@ const ALL_MENU_GROUPS = [
   {
     label: "Overview",
     items: [
-      { title: "Dashboard", icon: "LayoutDashboard", href: "/app", permission: "Order Statistics" },
+      { title: "Dashboard", icon: "LayoutDashboard", href: "/app" },
     ],
   },
   {
