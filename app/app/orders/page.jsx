@@ -35,6 +35,8 @@ import { getImageUrl } from "../../../lib/utils";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import PackingSlip from "../../components/PackingSlip";
+import { exportToCSV } from "@/app/lib/exportUtils";
+
 
 const getAvatarUrl = (user) => {
   if (user?.profile_image) {
@@ -122,7 +124,7 @@ export default function InteractiveOrdersPage() {
       // 1. Search filter (Order Number or Customer Name)
       const matchesSearch = searchTerm
         ? order.order_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          order.user?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+        order.user?.name?.toLowerCase().includes(searchTerm.toLowerCase())
         : true;
 
       // 2. Active Tab (Fulfillment Status)
@@ -152,7 +154,7 @@ export default function InteractiveOrdersPage() {
       if (statusFilters.length > 0) {
         const pStatus = (order.latest_payment?.payment_status || order.payment_status || "").toLowerCase();
         const fStatus = (order.order_status || "").toLowerCase();
-        
+
         matchesStatusFilters = statusFilters.some((filter) => {
           const f = filter.toLowerCase();
           return pStatus === f || fStatus === f || (f === "fulfilled" && fStatus === "completed");
@@ -468,6 +470,19 @@ export default function InteractiveOrdersPage() {
     }
   };
 
+  const handleExport = () => {
+    const orders = ordersResponse?.data?.data || ordersResponse?.data || [];
+    const headerMap = {
+      order_number: "Order #",
+      "user.name": "Customer",
+      total_amount: "Amount",
+      order_status: "Status",
+      created_at: "Date",
+      "latest_payment.payment_status": "Payment",
+    };
+    exportToCSV(orders, "Orders", headerMap);
+  };
+
   // --- HELPERS ---
   const getPaymentColor = (status) => {
     switch (status?.toLowerCase()) {
@@ -527,7 +542,10 @@ export default function InteractiveOrdersPage() {
           </p>
         </div>
         <div className="animate-header flex gap-2">
-          <button className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white transition-colors shadow-sm">
+          <button
+            onClick={handleExport}
+            className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white transition-colors shadow-sm"
+          >
             <Download className="w-4 h-4" /> Export
           </button>
 

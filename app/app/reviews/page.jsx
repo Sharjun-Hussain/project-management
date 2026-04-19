@@ -20,12 +20,14 @@ import {
   ThumbsDown,
   Filter,
   SlidersHorizontal,
+  Download,
 } from "lucide-react";
 import useSWR, { useSWRConfig } from "swr";
 import { useSession } from "next-auth/react";
 import { fetcher as globalFetcher } from "../../../lib/fetcher";
 import { getImageUrl } from "../../../lib/utils";
 import { toast } from "sonner";
+import { exportToCSV } from "@/app/lib/exportUtils";
 
 // --- HELPERS ---
 const getAvatarUrl = (user) => {
@@ -96,9 +98,9 @@ export default function ReviewsPage() {
   // --- API ---
   const apiUrl = session?.accessToken
     ? [
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/reviews?page=${currentPage}&per_page=${itemsPerPage}&search=${searchTerm}${activeTab !== "all" ? `&status=${activeTab}` : ""}${ratingFilter ? `&rating=${ratingFilter}` : ""}`,
-        session.accessToken,
-      ]
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/reviews?page=${currentPage}&per_page=${itemsPerPage}&search=${searchTerm}${activeTab !== "all" ? `&status=${activeTab}` : ""}${ratingFilter ? `&rating=${ratingFilter}` : ""}`,
+      session.accessToken,
+    ]
     : null;
 
   const { data: reviewsResponse, isLoading, mutate } = useSWR(
@@ -178,6 +180,18 @@ export default function ReviewsPage() {
     }
   };
 
+  const handleExport = () => {
+    const headerMap = {
+      "user.name": "Customer",
+      "product.name": "Product",
+      rating: "Rating",
+      review: "Review",
+      is_approved: "Approved",
+      created_at: "Date",
+    };
+    exportToCSV(reviews, "Reviews", headerMap);
+  };
+
   // --- KPI STATS ---
   const stats = useMemo(() => {
     const allReviews = reviewsResponse?.data?.data || [];
@@ -203,6 +217,14 @@ export default function ReviewsPage() {
           <p className="text-slate-500 dark:text-slate-400 font-medium mt-1">
             Manage customer product reviews and ratings.
           </p>
+        </div>
+        <div className="animate-header">
+          <button
+            onClick={handleExport}
+            className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm"
+          >
+            <Download className="w-4 h-4" /> Export
+          </button>
         </div>
       </div>
 
@@ -502,7 +524,7 @@ export default function ReviewsPage() {
 
               {/* Drawer Content */}
               <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50/30 dark:bg-slate-950/30">
-                
+
                 {/* Customer Card */}
                 <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5">
                   <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-4">Customer</h3>

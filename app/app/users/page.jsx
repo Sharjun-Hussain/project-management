@@ -29,9 +29,11 @@ import {
   UserPlus,
   Camera,
   Lock,
-  User,
   Check,
+  Download,
 } from "lucide-react";
+import { exportToCSV } from "@/app/lib/exportUtils";
+import { User } from "lucide-react";
 
 // --- THEMED CHECKBOX COMPONENT ---
 const Checkbox = ({ checked, onChange, indeterminate = false }) => {
@@ -51,8 +53,8 @@ const Checkbox = ({ checked, onChange, indeterminate = false }) => {
         onChange(!checked);
       }}
       className={`w-5 h-5 rounded-md border-2 transition-all flex items-center justify-center ${checked || indeterminate
-          ? "bg-indigo-600 border-indigo-600 shadow-lg shadow-indigo-600/20"
-          : "border-slate-300 dark:border-slate-600 hover:border-indigo-400"
+        ? "bg-indigo-600 border-indigo-600 shadow-lg shadow-indigo-600/20"
+        : "border-slate-300 dark:border-slate-600 hover:border-indigo-400"
         }`}
     >
       {checked && !indeterminate && <Check className="w-3.5 h-3.5 text-white stroke-3" />}
@@ -391,7 +393,7 @@ export default function UsersPage() {
         // Handle validation errors specifically for 422
         if (response.status === 422) {
           console.error("[UserInvite] Validation Failed:", data.errors);
-          
+
           // Map API error format to our state
           const errorsMap = {};
           if (Array.isArray(data.errors)) {
@@ -404,7 +406,7 @@ export default function UsersPage() {
               errorsMap[key] = Array.isArray(data.errors[key]) ? data.errors[key][0] : data.errors[key];
             });
           }
-          
+
           setValidationErrors(errorsMap);
           toast.error(data.message || "Please correct the errors below.");
         } else {
@@ -436,6 +438,23 @@ export default function UsersPage() {
     }
   };
 
+  const handleExport = () => {
+    const usersToExport = users.map(u => ({
+      ...u,
+      role_names: u.roles?.map(r => r.name).join(", ") || "N/A",
+    }));
+
+    const headerMap = {
+      name: "Name",
+      email: "Email",
+      username: "Username",
+      role_names: "Roles",
+      created_at: "Joined Date",
+    };
+
+    exportToCSV(usersToExport, "Users", headerMap);
+  };
+
   const sortedUsers = React.useMemo(() => {
     return [...users].sort((a, b) => {
       let valA = a[sortBy];
@@ -465,15 +484,24 @@ export default function UsersPage() {
             </p>
           </div>
 
-          {hasPermission("Admin User Create") && (
+          <div className="animate-header flex gap-2">
             <button
-              onClick={handleOpenInvite}
-              className="animate-header group flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3.5 rounded-2xl font-bold text-sm shadow-xl shadow-indigo-600/20 active:scale-95 transition-all"
+              onClick={handleExport}
+              className="group flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white px-6 py-3.5 rounded-2xl font-bold text-sm shadow-sm active:scale-95 transition-all"
             >
-              <UserPlus className="w-5 h-5 group-hover:rotate-12 transition-transform" />
-              Invite User
+              <Download className="w-5 h-5 group-hover:translate-y-0.5 transition-transform" />
+              Export
             </button>
-          )}
+            {hasPermission("Admin User Create") && (
+              <button
+                onClick={handleOpenInvite}
+                className="group flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3.5 rounded-2xl font-bold text-sm shadow-xl shadow-indigo-600/20 active:scale-95 transition-all"
+              >
+                <UserPlus className="w-5 h-5 group-hover:rotate-12 transition-transform" />
+                Invite User
+              </button>
+            )}
+          </div>
         </div>
 
         {/* 2. TOOLBAR */}
@@ -722,8 +750,8 @@ export default function UsersPage() {
                       key={displayNum}
                       onClick={() => setCurrentPage(displayNum)}
                       className={`w-9 h-9 rounded-xl text-xs font-bold transition-all flex items-center justify-center ${currentPage === displayNum
-                          ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/20"
-                          : "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-indigo-500 hover:text-indigo-600 transition-all active:scale-90"
+                        ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/20"
+                        : "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-indigo-500 hover:text-indigo-600 transition-all active:scale-90"
                         }`}
                     >
                       {displayNum}
@@ -957,10 +985,10 @@ export default function UsersPage() {
                             if (validationErrors.role) setValidationErrors({ ...validationErrors, role: null });
                           }}
                           className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all ${formData.role === role.id
-                              ? "border-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 shadow-sm"
-                              : validationErrors.role 
-                                ? "border-red-200 dark:border-red-900/40 bg-red-50/10" 
-                                : "border-slate-100 dark:border-slate-700 hover:border-slate-200 dark:hover:border-slate-600 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900"
+                            ? "border-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 shadow-sm"
+                            : validationErrors.role
+                              ? "border-red-200 dark:border-red-900/40 bg-red-50/10"
+                              : "border-slate-100 dark:border-slate-700 hover:border-slate-200 dark:hover:border-slate-600 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900"
                             }`}
                         >
                           <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${formData.role === role.id ? "border-indigo-600" : validationErrors.role ? "border-red-400" : "border-slate-300 dark:border-slate-600"

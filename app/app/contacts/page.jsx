@@ -23,7 +23,9 @@ import {
   Clock,
   Reply,
   Check,
+  Download,
 } from "lucide-react";
+import { exportToCSV } from "@/app/lib/exportUtils";
 
 export default function ContactsPage() {
   const { data: session } = useSession();
@@ -158,10 +160,12 @@ export default function ContactsPage() {
 
   // --- HANDLERS ---
   const handleCloseDrawer = () => {
-    const tl = gsap.timeline({ onComplete: () => {
-      setSelectedContact(null);
-      setReplyMessage("");
-    }});
+    const tl = gsap.timeline({
+      onComplete: () => {
+        setSelectedContact(null);
+        setReplyMessage("");
+      }
+    });
     tl.to(drawerRef.current, {
       x: "100%",
       duration: 0.3,
@@ -205,6 +209,18 @@ export default function ContactsPage() {
     }
   };
 
+  const handleExport = () => {
+    const headerMap = {
+      name: "Name",
+      email: "Email",
+      subject: "Subject",
+      message: "Message",
+      status: "Status",
+      created_at: "Date",
+    };
+    exportToCSV(contacts, "Inquiries", headerMap);
+  };
+
   const getStatusColor = (status) => {
     switch (status) {
       case "pending":
@@ -242,6 +258,14 @@ export default function ContactsPage() {
           <p className="text-slate-500 dark:text-slate-400 font-medium mt-1">
             Manage and reply to customer inquiries professionally.
           </p>
+        </div>
+        <div className="animate-header">
+          <button
+            onClick={handleExport}
+            className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm"
+          >
+            <Download className="w-4 h-4" /> Export
+          </button>
         </div>
       </div>
 
@@ -323,86 +347,86 @@ export default function ContactsPage() {
       <div className="animate-toolbar bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm overflow-hidden flex flex-col min-h-[600px]">
         <div className="overflow-x-auto flex-1">
           {loading ? (
-             <div className="flex flex-col items-center justify-center h-full py-20">
-               <div className="w-10 h-10 border-2 border-slate-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
-               <p className="text-slate-500 dark:text-slate-400 font-medium">Loading messages...</p>
-             </div>
+            <div className="flex flex-col items-center justify-center h-full py-20">
+              <div className="w-10 h-10 border-2 border-slate-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
+              <p className="text-slate-500 dark:text-slate-400 font-medium">Loading messages...</p>
+            </div>
           ) : (
-          <table className="w-full text-left border-collapse" ref={tableRef}>
-            <thead className="bg-slate-50/80 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-700">
-              <tr>
-                <th className="p-4 pl-6 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  Customer
-                </th>
-                <th className="p-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  Subject
-                </th>
-                <th className="p-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="p-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  Received At
-                </th>
-                <th className="p-4 pr-6 text-right"></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
-              {contacts.length > 0 ? (
-                contacts.map((contact) => (
-                  <tr
-                    key={contact.id}
-                    onClick={() => setSelectedContact(contact)}
-                    className="contact-row hover:bg-slate-50/80 dark:hover:bg-slate-700/80 transition-colors cursor-pointer group"
-                  >
-                    <td className="p-4 pl-6">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center shrink-0 border border-slate-200 dark:border-slate-600">
-                          <User className="w-5 h-5 text-slate-400" />
-                        </div>
-                        <div>
-                          <div className="font-semibold text-slate-900 dark:text-white text-sm">
-                            {contact.name}
+            <table className="w-full text-left border-collapse" ref={tableRef}>
+              <thead className="bg-slate-50/80 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-700">
+                <tr>
+                  <th className="p-4 pl-6 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    Customer
+                  </th>
+                  <th className="p-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    Subject
+                  </th>
+                  <th className="p-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="p-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    Received At
+                  </th>
+                  <th className="p-4 pr-6 text-right"></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
+                {contacts.length > 0 ? (
+                  contacts.map((contact) => (
+                    <tr
+                      key={contact.id}
+                      onClick={() => setSelectedContact(contact)}
+                      className="contact-row hover:bg-slate-50/80 dark:hover:bg-slate-700/80 transition-colors cursor-pointer group"
+                    >
+                      <td className="p-4 pl-6">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center shrink-0 border border-slate-200 dark:border-slate-600">
+                            <User className="w-5 h-5 text-slate-400" />
                           </div>
-                          <div className="text-xs text-slate-400 dark:text-slate-500">
-                            {contact.email}
+                          <div>
+                            <div className="font-semibold text-slate-900 dark:text-white text-sm">
+                              {contact.name}
+                            </div>
+                            <div className="text-xs text-slate-400 dark:text-slate-500">
+                              {contact.email}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </td>
-                    <td className="p-4">
-                      <div className="text-sm font-medium text-slate-700 dark:text-slate-300 max-w-xs truncate">
-                        {contact.subject}
-                      </div>
-                    </td>
-                    <td className="p-4">
-                      <span
-                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border capitalize ${getStatusColor(contact.status)}`}
-                      >
-                        {contact.status}
-                      </span>
-                    </td>
-                    <td className="p-4 text-sm text-slate-500 dark:text-slate-400">
-                      {formatDate(contact.created_at)}
-                    </td>
-                    <td className="p-4 pr-6 text-right">
-                      <button className="p-2 text-slate-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-white dark:hover:bg-slate-700 rounded-lg transition-colors opacity-0 group-hover:opacity-100">
-                        <ChevronRight className="w-4 h-4" />
-                      </button>
+                      </td>
+                      <td className="p-4">
+                        <div className="text-sm font-medium text-slate-700 dark:text-slate-300 max-w-xs truncate">
+                          {contact.subject}
+                        </div>
+                      </td>
+                      <td className="p-4">
+                        <span
+                          className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border capitalize ${getStatusColor(contact.status)}`}
+                        >
+                          {contact.status}
+                        </span>
+                      </td>
+                      <td className="p-4 text-sm text-slate-500 dark:text-slate-400">
+                        {formatDate(contact.created_at)}
+                      </td>
+                      <td className="p-4 pr-6 text-right">
+                        <button className="p-2 text-slate-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-white dark:hover:bg-slate-700 rounded-lg transition-colors opacity-0 group-hover:opacity-100">
+                          <ChevronRight className="w-4 h-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td
+                      colSpan="5"
+                      className="p-8 text-center text-slate-400 dark:text-slate-500 font-medium"
+                    >
+                      No messages found.
                     </td>
                   </tr>
-                ))
-              ) : (
-                <tr>
-                  <td
-                    colSpan="5"
-                    className="p-8 text-center text-slate-400 dark:text-slate-500 font-medium"
-                  >
-                    No messages found.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                )}
+              </tbody>
+            </table>
           )}
         </div>
 
@@ -520,7 +544,7 @@ export default function ContactsPage() {
                   <div className="text-lg font-bold text-slate-900 dark:text-white mb-6">
                     {selectedContact.subject}
                   </div>
-                  
+
                   <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3">Message</h3>
                   <div className="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl p-6 text-slate-700 dark:text-slate-300 leading-relaxed shadow-sm italic text-sm">
                     {selectedContact.message || "No message content."}
@@ -533,15 +557,15 @@ export default function ContactsPage() {
                     <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Your Reply</h3>
                     <div className="bg-indigo-50/50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-900/30 rounded-2xl p-6">
                       <div className="flex items-center gap-2 mb-3">
-                         <div className="w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px] font-bold">
-                           {selectedContact.replied_by?.name?.[0] || 'A'}
-                         </div>
-                         <span className="text-xs font-bold text-indigo-700 dark:text-indigo-400">
-                           {selectedContact.replied_by?.name || "Admin"}
-                         </span>
-                         <span className="text-[10px] text-slate-400 ml-auto">
-                           {formatDate(selectedContact.replied_at)}
-                         </span>
+                        <div className="w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px] font-bold">
+                          {selectedContact.replied_by?.name?.[0] || 'A'}
+                        </div>
+                        <span className="text-xs font-bold text-indigo-700 dark:text-indigo-400">
+                          {selectedContact.replied_by?.name || "Admin"}
+                        </span>
+                        <span className="text-[10px] text-slate-400 ml-auto">
+                          {formatDate(selectedContact.replied_at)}
+                        </span>
                       </div>
                       <div className="text-sm text-slate-700 dark:text-slate-300">
                         {selectedContact.reply_message}

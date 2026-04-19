@@ -28,6 +28,7 @@ import {
   Loader2,
   Image as ImageIcon,
   Layers,
+  Download,
   Tag,
   Box,
   ChevronLeft,
@@ -37,6 +38,7 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Trash2 } from "lucide-react";
+import { exportToCSV } from "@/app/lib/exportUtils";
 
 // --- HELPER: Image URL ---
 const getImageUrl = (path) => {
@@ -120,7 +122,7 @@ const ProductSheet = ({ product: initialProduct, onClose, hasPermission }) => {
 
   // Calculate stock from variants if available in detailed data
   const stock = productData.variants?.reduce((sum, v) => sum + v.stock_quantity, 0) || productData.stock || 0;
-  
+
   // Ensure price is a number
   const price = parseFloat(productData.price || productData.variants?.[0]?.price || 0);
 
@@ -176,270 +178,267 @@ const ProductSheet = ({ product: initialProduct, onClose, hasPermission }) => {
         message={`Are you sure you want to delete "${deleteVariant?.variant_name}"? This action cannot be undone.`}
         isDeleting={isDeleting}
       />
-    <div className="fixed inset-0 z-50 flex justify-end">
-      <div
-        onClick={handleClose}
-        className="absolute inset-0 bg-slate-900/20 dark:bg-slate-950/50 backdrop-blur-sm transition-opacity opacity-100"
-      />
-
-      <div
-        ref={sheetRef}
-        className="relative w-full max-w-2xl h-full bg-white dark:bg-slate-800 shadow-2xl flex flex-col overflow-hidden border-l border-slate-200 dark:border-slate-700"
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 z-10">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                Product Details
-              </span>
-              <span
-                className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
-                  (productData.status === "published" || productData.is_active)
-                    ? "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800/50"
-                    : "bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-600"
-                }`}
-              >
-                {productData.status || (productData.is_active ? "published" : "draft")}
-              </span>
-            </div>
-            <h2 className="text-xl font-bold text-slate-900 dark:text-white">
-              {productData.name}
-            </h2>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handleClose}
-              className="p-2 text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
-
-        {/* Scrollable Content */}
+      <div className="fixed inset-0 z-50 flex justify-end">
         <div
-          ref={contentRef}
-          className="flex-1 overflow-y-auto bg-slate-50/50 dark:bg-slate-900/50 p-6 space-y-6"
+          onClick={handleClose}
+          className="absolute inset-0 bg-slate-900/20 dark:bg-slate-950/50 backdrop-blur-sm transition-opacity opacity-100"
+        />
+
+        <div
+          ref={sheetRef}
+          className="relative w-full max-w-2xl h-full bg-white dark:bg-slate-800 shadow-2xl flex flex-col overflow-hidden border-l border-slate-200 dark:border-slate-700"
         >
-          {isLoading && !apiResponse ? (
-             <div className="flex items-center justify-center py-20">
-                <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
-             </div>
-          ) : (
-            <>
-              {/* Hero Section */}
-              <div className="sheet-animate bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col sm:flex-row gap-6">
-                <div className="w-32 h-32 bg-slate-100 dark:bg-slate-700 rounded-xl overflow-hidden shrink-0 border border-slate-100 dark:border-slate-600 flex items-center justify-center">
-                  {productData.primary_image_path || productData.image ? (
-                    <img
-                      src={getImageUrl(productData.primary_image_path || productData.image)}
-                      className="w-full h-full object-cover"
-                      alt="Product"
-                    />
-                  ) : (
-                    <ImageIcon className="w-10 h-10 text-slate-300 dark:text-slate-600" />
-                  )}
-                </div>
-                <div className="flex-1 flex flex-col justify-center">
-                  <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div>
-                      <p className="text-xs text-slate-500 mb-1">Price</p>
-                      <p className="text-2xl font-bold text-slate-900 dark:text-white">
-                        Rs {formatPrice(price)}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-slate-500 mb-1">Total Stock</p>
-                      <div className="flex items-center gap-2">
-                        <p className="text-2xl font-bold text-slate-900 dark:text-white">
-                          {stock}
-                        </p>
-                        <div
-                          className={`w-2.5 h-2.5 rounded-full ${
-                            stock > 10 ? "bg-emerald-500" : "bg-amber-500"
-                          }`}
-                        ></div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex gap-3">
-                    {hasPermission ("Product Update") && (
-                      <Link 
-                        href={`/app/products/new?productId=${productData.id}`}
-                        className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg text-sm font-bold  transition-colors text-center"
-                      >
-                        Edit Product
-                      </Link>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Tabs */}
-              <div className="sheet-animate flex gap-6 border-b border-slate-200 dark:border-slate-700 px-2 overflow-x-auto">
-                {["overview", "variants", "gallery", "related", "buy_together", "orders"].map((tab) => (
-                  <button
-                    key={tab}
-                    onClick={() => setActiveTab(tab)}
-                    className={`pb-3 text-sm font-bold transition-colors relative capitalize whitespace-nowrap ${
-                      activeTab === tab
-                        ? "text-indigo-600 dark:text-indigo-400"
-                        : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
+          {/* Header */}
+          <div className="flex items-center justify-between p-6 border-b border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 z-10">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                  Product Details
+                </span>
+                <span
+                  className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${(productData.status === "published" || productData.is_active)
+                      ? "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800/50"
+                      : "bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-600"
                     }`}
-                  >
-                    {tab.replace("_", " ")}
-                    {activeTab === tab && (
-                      <div className="absolute bottom-0 left-0 w-full h-0.5 bg-indigo-600 rounded-t-full"></div>
-                    )}
-                  </button>
-                ))}
+                >
+                  {productData.status || (productData.is_active ? "published" : "draft")}
+                </span>
               </div>
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+                {productData.name}
+              </h2>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleClose}
+                className="p-2 text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
 
-              {/* Tab Content: Overview */}
-              {activeTab === "overview" && (
-                <div className="space-y-6">
-                  {/* Basic Info */}
-                  <div className="sheet-animate bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
-                    <div className="p-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 flex items-center gap-2">
-                       <Info className="w-4 h-4 text-indigo-500" />
-                      <h3 className="font-bold text-slate-900 dark:text-white text-sm">
-                        Basic Information
-                      </h3>
+          {/* Scrollable Content */}
+          <div
+            ref={contentRef}
+            className="flex-1 overflow-y-auto bg-slate-50/50 dark:bg-slate-900/50 p-6 space-y-6"
+          >
+            {isLoading && !apiResponse ? (
+              <div className="flex items-center justify-center py-20">
+                <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
+              </div>
+            ) : (
+              <>
+                {/* Hero Section */}
+                <div className="sheet-animate bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col sm:flex-row gap-6">
+                  <div className="w-32 h-32 bg-slate-100 dark:bg-slate-700 rounded-xl overflow-hidden shrink-0 border border-slate-100 dark:border-slate-600 flex items-center justify-center">
+                    {productData.primary_image_path || productData.image ? (
+                      <img
+                        src={getImageUrl(productData.primary_image_path || productData.image)}
+                        className="w-full h-full object-cover"
+                        alt="Product"
+                      />
+                    ) : (
+                      <ImageIcon className="w-10 h-10 text-slate-300 dark:text-slate-600" />
+                    )}
+                  </div>
+                  <div className="flex-1 flex flex-col justify-center">
+                    <div className="grid grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <p className="text-xs text-slate-500 mb-1">Price</p>
+                        <p className="text-2xl font-bold text-slate-900 dark:text-white">
+                          Rs {formatPrice(price)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-500 mb-1">Total Stock</p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-2xl font-bold text-slate-900 dark:text-white">
+                            {stock}
+                          </p>
+                          <div
+                            className={`w-2.5 h-2.5 rounded-full ${stock > 10 ? "bg-emerald-500" : "bg-amber-500"
+                              }`}
+                          ></div>
+                        </div>
+                      </div>
                     </div>
-                    <div className="divide-y divide-slate-100 dark:divide-slate-700">
-                      <div className="flex justify-between p-4 text-sm">
-                        <span className="text-slate-500">Code</span>
-                        <span className="font-mono font-bold text-slate-700 dark:text-slate-300">
-                          {productData.code}
-                        </span>
-                      </div>
-                      <div className="flex justify-between p-4 text-sm">
-                        <span className="text-slate-500">Brand</span>
-                        <span className="font-bold text-slate-700 dark:text-slate-300">
-                          {productData.brand?.name || "N/A"}
-                        </span>
-                      </div>
-                      <div className="flex justify-between p-4 text-sm">
-                        <span className="text-slate-500">Condition</span>
-                        <span className="font-bold text-slate-700 dark:text-slate-300 capitalize">
-                          {productData.condition || "N/A"}
-                        </span>
-                      </div>
-                      <div className="flex justify-between p-4 text-sm">
-                        <span className="text-slate-500">Type</span>
-                        <span className="font-bold text-slate-700 dark:text-slate-300 capitalize">
-                          {productData.type}
-                        </span>
-                      </div>
+                    <div className="flex gap-3">
+                      {hasPermission("Product Update") && (
+                        <Link
+                          href={`/app/products/new?productId=${productData.id}`}
+                          className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg text-sm font-bold  transition-colors text-center"
+                        >
+                          Edit Product
+                        </Link>
+                      )}
                     </div>
                   </div>
+                </div>
 
-                  {/* Dynamic Specifications */}
-                  {productData.specifications?.length > 0 && (
+                {/* Tabs */}
+                <div className="sheet-animate flex gap-6 border-b border-slate-200 dark:border-slate-700 px-2 overflow-x-auto">
+                  {["overview", "variants", "gallery", "related", "buy_together", "orders"].map((tab) => (
+                    <button
+                      key={tab}
+                      onClick={() => setActiveTab(tab)}
+                      className={`pb-3 text-sm font-bold transition-colors relative capitalize whitespace-nowrap ${activeTab === tab
+                          ? "text-indigo-600 dark:text-indigo-400"
+                          : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
+                        }`}
+                    >
+                      {tab.replace("_", " ")}
+                      {activeTab === tab && (
+                        <div className="absolute bottom-0 left-0 w-full h-0.5 bg-indigo-600 rounded-t-full"></div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Tab Content: Overview */}
+                {activeTab === "overview" && (
+                  <div className="space-y-6">
+                    {/* Basic Info */}
                     <div className="sheet-animate bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
                       <div className="p-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 flex items-center gap-2">
-                        <Layers className="w-4 h-4 text-indigo-500" />
+                        <Info className="w-4 h-4 text-indigo-500" />
                         <h3 className="font-bold text-slate-900 dark:text-white text-sm">
-                          Specifications
+                          Basic Information
                         </h3>
                       </div>
                       <div className="divide-y divide-slate-100 dark:divide-slate-700">
-                        {productData.specifications.map((spec) => (
-                          <div key={spec.id} className="flex justify-between p-4 text-sm">
-                            <span className="text-slate-500">{spec.specification_name}</span>
-                            <span className="font-bold text-slate-700 dark:text-slate-300 text-right">
-                              {spec.specification_value}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Features */}
-                  {productData.features?.length > 0 && (
-                    <div className="sheet-animate bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm p-4">
-                      <div className="flex items-center gap-2 mb-3">
-                         <CheckCircle2 className="w-4 h-4 text-indigo-500" />
-                         <h3 className="font-bold text-slate-900 dark:text-white text-sm">Features</h3>
-                      </div>
-                      <ul className="space-y-2">
-                        {productData.features.map((feature) => (
-                          <li key={feature.id} className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-400">
-                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0"></div>
-                            <span>{feature.name}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  {/* Tags */}
-                  {productData.tags?.length > 0 && (
-                    <div className="sheet-animate">
-                      <h3 className="font-bold text-slate-900 dark:text-white text-sm mb-3 px-1">Tags</h3>
-                      <div className="flex flex-wrap gap-2">
-                        {productData.tags.map((tag) => (
-                          <span key={tag.id} className="px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-xs font-bold border border-slate-200 dark:border-slate-700 flex items-center gap-1">
-                            <Tag className="w-3 h-3" />
-                            {tag.name}
+                        <div className="flex justify-between p-4 text-sm">
+                          <span className="text-slate-500">Code</span>
+                          <span className="font-mono font-bold text-slate-700 dark:text-slate-300">
+                            {productData.code}
                           </span>
-                        ))}
+                        </div>
+                        <div className="flex justify-between p-4 text-sm">
+                          <span className="text-slate-500">Brand</span>
+                          <span className="font-bold text-slate-700 dark:text-slate-300">
+                            {productData.brand?.name || "N/A"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between p-4 text-sm">
+                          <span className="text-slate-500">Condition</span>
+                          <span className="font-bold text-slate-700 dark:text-slate-300 capitalize">
+                            {productData.condition || "N/A"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between p-4 text-sm">
+                          <span className="text-slate-500">Type</span>
+                          <span className="font-bold text-slate-700 dark:text-slate-300 capitalize">
+                            {productData.type}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  )}
-                  
-                  {/* Description */}
-                  {productData.full_description && (
-                     <div className="sheet-animate bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm p-4 overflow-hidden w-full">
+
+                    {/* Dynamic Specifications */}
+                    {productData.specifications?.length > 0 && (
+                      <div className="sheet-animate bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+                        <div className="p-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 flex items-center gap-2">
+                          <Layers className="w-4 h-4 text-indigo-500" />
+                          <h3 className="font-bold text-slate-900 dark:text-white text-sm">
+                            Specifications
+                          </h3>
+                        </div>
+                        <div className="divide-y divide-slate-100 dark:divide-slate-700">
+                          {productData.specifications.map((spec) => (
+                            <div key={spec.id} className="flex justify-between p-4 text-sm">
+                              <span className="text-slate-500">{spec.specification_name}</span>
+                              <span className="font-bold text-slate-700 dark:text-slate-300 text-right">
+                                {spec.specification_value}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Features */}
+                    {productData.features?.length > 0 && (
+                      <div className="sheet-animate bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm p-4">
+                        <div className="flex items-center gap-2 mb-3">
+                          <CheckCircle2 className="w-4 h-4 text-indigo-500" />
+                          <h3 className="font-bold text-slate-900 dark:text-white text-sm">Features</h3>
+                        </div>
+                        <ul className="space-y-2">
+                          {productData.features.map((feature) => (
+                            <li key={feature.id} className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-400">
+                              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0"></div>
+                              <span>{feature.name}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Tags */}
+                    {productData.tags?.length > 0 && (
+                      <div className="sheet-animate">
+                        <h3 className="font-bold text-slate-900 dark:text-white text-sm mb-3 px-1">Tags</h3>
+                        <div className="flex flex-wrap gap-2">
+                          {productData.tags.map((tag) => (
+                            <span key={tag.id} className="px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-xs font-bold border border-slate-200 dark:border-slate-700 flex items-center gap-1">
+                              <Tag className="w-3 h-3" />
+                              {tag.name}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Description */}
+                    {productData.full_description && (
+                      <div className="sheet-animate bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm p-4 overflow-hidden w-full">
                         <h3 className="font-bold text-slate-900 dark:text-white text-sm mb-2">Description</h3>
                         <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed break-words whitespace-pre-wrap">
                           {productData.full_description}
                         </p>
-                     </div>
-                  )}
-                </div>
-              )}
-
-              {/* Tab Content: Variants (Accordion Style) */}
-              {activeTab === "variants" && (
-                <div className="space-y-4">
-                  <div className="flex justify-end">
-                    {hasPermission("Product Variant Create") && (
-                      <button className="flex items-center gap-2 px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-lg text-xs font-bold hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors">
-                        <Plus className="w-3 h-3" /> Add Variant
-                      </button>
+                      </div>
                     )}
                   </div>
-                  
-                  <div className="space-y-3">
-                    {productData.variants?.map((variant) => (
-                      <details
-                        key={variant.id}
-                        className="sheet-animate group bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden"
-                      >
-                        <summary className="flex items-center justify-between p-4 cursor-pointer list-none select-none hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-bold text-xs">
+                )}
+
+                {/* Tab Content: Variants (Accordion Style) */}
+                {activeTab === "variants" && (
+                  <div className="space-y-4">
+                    <div className="flex justify-end">
+                      {hasPermission("Product Variant Create") && (
+                        <button className="flex items-center gap-2 px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-lg text-xs font-bold hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors">
+                          <Plus className="w-3 h-3" /> Add Variant
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="space-y-3">
+                      {productData.variants?.map((variant) => (
+                        <details
+                          key={variant.id}
+                          className="sheet-animate group bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden"
+                        >
+                          <summary className="flex items-center justify-between p-4 cursor-pointer list-none select-none hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-bold text-xs">
                                 {variant.storage_size?.replace(/"/g, "") || "V"}
-                            </div>
-                            <div>
+                              </div>
+                              <div>
                                 <h4 className="font-bold text-slate-900 dark:text-white text-sm">
-                                    {variant.variant_name?.replace(/"/g, "")}
+                                  {variant.variant_name?.replace(/"/g, "")}
                                 </h4>
                                 <p className="text-xs text-slate-500 font-mono">{variant.sku?.replace(/"/g, "")}</p>
+                              </div>
                             </div>
-                          </div>
-                          <div className="flex items-center gap-4">
-                             <div className="text-right">
+                            <div className="flex items-center gap-4">
+                              <div className="text-right">
                                 <p className="font-bold  text-slate-900 dark:text-white text-sm">Rs {formatPrice(variant.price)}</p>
                                 <p className={`text-[2px] font-bold ${variant.stock_quantity > 0 ? "text-emerald-600" : "text-red-600"}`}>
-                                    {variant.stock_quantity} in stock
+                                  {variant.stock_quantity} in stock
                                 </p>
-                             </div>
-                             {hasPermission("Product Variant Delete") && (
-                               <button
+                              </div>
+                              {hasPermission("Product Variant Delete") && (
+                                <button
                                   onClick={(e) => {
                                     e.preventDefault();
                                     setDeleteVariant(variant);
@@ -448,189 +447,189 @@ const ProductSheet = ({ product: initialProduct, onClose, hasPermission }) => {
                                 >
                                   <Trash2 className="w-4 h-4" />
                                 </button>
-                             )}
-                             <ChevronRight className="w-5 h-5 text-slate-400 group-open:rotate-90 transition-transform" />
-                          </div>
-                        </summary>
-                        
-                        <div className="p-4 pt-0 border-t border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50">
+                              )}
+                              <ChevronRight className="w-5 h-5 text-slate-400 group-open:rotate-90 transition-transform" />
+                            </div>
+                          </summary>
+
+                          <div className="p-4 pt-0 border-t border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50">
                             <div className="grid grid-cols-2 gap-4 mt-4">
-                                <div className="space-y-1">
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Storage</p>
-                                    <p className="text-sm font-medium text-slate-700 dark:text-slate-300">{variant.storage_size?.replace(/"/g, "") || "N/A"}</p>
-                                </div>
-                                <div className="space-y-1">
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">RAM</p>
-                                    <p className="text-sm font-medium text-slate-700 dark:text-slate-300">{variant.ram_size?.replace(/"/g, "") || "N/A"}</p>
-                                </div>
-                                <div className="space-y-1">
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Color</p>
-                                    <p className="text-sm font-medium text-slate-700 dark:text-slate-300">{variant.color?.replace(/"/g, "") || "N/A"}</p>
-                                </div>
-                                <div className="space-y-1">
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Barcode</p>
-                                    <p className="text-sm font-mono text-slate-700 dark:text-slate-300">{variant.barcode?.replace(/"/g, "") || "N/A"}</p>
-                                </div>
+                              <div className="space-y-1">
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Storage</p>
+                                <p className="text-sm font-medium text-slate-700 dark:text-slate-300">{variant.storage_size?.replace(/"/g, "") || "N/A"}</p>
+                              </div>
+                              <div className="space-y-1">
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">RAM</p>
+                                <p className="text-sm font-medium text-slate-700 dark:text-slate-300">{variant.ram_size?.replace(/"/g, "") || "N/A"}</p>
+                              </div>
+                              <div className="space-y-1">
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Color</p>
+                                <p className="text-sm font-medium text-slate-700 dark:text-slate-300">{variant.color?.replace(/"/g, "") || "N/A"}</p>
+                              </div>
+                              <div className="space-y-1">
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Barcode</p>
+                                <p className="text-sm font-mono text-slate-700 dark:text-slate-300">{variant.barcode?.replace(/"/g, "") || "N/A"}</p>
+                              </div>
                             </div>
 
                             <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700 grid grid-cols-2 gap-4">
-                                <div>
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Pricing</p>
-                                    <div className="space-y-1">
-                                        <div className="flex justify-between text-xs">
-                                            <span className="text-slate-500">Regular Price:</span>
-                                            <span className="font-medium">Rs {formatPrice(variant.price)}</span>
-                                        </div>
-                                        <div className="flex justify-between text-xs">
-                                            <span className="text-slate-500">Sales Price:</span>
-                                            <span className="font-medium">Rs {formatPrice(variant.sales_price)}</span>
-                                        </div>
-                                        {variant.is_offer && (
-                                            <div className="flex justify-between text-xs text-amber-600 font-bold">
-                                                <span>Offer Price:</span>
-                                                <span>Rs {formatPrice(variant.offer_price)}</span>
-                                            </div>
-                                        )}
+                              <div>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Pricing</p>
+                                <div className="space-y-1">
+                                  <div className="flex justify-between text-xs">
+                                    <span className="text-slate-500">Regular Price:</span>
+                                    <span className="font-medium">Rs {formatPrice(variant.price)}</span>
+                                  </div>
+                                  <div className="flex justify-between text-xs">
+                                    <span className="text-slate-500">Sales Price:</span>
+                                    <span className="font-medium">Rs {formatPrice(variant.sales_price)}</span>
+                                  </div>
+                                  {variant.is_offer && (
+                                    <div className="flex justify-between text-xs text-amber-600 font-bold">
+                                      <span>Offer Price:</span>
+                                      <span>Rs {formatPrice(variant.offer_price)}</span>
                                     </div>
+                                  )}
                                 </div>
-                                <div>
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Status</p>
-                                    <div className="flex flex-wrap gap-2">
-                                        {variant.is_active && <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-green-100 text-green-700">Active</span>}
-                                        {variant.is_trending && <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-700">Trending</span>}
-                                        {variant.is_featured && <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-700">Featured</span>}
-                                        {variant.is_offer && <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700">Offer</span>}
-                                    </div>
+                              </div>
+                              <div>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Status</p>
+                                <div className="flex flex-wrap gap-2">
+                                  {variant.is_active && <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-green-100 text-green-700">Active</span>}
+                                  {variant.is_trending && <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-700">Trending</span>}
+                                  {variant.is_featured && <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-700">Featured</span>}
+                                  {variant.is_offer && <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700">Offer</span>}
                                 </div>
+                              </div>
                             </div>
-                        </div>
-                      </details>
-                    ))}
-                    {(!productData.variants || productData.variants.length === 0) && (
+                          </div>
+                        </details>
+                      ))}
+                      {(!productData.variants || productData.variants.length === 0) && (
                         <div className="p-8 text-center text-slate-500 bg-slate-50 dark:bg-slate-900 rounded-xl border border-dashed border-slate-200 dark:border-slate-700">
-                            No variants found.
+                          No variants found.
                         </div>
-                    )}
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* Tab Content: Gallery */}
-              {activeTab === "gallery" && (
-                <div className="space-y-4">
-                   <div className="flex justify-end">
-                    {hasPermission("Product Update") && (
-                      <button className="flex items-center gap-2 px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-lg text-xs font-bold hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors">
-                        <Plus className="w-3 h-3" /> Add Image
-                      </button>
-                    )}
-                  </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                    {productData.images?.map((img) => (
-                      <div
-                        key={img.id}
-                        className="sheet-animate aspect-square rounded-xl bg-slate-100 dark:bg-slate-700 overflow-hidden border border-slate-200 dark:border-slate-600 relative group"
-                      >
-                        <img
-                          src={getImageUrl(img.image_path)}
-                          className="w-full h-full object-cover"
-                          alt="Gallery"
-                        />
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                {/* Tab Content: Gallery */}
+                {activeTab === "gallery" && (
+                  <div className="space-y-4">
+                    <div className="flex justify-end">
+                      {hasPermission("Product Update") && (
+                        <button className="flex items-center gap-2 px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-lg text-xs font-bold hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors">
+                          <Plus className="w-3 h-3" /> Add Image
+                        </button>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                      {productData.images?.map((img) => (
+                        <div
+                          key={img.id}
+                          className="sheet-animate aspect-square rounded-xl bg-slate-100 dark:bg-slate-700 overflow-hidden border border-slate-200 dark:border-slate-600 relative group"
+                        >
+                          <img
+                            src={getImageUrl(img.image_path)}
+                            className="w-full h-full object-cover"
+                            alt="Gallery"
+                          />
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                             {hasPermission("Product Update") && (
                               <button className="p-2 bg-white/20 hover:bg-white/40 rounded-lg text-white backdrop-blur-sm transition-colors">
-                                  <Trash2 className="w-4 h-4" />
+                                <Trash2 className="w-4 h-4" />
                               </button>
                             )}
+                          </div>
                         </div>
-                      </div>
-                    ))}
-                     {(!productData.images || productData.images.length === 0) && (
+                      ))}
+                      {(!productData.images || productData.images.length === 0) && (
                         <div className="col-span-full py-10 text-center text-slate-500 border border-dashed border-slate-300 dark:border-slate-700 rounded-xl">
-                            No gallery images.
+                          No gallery images.
                         </div>
-                     )}
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* Tab Content: Related Products */}
-              {activeTab === "related" && (
-                <div className="space-y-4">
-                  <h3 className="font-bold text-slate-900 dark:text-white text-sm px-1 sheet-animate">Related Products</h3>
-                  {productData.compatible_products?.length > 0 ? (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                      {productData.compatible_products.map((product) => (
-                        <div key={product.id} className="sheet-animate bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-3 shadow-sm hover:shadow-md transition-shadow">
-                          <div className="aspect-square rounded-lg bg-slate-100 dark:bg-slate-700 overflow-hidden mb-2 relative">
-                            {product.primary_image_path ? (
-                              <img src={getImageUrl(product.primary_image_path)} className="w-full h-full object-cover" alt={product.name} />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center text-slate-400">
-                                <ImageIcon className="w-6 h-6" />
-                              </div>
-                            )}
+                {/* Tab Content: Related Products */}
+                {activeTab === "related" && (
+                  <div className="space-y-4">
+                    <h3 className="font-bold text-slate-900 dark:text-white text-sm px-1 sheet-animate">Related Products</h3>
+                    {productData.compatible_products?.length > 0 ? (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                        {productData.compatible_products.map((product) => (
+                          <div key={product.id} className="sheet-animate bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-3 shadow-sm hover:shadow-md transition-shadow">
+                            <div className="aspect-square rounded-lg bg-slate-100 dark:bg-slate-700 overflow-hidden mb-2 relative">
+                              {product.primary_image_path ? (
+                                <img src={getImageUrl(product.primary_image_path)} className="w-full h-full object-cover" alt={product.name} />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-slate-400">
+                                  <ImageIcon className="w-6 h-6" />
+                                </div>
+                              )}
+                            </div>
+                            <h4 className="font-bold text-slate-900 dark:text-white text-xs line-clamp-2">{product.name}</h4>
                           </div>
-                          <h4 className="font-bold text-slate-900 dark:text-white text-xs line-clamp-2">{product.name}</h4>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="sheet-animate p-8 text-center text-slate-500 bg-slate-50 dark:bg-slate-900 rounded-xl border border-dashed border-slate-200 dark:border-slate-700">
-                      No related products found.
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Tab Content: Buy Together */}
-              {activeTab === "buy_together" && (
-                <div className="space-y-4">
-                  <h3 className="font-bold text-slate-900 dark:text-white text-sm px-1 sheet-animate">Frequently Bought Together</h3>
-                  {productData.bundled_products?.length > 0 ? (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                      {productData.bundled_products.map((product) => (
-                        <div key={product.id} className="sheet-animate bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-3 shadow-sm hover:shadow-md transition-shadow">
-                          <div className="aspect-square rounded-lg bg-slate-100 dark:bg-slate-700 overflow-hidden mb-2 relative">
-                            {product.primary_image_path ? (
-                              <img src={getImageUrl(product.primary_image_path)} className="w-full h-full object-cover" alt={product.name} />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center text-slate-400">
-                                <ImageIcon className="w-6 h-6" />
-                              </div>
-                            )}
-                          </div>
-                          <h4 className="font-bold text-slate-900 dark:text-white text-xs line-clamp-2">{product.name}</h4>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="sheet-animate p-8 text-center text-slate-500 bg-slate-50 dark:bg-slate-900 rounded-xl border border-dashed border-slate-200 dark:border-slate-700">
-                      No frequently bought together products found.
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Tab Content: Orders (Placeholder) */}
-              {activeTab === "orders" && (
-                <div className="sheet-animate bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm p-8 text-center">
-                  <div className="w-12 h-12 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <ShoppingCart className="w-6 h-6 text-slate-400" />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="sheet-animate p-8 text-center text-slate-500 bg-slate-50 dark:bg-slate-900 rounded-xl border border-dashed border-slate-200 dark:border-slate-700">
+                        No related products found.
+                      </div>
+                    )}
                   </div>
-                  <h3 className="font-bold text-slate-900 dark:text-white">
-                    No orders yet
-                  </h3>
-                  <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                    Orders for this product will appear here.
-                  </p>
-                </div>
-              )}
-            </>
-          )}
+                )}
+
+                {/* Tab Content: Buy Together */}
+                {activeTab === "buy_together" && (
+                  <div className="space-y-4">
+                    <h3 className="font-bold text-slate-900 dark:text-white text-sm px-1 sheet-animate">Frequently Bought Together</h3>
+                    {productData.bundled_products?.length > 0 ? (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                        {productData.bundled_products.map((product) => (
+                          <div key={product.id} className="sheet-animate bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-3 shadow-sm hover:shadow-md transition-shadow">
+                            <div className="aspect-square rounded-lg bg-slate-100 dark:bg-slate-700 overflow-hidden mb-2 relative">
+                              {product.primary_image_path ? (
+                                <img src={getImageUrl(product.primary_image_path)} className="w-full h-full object-cover" alt={product.name} />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-slate-400">
+                                  <ImageIcon className="w-6 h-6" />
+                                </div>
+                              )}
+                            </div>
+                            <h4 className="font-bold text-slate-900 dark:text-white text-xs line-clamp-2">{product.name}</h4>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="sheet-animate p-8 text-center text-slate-500 bg-slate-50 dark:bg-slate-900 rounded-xl border border-dashed border-slate-200 dark:border-slate-700">
+                        No frequently bought together products found.
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Tab Content: Orders (Placeholder) */}
+                {activeTab === "orders" && (
+                  <div className="sheet-animate bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm p-8 text-center">
+                    <div className="w-12 h-12 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <ShoppingCart className="w-6 h-6 text-slate-400" />
+                    </div>
+                    <h3 className="font-bold text-slate-900 dark:text-white">
+                      No orders yet
+                    </h3>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                      Orders for this product will appear here.
+                    </p>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
         </div>
       </div>
-    </div>
     </>
   );
 };
@@ -649,17 +648,17 @@ export default function ProductsPage() {
   const [localDrafts, setLocalDrafts] = useState([]);
   const debouncedSearch = useDebounce(searchTerm, 500);
   const { mutate } = useSWRConfig();
-  const DRAFTS_KEY = useMemo(() => 
+  const DRAFTS_KEY = useMemo(() =>
     session?.user?.id ? `igen_product_drafts_${session.user.id}` : "igen_product_drafts",
     [session?.user?.id]
   );
-  
+
   const userRoles = session?.user?.roles || [];
   const isAdmin = userRoles.some(role => role.name === "Admin" || role.name === "Super Admin");
 
   const hasPermission = (permissionName) => {
     if (isAdmin) return true;
-    return userRoles.some(role => 
+    return userRoles.some(role =>
       role.permissions?.some(p => p.name === permissionName)
     );
   };
@@ -735,7 +734,7 @@ export default function ProductsPage() {
     const apiProducts = productsData.map((p) => {
       // Calculate total stock from variants
       const totalStock = p.variants?.reduce((sum, v) => sum + v.stock_quantity, 0) || 0;
-      
+
       // Get price from first variant or default
       const price = p.variants?.[0]?.price || 0;
 
@@ -767,7 +766,7 @@ export default function ProductsPage() {
   // Calculate dynamic stats from current view products
   const { lowStockCount, outOfStockCount, avgPrice } = useMemo(() => {
     if (products.length === 0) return { lowStockCount: 0, outOfStockCount: 0, avgPrice: 0 };
-    
+
     let lowStock = 0;
     let outOfStock = 0;
     let totalPrice = 0;
@@ -859,6 +858,26 @@ export default function ProductsPage() {
     }
   };
 
+  const handleExport = () => {
+    const productsToExport = products.map(p => ({
+      ...p,
+      category_name: p.category?.name || "N/A",
+      brand_name: p.brand?.name || "N/A",
+    }));
+
+    const headerMap = {
+      code: "Code",
+      name: "Product Name",
+      price: "Price",
+      stock: "Stock",
+      category_name: "Category",
+      brand_name: "Brand",
+      status: "Status",
+    };
+
+    exportToCSV(productsToExport, "Products", headerMap);
+  };
+
   return (
     <div
       ref={containerRef}
@@ -896,7 +915,13 @@ export default function ProductsPage() {
               Manage inventory, pricing, and product details.
             </p>
           </div>
-          <div className="animate-up">
+          <div className="animate-up flex gap-2">
+            <button
+              onClick={handleExport}
+              className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm"
+            >
+              <Download className="w-4 h-4" /> Export
+            </button>
             {hasPermission("Product Create") && (
               <Link
                 href="/app/products/new"
@@ -978,11 +1003,10 @@ export default function ProductsPage() {
                   e.stopPropagation();
                   setShowFilterMenu(!showFilterMenu);
                 }}
-                className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
-                  showFilterMenu || statusFilter !== "all" || conditionFilter !== "all" || categoryFilter !== "all" || brandFilter !== "all"
+                className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${showFilterMenu || statusFilter !== "all" || conditionFilter !== "all" || categoryFilter !== "all" || brandFilter !== "all"
                     ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800"
                     : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 border border-transparent"
-                }`}
+                  }`}
               >
                 <div className="relative">
                   <Filter className="w-4 h-4" />
@@ -998,22 +1022,22 @@ export default function ProductsPage() {
                   onClick={(e) => e.stopPropagation()}
                   className="absolute top-full mt-2 right-0 md:right-auto md:left-0 lg:right-0 lg:left-auto w-72 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 p-4 z-30 animate-in fade-in slide-in-from-top-2 duration-200 overflow-y-auto max-h-[80vh]"
                 >
-                    <div className="flex items-center justify-between mb-3">
-                        <h4 className="text-sm font-bold text-slate-900 dark:text-white">Filter Products</h4>
-                        {(statusFilter !== "all" || conditionFilter !== "all" || categoryFilter !== "all" || brandFilter !== "all") && (
-                            <button
-                                onClick={() => {
-                                    setStatusFilter("all");
-                                    setConditionFilter("all");
-                                    setCategoryFilter("all");
-                                    setBrandFilter("all");
-                                }}
-                                className="text-xs text-indigo-600 font-medium hover:underline"
-                            >
-                                Clear All
-                            </button>
-                        )}
-                    </div>
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="text-sm font-bold text-slate-900 dark:text-white">Filter Products</h4>
+                    {(statusFilter !== "all" || conditionFilter !== "all" || categoryFilter !== "all" || brandFilter !== "all") && (
+                      <button
+                        onClick={() => {
+                          setStatusFilter("all");
+                          setConditionFilter("all");
+                          setCategoryFilter("all");
+                          setBrandFilter("all");
+                        }}
+                        className="text-xs text-indigo-600 font-medium hover:underline"
+                      >
+                        Clear All
+                      </button>
+                    )}
+                  </div>
 
                   {/* Category Filter */}
                   <div className="mb-4">
@@ -1084,11 +1108,10 @@ export default function ProductsPage() {
                         <button
                           key={cond.id}
                           onClick={() => setConditionFilter(cond.id)}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                            conditionFilter === cond.id
+                          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${conditionFilter === cond.id
                               ? "bg-indigo-600 text-white shadow-sm"
                               : "bg-slate-50 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-600"
-                          }`}
+                            }`}
                         >
                           {cond.label}
                         </button>
@@ -1102,21 +1125,19 @@ export default function ProductsPage() {
             <div className="flex bg-slate-100/50 dark:bg-slate-900 rounded-lg p-1">
               <button
                 onClick={() => setViewMode("list")}
-                className={`p-2 rounded-md transition-all ${
-                  viewMode === "list"
+                className={`p-2 rounded-md transition-all ${viewMode === "list"
                     ? "bg-white dark:bg-slate-800 shadow-sm text-indigo-600 dark:text-indigo-400"
                     : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
-                }`}
+                  }`}
               >
                 <ListIcon className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setViewMode("grid")}
-                className={`p-2 rounded-md transition-all ${
-                  viewMode === "grid"
+                className={`p-2 rounded-md transition-all ${viewMode === "grid"
                     ? "bg-white dark:bg-slate-800 shadow-sm text-indigo-600 dark:text-indigo-400"
                     : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
-                }`}
+                  }`}
               >
                 <LayoutGrid className="w-4 h-4" />
               </button>
@@ -1156,7 +1177,7 @@ export default function ProductsPage() {
                   onClick={() => router.push("/app/products/new")}
                   className="flex items-center gap-2 px-8 py-4 bg-indigo-600 text-white rounded-2xl text-sm font-bold hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-600/20 active:scale-95 group"
                 >
-                  <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform" /> 
+                  <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform" />
                   Create Your First Product
                 </button>
               )}
@@ -1180,7 +1201,7 @@ export default function ProductsPage() {
                         <th className="p-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                           Price
                         </th>
-                         <th className="p-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                        <th className="p-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                           Condition
                         </th>
                         <th className="p-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
@@ -1247,20 +1268,20 @@ export default function ProductsPage() {
                               </div>
                             </div>
                           </td>
-                           <td className="p-4 text-sm font-medium text-slate-900 dark:text-white">
-                             Rs {formatPrice(product.price)}
-                           </td>
+                          <td className="p-4 text-sm font-medium text-slate-900 dark:text-white">
+                            Rs {formatPrice(product.price)}
+                          </td>
                           <td className="p-4">
-                             <span className={`px-2 py-1 rounded-lg text-[10px] font-semibold border capitalize ${getConditionColor(product.condition)}`}>
-                                {product.condition || "N/A"}
+                            <span className={`px-2 py-1 rounded-lg text-[10px] font-semibold border capitalize ${getConditionColor(product.condition)}`}>
+                              {product.condition || "N/A"}
                             </span>
                           </td>
                           <td className="p-4">
                             <span
-                               className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${getStatusColor(
-                                 product.status
-                               )}`}
-                             >
+                              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${getStatusColor(
+                                product.status
+                              )}`}
+                            >
                               {product.is_local_draft ? (
                                 <>
                                   <Clock className="w-3 h-3" />
@@ -1319,39 +1340,39 @@ export default function ProductsPage() {
                           <ImageIcon className="w-10 h-10 text-slate-300 dark:text-slate-600" />
                         )}
                         <div className="absolute top-3 right-3 flex gap-2">
-                           {hasPermission("Product Delete") && (
-                             <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setDeleteProduct(product);
-                                }}
-                                className="p-2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm text-slate-400 hover:text-red-600 rounded-full opacity-0 group-hover:opacity-100 transition-all shadow-sm"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
-                           )}
+                          {hasPermission("Product Delete") && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setDeleteProduct(product);
+                              }}
+                              className="p-2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm text-slate-400 hover:text-red-600 rounded-full opacity-0 group-hover:opacity-100 transition-all shadow-sm"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
                           <span
                             className={`backdrop-blur-md px-2 py-1 rounded-full text-xs font-bold border ${getStatusColor(
                               product.status
                             )}`}
                           >
-                             {product.is_local_draft ? (
-                               <span className="flex items-center gap-1">
-                                 <Clock className="w-3 h-3" />
-                                 Local Draft
-                               </span>
-                             ) : (
-                               product.status
-                             )}
-                           </span>
-                           {product.condition && (
-                             <span className="backdrop-blur-md px-2 py-1 rounded-full text-[10px] font-bold border bg-white/10 text-white border-white/20 capitalize">
-                               {product.condition}
-                             </span>
-                           )}
-                         </div>
-                       </div>
-<div className="px-1 pb-2">
+                            {product.is_local_draft ? (
+                              <span className="flex items-center gap-1">
+                                <Clock className="w-3 h-3" />
+                                Local Draft
+                              </span>
+                            ) : (
+                              product.status
+                            )}
+                          </span>
+                          {product.condition && (
+                            <span className="backdrop-blur-md px-2 py-1 rounded-full text-[10px] font-bold border bg-white/10 text-white border-white/20 capitalize">
+                              {product.condition}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="px-1 pb-2">
                         <div className="flex justify-between items-start mb-1">
                           <h3 className="font-bold text-slate-900 dark:text-white line-clamp-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                             {product.name}
@@ -1379,7 +1400,7 @@ export default function ProductsPage() {
                           </span>
                         </div>
                       </div>
-                      
+
                     </div>
                   ))}
                 </div>
@@ -1423,11 +1444,10 @@ export default function ProductsPage() {
                         <button
                           key={pageNum}
                           onClick={() => handlePageChange(pageNum)}
-                          className={`w-10 h-10 rounded-lg text-sm font-bold transition-colors ${
-                            currentPage === pageNum
+                          className={`w-10 h-10 rounded-lg text-sm font-bold transition-colors ${currentPage === pageNum
                               ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/20"
                               : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
-                          }`}
+                            }`}
                         >
                           {pageNum}
                         </button>
