@@ -28,11 +28,12 @@ import {
   RotateCcw,
   Ban,
 } from "lucide-react";
-import useSWR from "swr";
+import useSWR, { mutate as globalMutate } from "swr";
 import { useSession } from "next-auth/react";
 import { fetcher as globalFetcher } from "../../../lib/fetcher";
 import { getImageUrl } from "../../../lib/utils";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 import PackingSlip from "../../components/PackingSlip";
 
 const getAvatarUrl = (user) => {
@@ -43,6 +44,7 @@ const getAvatarUrl = (user) => {
 };
 
 export default function InteractiveOrdersPage() {
+  const router = useRouter();
   const { data: session } = useSession();
   const containerRef = useRef(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -396,6 +398,9 @@ export default function InteractiveOrdersPage() {
 
       toast.success("Payment verified successfully");
       mutate(); // Refresh the list
+      // Mutate the sidebar count specifically
+      globalMutate([`${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/orders?order_status=pending&per_page=1`, session?.accessToken]);
+      router.refresh(); // Refresh overall layout (sidebar)
 
       // Update local state for immediate feedback
       if (selectedOrder?.id === orderId) {
@@ -442,6 +447,9 @@ export default function InteractiveOrdersPage() {
           : "Order cancelled successfully",
       );
       mutate(); // Refresh the list
+      // Mutate the sidebar count specifically
+      globalMutate([`${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/orders?order_status=pending&per_page=1`, session?.accessToken]);
+      router.refresh(); // Refresh overall layout (sidebar)
       setShowShipmentModal(false);
       setShowCancellationModal(false);
 

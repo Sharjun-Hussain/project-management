@@ -32,6 +32,8 @@ import {
 import { useGlobalSettings } from "../app/context/GlobalSettingsContext";
 import { setCookie } from "@/lib/cookies";
 import { User } from "lucide-react";
+import useSWR from "swr";
+import { fetcher } from "@/lib/fetcher";
 
 const IconMap = {
   LayoutDashboard,
@@ -185,6 +187,14 @@ export default function SidebarClient({ menuGroups, initialCollapsed, session, t
       ease: "power2.in",
     }).to(logoutOverlayRef.current, { opacity: 0, duration: 0.2 }, "<");
   };
+
+  const { data: statsRes } = useSWR(
+    session?.accessToken ? [`${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/orders?order_status=pending&per_page=1`, session.accessToken] : null,
+    ([url, token]) => fetcher(url, token),
+    { refreshInterval: 30000 } // Refresh every 30 seconds
+  );
+
+  const pendingCount = statsRes?.data?.total || 0;
 
   const openLogoutWithAnim = () => {
     setShowLogoutConfirm(true);
@@ -340,16 +350,25 @@ export default function SidebarClient({ menuGroups, initialCollapsed, session, t
                             })}
                             {!isCollapsed && <span className="animate-in fade-in slide-in-from-left-1 duration-200">{item.title}</span>}
                           </div>
-                          {!isCollapsed && item.badge && (
-                            <span
-                              className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${isActive ? "bg-indigo-500 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"}`}
-                            >
-                              {item.badge}
-                            </span>
-                          )}
-                          {isCollapsed && item.badge && (
-                            <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-indigo-600 rounded-full border border-white dark:border-slate-950"></span>
-                          )}
+                          {(() => {
+                            const badgeValue = item.title === "Orders" ? pendingCount : item.badge;
+                            if (!badgeValue || badgeValue === 0 || badgeValue === "0") return null;
+
+                            return (
+                              <>
+                                {!isCollapsed && (
+                                  <span
+                                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${isActive ? "bg-indigo-500 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"}`}
+                                  >
+                                    {badgeValue}
+                                  </span>
+                                )}
+                                {isCollapsed && (
+                                  <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-indigo-600 rounded-full border border-white dark:border-slate-950"></span>
+                                )}
+                              </>
+                            );
+                          })()}
                         </Link>
                       )}
 
