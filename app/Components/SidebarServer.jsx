@@ -67,7 +67,7 @@ const ALL_MENU_GROUPS = [
           { title: "Promo Banners", href: "/app/cms/featured-sections" },
           { title: "Promises", href: "/app/cms/promises" },
           { title: "Product Showcase", href: "/app/cms/product-showcase" },
-          { title: "Delivery Process", href: "/app/cms/delivery-process" },
+// { title: "Delivery Process", href: "/app/cms/delivery-process" },
           { title: "FAQs", href: "/app/cms/faqs" },
           { title: "Header", href: "/app/cms/header" },
           { title: "Footer", href: "/app/cms/footer" },
