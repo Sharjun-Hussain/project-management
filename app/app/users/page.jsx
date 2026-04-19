@@ -112,7 +112,7 @@ export default function UsersPage() {
     username: "",
     password: "",
     password_confirmation: "",
-    role: "", // Changed from role_id to role
+    role: "",
     profile_image: null,
   });
   const [validationErrors, setValidationErrors] = useState({});
@@ -333,7 +333,7 @@ export default function UsersPage() {
       username: user.username || "",
       password: "",
       password_confirmation: "",
-      role: user.roles?.[0]?.id || "", // Assuming role ID is needed for selection
+      role: user.roles?.[0]?.name || "",
       profile_image: null,
     });
     setImagePreview(user.image || null);
@@ -371,9 +371,8 @@ export default function UsersPage() {
       console.log(`[UserInvite] URL: ${url}`);
       console.log("[UserInvite] Payload:", Object.fromEntries(body.entries()));
 
-      // Direct fetch for maximum transparency
       const response = await fetch(url, {
-        method: "POST",
+        method: "POST", // Laravel multipart requires POST with _method PUT for updates
         headers: {
           "Authorization": `Bearer ${session?.accessToken}`,
           "Accept": "application/json",
@@ -981,19 +980,19 @@ export default function UsersPage() {
                           key={role.id}
                           type="button"
                           onClick={() => {
-                            setFormData({ ...formData, role: role.id });
+                            setFormData({ ...formData, role: role.name });
                             if (validationErrors.role) setValidationErrors({ ...validationErrors, role: null });
                           }}
-                          className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all ${formData.role === role.id
+                          className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all ${formData.role === role.name
                             ? "border-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 shadow-sm"
                             : validationErrors.role
                               ? "border-red-200 dark:border-red-900/40 bg-red-50/10"
                               : "border-slate-100 dark:border-slate-700 hover:border-slate-200 dark:hover:border-slate-600 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900"
                             }`}
                         >
-                          <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${formData.role === role.id ? "border-indigo-600" : validationErrors.role ? "border-red-400" : "border-slate-300 dark:border-slate-600"
+                          <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${formData.role === role.name ? "border-indigo-600" : validationErrors.role ? "border-red-400" : "border-slate-300 dark:border-slate-600"
                             }`}>
-                            {formData.role === role.id && <div className="w-2 h-2 bg-indigo-600 rounded-full" />}
+                            {formData.role === role.name && <div className="w-2 h-2 bg-indigo-600 rounded-full" />}
                           </div>
                           <span className="text-xs font-semibold">{role.name}</span>
                         </button>
