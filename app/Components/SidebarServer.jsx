@@ -34,7 +34,7 @@ const ALL_MENU_GROUPS = [
   {
     label: "Sales Management",
     items: [
-      { title: "Orders", icon: "ShoppingCart", href: "/app/orders", badge: "12", permission: "Order Index" },
+      { title: "Orders", icon: "ShoppingCart", href: "/app/orders", permission: "Order Index" },
       { title: "Reviews", icon: "MessageSquare", href: "/app/reviews", permission: "Review Index" },
       { title: "Inquiries", icon: "Mail", href: "/app/contacts", permission: "Contact Index" },
     ],
@@ -109,6 +109,26 @@ const SidebarServer = async ({ isOpen }) => {
   const cookieStore = await cookies();
   const isCollapsed = cookieStore.get("sidebar_collapsed")?.value === "true";
 
+  // Fetch pending orders count
+  let pendingCount = 0;
+  if (session?.accessToken) {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/orders?order_status=pending&per_page=1`, {
+        headers: {
+          'Authorization': `Bearer ${session.accessToken}`,
+          'Accept': 'application/json'
+        },
+        next: { revalidate: 30 } // Cache for 30 seconds
+      });
+      if (res.ok) {
+        const json = await res.json();
+        pendingCount = json.data?.total || 0;
+      }
+    } catch (err) {
+      console.error("Failed to fetch pending orders count:", err);
+    }
+  }
+
   // RBAC Filtering
   const userRoles = session?.user?.roles || [];
   const isAdmin = userRoles.some(role => role.name === "Admin" || role.name === "Super Admin");
@@ -126,6 +146,12 @@ const SidebarServer = async ({ isOpen }) => {
       return userRoles.some(role => 
         role.permissions?.some(p => p.name === item.permission)
       );
+    }).map(item => {
+      // Dynamic badge for Orders
+      if (item.title === "Orders") {
+        return { ...item, badge: pendingCount > 0 ? pendingCount.toString() : null };
+      }
+      return item;
     });
 
     return { ...group, items: filteredItems };
