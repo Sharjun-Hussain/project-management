@@ -1194,9 +1194,9 @@ export default function InteractiveOrdersPage() {
       )}
       {/* SHIPMENT MODAL */}
       {showShipmentModal && (
-        <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto custom-tiny-scrollbar">
           <div
-            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+            className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm"
             onClick={() => !isSubmitting && setShowShipmentModal(false)}
           ></div>
           <div className="relative bg-white dark:bg-slate-800 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-700 w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200">
@@ -1355,9 +1355,9 @@ export default function InteractiveOrdersPage() {
 
       {/* CANCELLATION MODAL */}
       {showCancellationModal && (
-        <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto custom-tiny-scrollbar">
           <div
-            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+            className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm"
             onClick={() => !isSubmitting && setShowCancellationModal(false)}
           ></div>
           <div className="relative bg-white dark:bg-slate-800 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-700 w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
