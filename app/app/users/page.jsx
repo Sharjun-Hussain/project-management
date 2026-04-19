@@ -368,8 +368,6 @@ export default function UsersPage() {
         body.append("_method", "PUT");
       }
 
-      console.log(`[UserInvite] URL: ${url}`);
-      console.log("[UserInvite] Payload:", Object.fromEntries(body.entries()));
 
       const response = await fetch(url, {
         method: "POST", // Laravel multipart requires POST with _method PUT for updates
@@ -380,9 +378,7 @@ export default function UsersPage() {
         body: body,
       });
 
-      console.log("[UserInvite] Raw Response Status:", response.status);
       const data = await response.json();
-      console.log("[UserInvite] Parsed JSON Response:", data);
 
       if (response.ok) {
         toast.success(formMode === "edit" ? "User updated successfully" : "Invitation sent successfully");

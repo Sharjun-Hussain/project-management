@@ -1222,22 +1222,6 @@ function CreateProductContent() {
         ? `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/products/${productId}`
         : `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/products`;
 
-      // --- DEBUG LOGGING ---
-      console.group("🚀 PRODUCT SUBMISSION DEBUG");
-      console.log("URL:", url);
-      console.log("Method:", isEditMode ? "PUT (via _method)" : "POST");
-      
-      const payloadObj = {};
-      formDataPayload.forEach((value, key) => {
-        if (value instanceof File) {
-          payloadObj[key] = `File: ${value.name} (${value.size} bytes)`;
-        } else {
-          payloadObj[key] = value;
-        }
-      });
-      console.log("Payload Content:", payloadObj);
-      console.groupEnd();
-
       // RAW FETCH FOR MAXIMUM VISIBILITY IN NETWORK TAB
       const response = await fetch(url, {
         method: "POST",
@@ -1249,19 +1233,7 @@ function CreateProductContent() {
         },
       });
 
-      // Handle raw response for debugging
-      const responseText = await response.text();
-      let responseData = {};
-      try {
-        responseData = JSON.parse(responseText);
-      } catch (e) {
-        console.error("Failed to parse JSON response:", responseText);
-      }
-      
-      console.group("📥 SERVER RESPONSE DEBUG");
-      console.log("Status:", response.status, response.statusText);
-      console.log("Data:", responseData);
-      console.groupEnd();
+      const responseData = await response.json().catch(() => ({}));
 
       if (!response.ok) {
         // Create an error object similar to what globalFetcher would throw

@@ -43,7 +43,6 @@ export const GlobalSettingsProvider = ({ children }) => {
   // Real API response: { status: "success", message: "...", data: { key: value, ... } }
   const fetchSettings = async () => {
     if (!session?.accessToken) {
-      console.log("No access token yet (status: " + status + "), skipping fetchSettings");
       return;
     }
 

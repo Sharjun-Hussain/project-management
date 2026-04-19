@@ -279,7 +279,6 @@ export default function SettingsPage() {
 
   // --- PER-SECTION SAVE ---
   const saveSection = async (sectionKey, buildFormData) => {
-    console.log(`[Settings] Attempting to save section: ${sectionKey}`);
     if (!session?.accessToken) {
       toast.error("Authentication required. Please log in again.");
       console.error("[Settings] No access token found.");
@@ -289,10 +288,8 @@ export default function SettingsPage() {
     setSectionSaving((prev) => ({ ...prev, [sectionKey]: true }));
     try {
       const formData = buildFormData();
-      console.log(`[Settings] Sending data for ${sectionKey}:`, Object.fromEntries(formData.entries()));
       
       const response = await saveSettings(session.accessToken, formData);
-      console.log(`[Settings] ${sectionKey} save response:`, response);
       
       toast.success(`${sectionKey.charAt(0).toUpperCase() + sectionKey.slice(1)} settings saved!`);
       setHasChanges(false);

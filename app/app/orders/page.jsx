@@ -258,7 +258,6 @@ export default function InteractiveOrdersPage() {
     } else if (action === "Print Packing Slip") {
       printPackingSlip();
     } else {
-      console.log(`Performing action: ${action} on order ${selectedOrder?.id}`);
       toast.info(`${action} initiated for ${selectedOrder?.order_number}`);
     }
   };
