@@ -50,8 +50,8 @@ const Checkbox = ({ checked, onChange, indeterminate = false }) => {
         onChange(!checked);
       }}
       className={`w-5 h-5 rounded-md border-2 transition-all flex items-center justify-center ${checked || indeterminate
-          ? "bg-indigo-600 border-indigo-600 shadow-lg shadow-indigo-600/20"
-          : "border-slate-300 dark:border-slate-600 hover:border-indigo-400"
+        ? "bg-indigo-600 border-indigo-600 shadow-lg shadow-indigo-600/20"
+        : "border-slate-300 dark:border-slate-600 hover:border-indigo-400"
         }`}
     >
       {checked && !indeterminate && <Check className="w-3.5 h-3.5 text-white stroke-3" />}
@@ -730,8 +730,8 @@ export default function CustomersPage() {
                     key={pageNum}
                     onClick={() => setCurrentPage(pageNum)}
                     className={`w-9 h-9 rounded-xl text-xs font-bold transition-all flex items-center justify-center ${currentPage === pageNum
-                        ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/20"
-                        : "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-indigo-500 hover:text-indigo-600 transition-all active:scale-90"
+                      ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/20"
+                      : "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-indigo-500 hover:text-indigo-600 transition-all active:scale-90"
                       }`}
                   >
                     {pageNum}

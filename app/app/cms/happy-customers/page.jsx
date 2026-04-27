@@ -90,7 +90,7 @@ export default function HappyCustomersManager() {
           if (sectionName.startsWith("collections_customer_")) {
             const sec = sections[sectionName];
             let mapped = { id: sectionName.replace("collections_", "") };
-            
+
             const idxMatch = sectionName.match(/\d+$/);
             if (idxMatch) {
               const idxNum = parseInt(idxMatch[0]);
@@ -349,7 +349,7 @@ export default function HappyCustomersManager() {
         <div className="px-2 mb-4"><h2 className="text-xl font-bold flex items-center gap-2"><User className="w-5 h-5 text-indigo-600" /> Community Library ({filteredCustomers.length})</h2></div>
 
         {viewMode === "grid" ? (
-           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6 gap-4">
             {filteredCustomers.map((cat, idx) => (
               <div
                 key={cat.id}
@@ -357,15 +357,15 @@ export default function HappyCustomersManager() {
                 className="group relative bg-white dark:bg-slate-900 rounded-2xl p-3 border border-slate-100 dark:border-slate-800 hover:border-indigo-100 shadow-sm hover:shadow-xl transition-all duration-300 flex items-center gap-3 cursor-pointer"
               >
                 <div className="w-12 h-12 rounded-xl bg-slate-50 dark:bg-slate-800 flex-shrink-0 overflow-hidden border border-slate-100 dark:border-slate-700 relative">
-                    <img 
-                      src={previews[cat.id] || cat.image} 
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
-                      alt={cat.title} 
-                      onError={(e) => {
-                        const randomIdx = Math.floor(Math.random() * 70) + 1;
-                        e.target.src = `https://i.pravatar.cc/300?img=${randomIdx}`;
-                      }}
-                    />
+                  <img
+                    src={previews[cat.id] || cat.image}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    alt={cat.title}
+                    onError={(e) => {
+                      const randomIdx = Math.floor(Math.random() * 70) + 1;
+                      e.target.src = `https://i.pravatar.cc/300?img=${randomIdx}`;
+                    }}
+                  />
                 </div>
                 <div className="flex-1 min-w-0 pr-8">
                   <h4 className="font-bold text-sm text-slate-800 dark:text-white truncate group-hover:text-indigo-600 transition-colors">{cat.title || "Untitled"}</h4>
@@ -376,7 +376,7 @@ export default function HappyCustomersManager() {
                 </div>
 
                 <div className="absolute right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
-                    <button onClick={(e) => { e.stopPropagation(); handleRemove(cat.id); }} className="p-1.5 text-slate-300 hover:text-red-500 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
+                  <button onClick={(e) => { e.stopPropagation(); handleRemove(cat.id); }} className="p-1.5 text-slate-300 hover:text-red-500 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
                 </div>
               </div>
             ))}
@@ -403,9 +403,9 @@ export default function HappyCustomersManager() {
                     <td className="p-4 pl-8">
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-12 rounded-xl overflow-hidden border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900">
-                          <img 
-                            src={previews[cat.id] || cat.image} 
-                            className="w-full h-full object-cover" 
+                          <img
+                            src={previews[cat.id] || cat.image}
+                            className="w-full h-full object-cover"
                             onError={(e) => {
                               const randomIdx = Math.floor(Math.random() * 70) + 1;
                               e.target.src = `https://i.pravatar.cc/300?img=${randomIdx}`;
@@ -445,8 +445,8 @@ export default function HappyCustomersManager() {
               <div className="px-6 py-6 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 flex items-start justify-between">
                 <div>
                   <h2 className="text-2xl font-bold text-slate-900 dark:text-white uppercase tracking-tight">
-                    {selectedId === "header" 
-                      ? "Edit Branding" 
+                    {selectedId === "header"
+                      ? "Edit Branding"
                       : (selectedMember?.title === "New Customer" ? "Add Customer" : "Edit Customer")
                     }
                   </h2>
@@ -567,7 +567,7 @@ export default function HappyCustomersManager() {
                     </div>
 
                     {selectedMember?.title !== "New Customer" && (
-                        <button onClick={() => { handleRemove(selectedMember.id); closeForm(); }} className="w-full flex items-center justify-center gap-2 py-4 text-red-500 font-bold hover:bg-red-50 rounded-2xl transition-colors mt-12"><Trash2 className="w-5 h-5" /> Remove from Library</button>
+                      <button onClick={() => { handleRemove(selectedMember.id); closeForm(); }} className="w-full flex items-center justify-center gap-2 py-4 text-red-500 font-bold hover:bg-red-50 rounded-2xl transition-colors mt-12"><Trash2 className="w-5 h-5" /> Remove from Library</button>
                     )}
                   </div>
                 ) : null}
