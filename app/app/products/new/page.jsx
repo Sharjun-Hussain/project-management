@@ -1299,7 +1299,7 @@ function CreateProductContent() {
       className="min-h-screen w-full bg-slate-50/50 dark:bg-slate-900 pb-20 font-sans text-slate-900 dark:text-slate-100"
     >
       {/* 1. HEADER & ACTIONS */}
-      <header className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 transition-all rounded-xl mb-6">
+      <header className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 transition-all rounded-xl mb-2">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-4">
@@ -1391,7 +1391,7 @@ function CreateProductContent() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-8 py-4 sm:py-8 transition-all">
+      <main className="max-w-7xl mx-auto px-4 sm:px-8 pt-2 sm:pt-4 pb-12 transition-all">
         {/* ERROR BANNER */}
         {Object.keys(errors).length > 0 && (
           <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl flex items-center gap-3 text-red-700 dark:text-red-400 animate-fade-up">
