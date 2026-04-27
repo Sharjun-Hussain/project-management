@@ -541,7 +541,9 @@ export default function HappyCustomersManager() {
                       </div>
                     </div>
 
-                    <button onClick={() => { handleRemove(selectedMember.id); closeForm(); }} className="w-full flex items-center justify-center gap-2 py-4 text-red-500 font-bold hover:bg-red-50 rounded-2xl transition-colors mt-12"><Trash2 className="w-5 h-5" /> Remove from Library</button>
+                    {selectedMember?.title !== "New Customer" && (
+                        <button onClick={() => { handleRemove(selectedMember.id); closeForm(); }} className="w-full flex items-center justify-center gap-2 py-4 text-red-500 font-bold hover:bg-red-50 rounded-2xl transition-colors mt-12"><Trash2 className="w-5 h-5" /> Remove from Library</button>
+                    )}
                   </div>
                 ) : null}
               </div>
