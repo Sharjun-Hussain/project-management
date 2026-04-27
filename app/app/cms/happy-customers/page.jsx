@@ -141,7 +141,7 @@ export default function HappyCustomersManager() {
     const newId = `customer_${Date.now()}`;
     const newMember = {
       id: newId,
-      title: "New Member",
+      title: "New Customer",
       badge: "Location",
       image: "https://images.unsplash.com/photo-1519085185750-7407a274359c?auto=format&fit=crop&q=80&w=300"
     };
@@ -270,7 +270,7 @@ export default function HappyCustomersManager() {
               className="group flex items-center gap-2 px-5 py-3 bg-indigo-600 text-white rounded-xl text-sm font-semibold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-600/20 active:scale-95"
             >
               <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform duration-300" />
-              <span>Add New Member</span>
+              <span>Add Customer</span>
             </button>
           </div>
         </div>
@@ -405,10 +405,13 @@ export default function HappyCustomersManager() {
               {/* Drawer Header */}
               <div className="px-6 py-6 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 flex items-start justify-between">
                 <div>
-                  <h2 className="text-2xl font-black text-slate-900 dark:text-white">
-                    {selectedId === "header" ? "Edit Branding" : "Edit Customer"}
+                  <h2 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                    {selectedId === "header" 
+                      ? "Edit Branding" 
+                      : (selectedMember?.title === "New Customer" ? "Add Customer" : "Edit Customer")
+                    }
                   </h2>
-                  <p className="text-sm text-slate-500 mt-1">Configure community display settings.</p>
+                  <p className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-1">Configure community display settings.</p>
                 </div>
                 <button onClick={closeForm} className="rounded-full p-2 text-slate-400 hover:bg-slate-100 transition-colors"><X className="w-6 h-6" /></button>
               </div>
@@ -476,18 +479,18 @@ export default function HappyCustomersManager() {
                   </div>
                 ) : selectedMember ? (
                   <div className="space-y-8">
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">
+                    <div className="space-y-4 flex flex-col items-center">
+                      <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest self-start ml-1">
                         Customer Photo <span className="text-red-500">*</span>
                       </label>
-                      <div onClick={() => fileInputs.current[selectedMember.id]?.click()} className="group relative aspect-square rounded-3xl bg-slate-50 dark:bg-slate-900 border-4 border-dashed border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center cursor-pointer hover:border-indigo-400 transition-all overflow-hidden shadow-inner">
+                      <div onClick={() => fileInputs.current[selectedMember.id]?.click()} className="group relative w-32 h-32 rounded-3xl bg-slate-50 dark:bg-slate-900 border-2 border-dashed border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center cursor-pointer hover:border-indigo-400 transition-all overflow-hidden shadow-inner">
                         {previews[selectedMember.id] || selectedMember.image ? (
                           <>
                             <img src={previews[selectedMember.id] || selectedMember.image} className="w-full h-full object-cover" />
-                            <div className="absolute inset-0 bg-indigo-600/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-white transition-opacity"><Upload className="w-8 h-8 mb-2" /><span className="text-xs font-bold uppercase tracking-wider">Replace Photo</span></div>
+                            <div className="absolute inset-0 bg-indigo-600/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-white transition-opacity"><Upload className="w-5 h-5 mb-1" /><span className="text-[8px] font-bold uppercase tracking-wider">Change</span></div>
                           </>
                         ) : (
-                          <><ImageIcon className="w-10 h-10 text-slate-200 mb-2" /><span className="text-xs font-bold text-slate-400 uppercase">Click to Upload</span></>
+                          <><ImageIcon className="w-8 h-8 text-slate-200 mb-1" /><span className="text-[8px] font-bold text-slate-400 uppercase">Upload</span></>
                         )}
                         <input type="file" ref={el => fileInputs.current[selectedMember.id] = el} className="hidden" onChange={(e) => handleImageChange(selectedMember.id, e)} accept="image/*" />
                       </div>
