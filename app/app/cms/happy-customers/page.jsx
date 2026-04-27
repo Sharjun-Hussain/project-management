@@ -40,6 +40,7 @@ export default function HappyCustomersManager() {
   });
   const [customers, setCustomers] = useState([]);
   const [previews, setPreviews] = useState({});
+  const [initialMaxIndex, setInitialMaxIndex] = useState(-1);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -83,12 +84,24 @@ export default function HappyCustomersManager() {
         // 2. Map Customers
         const customerList = [];
         const newPreviews = {};
+        let maxIdx = -1;
 
         Object.keys(sections).forEach(sectionName => {
           if (sectionName.startsWith("collections_customer_")) {
             const sec = sections[sectionName];
-            const mapped = { id: sectionName.replace("collections_", "") };
-            sec.forEach(i => mapped[i.key] = i.value);
+            let mapped = { id: sectionName.replace("collections_", "") };
+            
+            const idxMatch = sectionName.match(/\d+$/);
+            if (idxMatch) {
+              const idxNum = parseInt(idxMatch[0]);
+              if (idxNum > maxIdx) maxIdx = idxNum;
+            }
+
+            if (Array.isArray(sec)) {
+              sec.forEach(i => mapped[i.key] = i.value);
+            } else if (typeof sec === "object") {
+              mapped = { ...mapped, ...sec };
+            }
 
             if (mapped.image && !mapped.image.startsWith("http")) {
               mapped.image = `${STORAGE_BASE}/${mapped.image}`;
@@ -97,6 +110,8 @@ export default function HappyCustomersManager() {
             newPreviews[mapped.id] = mapped.image;
           }
         });
+
+        setInitialMaxIndex(maxIdx);
 
         customerList.sort((a, b) => {
           const numA = parseInt(a.id.split("_")[1]);
@@ -213,6 +228,16 @@ export default function HappyCustomersManager() {
         }
       });
 
+      // CLEANUP: If we have fewer customers now than before, clear the old slots
+      if (initialMaxIndex >= customers.length) {
+        for (let i = customers.length; i <= initialMaxIndex; i++) {
+          const sectionId = `collections_customer_${i}`;
+          append(sectionId, "title", "", "text"); // This will cause frontend to ignore the slot
+          append(sectionId, "badge", "", "text");
+          append(sectionId, "image", "", "text");
+        }
+      }
+
       const res = await fetch(`${API_BASE}/admin/cms/update`, {
         method: "POST",
         headers: {
@@ -235,8 +260,8 @@ export default function HappyCustomersManager() {
 
   const filteredCustomers = useMemo(() => {
     return customers.filter(c =>
-      c.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.badge.toLowerCase().includes(searchTerm.toLowerCase())
+      (c.title || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (c.badge || "").toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [customers, searchTerm]);
 
