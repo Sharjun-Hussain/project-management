@@ -279,7 +279,7 @@ export default function HappyCustomersManager() {
       <div className="max-w-7xl mx-auto mb-10">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
           <div>
-            <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-2">Happy Customers</h1>
+            <h1 className="text-4xl font-bold tracking-tight text-slate-900 dark:text-white mb-2">Happy Customers</h1>
             <p className="text-slate-500 dark:text-slate-400 font-medium">Manage your community gallery and customer testimonials.</p>
           </div>
           <div className="flex items-center gap-3">
@@ -338,7 +338,7 @@ export default function HappyCustomersManager() {
           <div className="bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col md:flex-row gap-8 items-center cursor-pointer hover:bg-slate-50 transition-colors" onClick={() => { setSelectedId("header"); setIsFormOpen(true); }}>
             <div className="flex-1">
               <span className="text-xs font-bold text-indigo-600 uppercase tracking-widest block mb-2">{header.label}</span>
-              <h3 className="text-3xl font-extrabold mb-3">{header.titleStart} <span className="text-slate-400">{header.titleEnd}</span></h3>
+              <h3 className="text-3xl font-bold mb-3">{header.titleStart} <span className="text-slate-400">{header.titleEnd}</span></h3>
               <p className="text-slate-500 max-w-2xl leading-relaxed">{header.description}</p>
             </div>
             <div className="hidden md:block p-4 border border-slate-100 rounded-2xl group-hover:bg-white shadow-sm"><Edit3 className="w-6 h-6 text-slate-300 group-hover:text-indigo-600" /></div>
@@ -444,13 +444,13 @@ export default function HappyCustomersManager() {
               {/* Drawer Header */}
               <div className="px-6 py-6 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 flex items-start justify-between">
                 <div>
-                  <h2 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                  <h2 className="text-2xl font-bold text-slate-900 dark:text-white uppercase tracking-tight">
                     {selectedId === "header" 
                       ? "Edit Branding" 
                       : (selectedMember?.title === "New Customer" ? "Add Customer" : "Edit Customer")
                     }
                   </h2>
-                  <p className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-1">Configure community display settings.</p>
+                  <p className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-1">Configure community display settings.</p>
                 </div>
                 <button onClick={closeForm} className="rounded-full p-2 text-slate-400 hover:bg-slate-100 transition-colors"><X className="w-6 h-6" /></button>
               </div>

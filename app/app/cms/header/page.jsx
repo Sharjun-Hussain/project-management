@@ -325,7 +325,7 @@ export default function HeaderManager() {
         </div>
       </div>
 
-      <div className="max-w-[1600px] mx-auto p-8 lg:p-12 space-y-12">
+      <div className="max-w-[1600px] mx-auto p-8 lg:p-12 space-y-12 pb-40">
         {error && (
             <div className="bg-red-50 dark:bg-red-950/20 border border-red-100 dark:border-red-900 p-4 rounded-2xl flex items-center gap-3 text-red-500 text-sm font-bold">
                 <AlertCircle className="w-5 h-5" /> {error}
@@ -400,7 +400,7 @@ export default function HeaderManager() {
                     <h2 className="text-2xl font-bold text-slate-900 dark:text-white uppercase tracking-tight">Menu Spotlight</h2>
                     <p className="text-slate-400 text-sm font-medium mt-1">Rich visual cards contained within the mega menu panel.</p>
                 </div>
-                <div className="grid grid-cols-2 gap-4 h-full min-h-[300px]">
+                <div className="grid grid-cols-2 gap-4 h-[240px]">
                     {["promo1", "promo2"].map(id => {
                         const p = data[id];
                         return (
@@ -544,7 +544,7 @@ export default function HeaderManager() {
 
                                 <div className="space-y-6">
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Card Heading</label>
+                                        <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest ml-1">Card Heading</label>
                                         <input 
                                             value={selectedMember.title || ""}
                                             onChange={e => handleUpdate(selectedId, "title", e.target.value)}
@@ -552,7 +552,7 @@ export default function HeaderManager() {
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Description</label>
+                                        <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest ml-1">Description</label>
                                         <textarea 
                                             value={selectedMember.subtitle || ""}
                                             onChange={e => handleUpdate(selectedId, "subtitle", e.target.value)}
@@ -560,7 +560,7 @@ export default function HeaderManager() {
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Action Link</label>
+                                        <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest ml-1">Action Link</label>
                                         <input 
                                             value={selectedMember.link || ""}
                                             onChange={e => handleUpdate(selectedId, "link", e.target.value)}
