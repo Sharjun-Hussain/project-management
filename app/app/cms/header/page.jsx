@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useSession } from "next-auth/react";
 import {
   Save,
@@ -23,7 +23,16 @@ import {
   AlertCircle,
   Upload,
   MousePointer2,
+  Edit3,
+  MapPin,
+  ExternalLink,
+  Zap,
+  Menu,
+  ChevronRight,
+  ShieldCheck,
+  Check
 } from "lucide-react";
+import gsap from "gsap";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
 const STORAGE_BASE = API_BASE?.replace("/api/v1", "");
@@ -61,7 +70,7 @@ const INITIAL_DATA = {
   },
 };
 
-export default function NavbarManager() {
+export default function HeaderManager() {
   const { data: session } = useSession();
   const [data, setData] = useState(INITIAL_DATA);
   const [previews, setPreviews] = useState({ promo1: "", promo2: "" });
@@ -70,13 +79,14 @@ export default function NavbarManager() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
-  const fileInputs = {
-    promo1: useRef(null),
-    promo2: useRef(null),
-  };
+  const drawerOverlayRef = useRef(null);
+  const drawerContentRef = useRef(null);
+  const fileInputs = useRef({});
 
-  // --- FETCH CMS DATA ---
+  // --- CMS FETCH ---
   useEffect(() => {
     if (!session?.accessToken) return;
     const fetchData = async () => {
@@ -96,33 +106,33 @@ export default function NavbarManager() {
         const newData = { ...INITIAL_DATA };
         const newPreviews = { ...previews };
 
-        const mapSection = (sectionName, keys) => {
+        const mapSection = (sectionName) => {
           const sec = sections[sectionName] || [];
           if (sec.length === 0) return null;
           const mapped = {};
-          sec.forEach((i) => (mapped[i.key] = i.value));
+          if (Array.isArray(sec)) {
+              sec.forEach((i) => (mapped[i.key] = i.value));
+          } else {
+              Object.assign(mapped, sec);
+          }
           return mapped;
         };
 
-        // 1. Nav Links
+        // 1. Navigation
         for (let i = 1; i <= 4; i++) {
-          const link = mapSection(`header_nav_link_${i}`, ["label", "href"]);
-          if (link) {
-            newData.navLinks[i - 1] = { ...newData.navLinks[i - 1], ...link };
-          }
+          const link = mapSection(`header_nav_link_${i}`);
+          if (link) newData.navLinks[i - 1] = { ...newData.navLinks[i - 1], ...link };
         }
 
         // 2. Categories
         for (let i = 1; i <= 5; i++) {
-          const cat = mapSection(`header_category_${i}`, ["label", "href", "icon"]);
-          if (cat) {
-            newData.categories[i - 1] = { ...newData.categories[i - 1], ...cat };
-          }
+          const cat = mapSection(`header_category_${i}`);
+          if (cat) newData.categories[i - 1] = { ...newData.categories[i - 1], ...cat };
         }
 
         // 3. Promos
         ["promo1", "promo2"].forEach((id) => {
-          const promo = mapSection(`header_${id}`, ["title", "subtitle", "badge", "image", "link", "theme"]);
+          const promo = mapSection(`header_${id}`);
           if (promo) {
             if (promo.image && !promo.image.startsWith("http")) {
               promo.image = `${STORAGE_BASE}/${promo.image}`;
@@ -135,7 +145,7 @@ export default function NavbarManager() {
         setData(newData);
         setPreviews(newPreviews);
       } catch (err) {
-        console.warn("CMS defaults used for header", err);
+        console.warn("CMS defaults used", err);
       } finally {
         setIsLoading(false);
       }
@@ -143,39 +153,44 @@ export default function NavbarManager() {
     fetchData();
   }, [session]);
 
-  // --- HANDLERS ---
-  const handleLinkUpdate = (id, field, value) => {
-    setData((prev) => ({
-      ...prev,
-      navLinks: prev.navLinks.map((l) =>
-        l.id === id ? { ...l, [field]: value } : l
-      ),
-    }));
+  // --- DRAWER ANIMATION ---
+  useEffect(() => {
+    if (isDrawerOpen && drawerContentRef.current) {
+      gsap.fromTo(drawerOverlayRef.current, { opacity: 0 }, { opacity: 1, duration: 0.4 });
+      gsap.fromTo(drawerContentRef.current, { x: "100%" }, { x: "0%", duration: 0.5, ease: "power4.out" });
+    }
+  }, [isDrawerOpen]);
+
+  const closeDrawer = () => {
+    gsap.to(drawerContentRef.current, { x: "100%", duration: 0.4, ease: "power3.in", onComplete: () => setIsDrawerOpen(false) });
+    gsap.to(drawerOverlayRef.current, { opacity: 0, duration: 0.3 });
   };
 
-  const handleCategoryUpdate = (id, field, value) => {
-    setData((prev) => ({
-      ...prev,
-      categories: prev.categories.map((c) =>
-        c.id === id ? { ...c, [field]: value } : c
-      ),
-    }));
+  const openDrawer = (id) => {
+    setSelectedId(id);
+    setIsDrawerOpen(true);
   };
 
-  const handlePromoUpdate = (promoKey, field, value) => {
-    setData((prev) => ({
-      ...prev,
-      [promoKey]: { ...prev[promoKey], [field]: value },
-    }));
+  // --- DATA HANDLERS ---
+  const handleUpdate = (id, field, value) => {
+    setData(prev => {
+        if (typeof id === "number") {
+            return { ...prev, navLinks: prev.navLinks.map(l => l.id === id ? { ...l, [field]: value } : l) };
+        }
+        if (id.startsWith("c")) {
+            return { ...prev, categories: prev.categories.map(c => c.id === id ? { ...c, [field]: value } : c) };
+        }
+        return { ...prev, [id]: { ...prev[id], [field]: value } };
+    });
   };
 
-  const handleImageChange = (promoKey, e) => {
+  const handleImageChange = (id, e) => {
     const file = e.target.files[0];
     if (file) {
-      handlePromoUpdate(promoKey, "imageFile", file);
+      handleUpdate(id, "imageFile", file);
       const reader = new FileReader();
       reader.onloadend = () => {
-        setPreviews(prev => ({ ...prev, [promoKey]: reader.result }));
+        setPreviews(prev => ({ ...prev, [id]: reader.result }));
       };
       reader.readAsDataURL(file);
     }
@@ -197,52 +212,41 @@ export default function NavbarManager() {
         formData.append(`contents[${index}][key]`, key);
         formData.append(`contents[${index}][type]`, type);
         if (value instanceof File) {
-          formData.append(`contents[${index}][value]`, value);
+            formData.append(`contents[${index}][value]`, value);
         } else {
-          formData.append(`contents[${index}][value]`, value || "");
+            formData.append(`contents[${index}][value]`, value || "");
         }
         index++;
       };
 
-      // 1. Nav Links
       data.navLinks.forEach((link, i) => {
         append(`header_nav_link_${i + 1}`, "label", link.label, "text");
         append(`header_nav_link_${i + 1}`, "href", link.href, "link");
       });
 
-      // 2. Categories
       data.categories.forEach((cat, i) => {
         append(`header_category_${i + 1}`, "label", cat.label, "text");
         append(`header_category_${i + 1}`, "href", cat.href, "link");
         append(`header_category_${i + 1}`, "icon", cat.icon, "text");
       });
 
-      // 3. Promos
       ["promo1", "promo2"].forEach((id) => {
-        const promo = data[id];
-        append(`header_${id}`, "title", promo.title, "text");
-        append(`header_${id}`, "subtitle", promo.subtitle, "text");
-        if (id === "promo1") append(`header_${id}`, "badge", promo.badge, "text");
-        append(`header_${id}`, "link", promo.link, "link");
-        append(`header_${id}`, "theme", promo.theme, "text");
-        
-        if (promo.imageFile) {
-          append(`header_${id}`, "image", promo.imageFile, "image");
-        }
+        const p = data[id];
+        append(`header_${id}`, "title", p.title, "text");
+        append(`header_${id}`, "subtitle", p.subtitle, "text");
+        if (id === "promo1") append(`header_${id}`, "badge", p.badge, "text");
+        append(`header_${id}`, "link", p.link, "link");
+        append(`header_${id}`, "theme", p.theme, "text");
+        if (p.imageFile) append(`header_${id}`, "image", p.imageFile, "image");
       });
 
       const res = await fetch(`${API_BASE}/admin/cms/update`, {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${session.accessToken}`,
-          Accept: "application/json",
-        },
+        headers: { Authorization: `Bearer ${session.accessToken}`, Accept: "application/json" },
         body: formData,
       });
 
-      const resData = await res.json();
-      if (!res.ok) throw new Error(resData.message || "Save failed");
-
+      if (!res.ok) throw new Error("Save failed");
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
     } catch (err) {
@@ -252,231 +256,338 @@ export default function NavbarManager() {
     }
   };
 
+  // --- FILTERS ---
+  const filteredCategories = useMemo(() => {
+    return data.categories.filter(c => (c.label || "").toLowerCase().includes(searchTerm.toLowerCase()));
+  }, [data.categories, searchTerm]);
+
+  const selectedMember = useMemo(() => {
+    if (!selectedId) return null;
+    if (typeof selectedId === "number") return data.navLinks.find(l => l.id === selectedId);
+    if (selectedId.startsWith("c")) return data.categories.find(c => c.id === selectedId);
+    return data[selectedId];
+  }, [selectedId, data]);
+
   const renderIcon = (name, className) => {
+    const props = { className };
     switch (name) {
-      case "smartphone": return <Smartphone className={className} />;
-      case "headphones": return <Headphones className={className} />;
-      case "tablet": return <Tablet className={className} />;
-      case "watch": return <Watch className={className} />;
-      case "laptop": return <Laptop className={className} />;
-      case "refresh": return <RotateCcw className={className} />;
-      default: return <Grid className={className} />;
+      case "smartphone": return <Smartphone {...props} />;
+      case "headphones": return <Headphones {...props} />;
+      case "tablet": return <Tablet {...props} />;
+      case "watch": return <Watch {...props} />;
+      case "laptop": return <Laptop {...props} />;
+      case "refresh": return <RotateCcw {...props} />;
+      default: return <Grid {...props} />;
     }
   };
 
   if (isLoading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
-        <div className="text-center">
-          <RefreshCw className="w-8 h-8 text-indigo-600 animate-spin mx-auto mb-3" />
-          <p className="text-slate-600 dark:text-slate-400 font-medium">Loading Navigation…</p>
-        </div>
+      <div className="flex flex-col h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
+        <RefreshCw className="w-8 h-8 text-indigo-600 animate-spin mb-4" />
+        <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px]">Synchronizing Header...</p>
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen bg-slate-50 dark:bg-slate-950 overflow-hidden font-sans text-slate-900 dark:text-white">
-      {/* 1. LEFT PANEL: PREVIEW */}
-      <div className="flex-1 flex flex-col h-full overflow-y-auto">
-        <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 p-6 flex justify-between items-center sticky top-0 z-50 shrink-0 shadow-sm">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-900 dark:text-white">
+      {/* 1. TOP UTILITY BAR */}
+      <div className="sticky top-0 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 px-8 py-4 flex items-center justify-between shadow-sm">
+        <div className="flex items-center gap-4">
+          <div className="w-10 h-10 rounded-2xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+            <Menu className="w-5 h-5 text-white" />
+          </div>
           <div>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Navigation & Menu</h1>
-            <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Manage top links and the mega menu content below.</p>
-          </div>
-          <div className="flex items-center gap-3">
-            {saveSuccess && (
-              <span className="flex items-center gap-1.5 text-sm font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1.5 rounded-lg border border-emerald-100 dark:border-emerald-800">
-                <CheckCircle2 className="w-4 h-4" /> Saved!
-              </span>
-            )}
-            <button onClick={handleSave} disabled={isSaving} className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-xl font-bold transition-all shadow-lg shadow-indigo-600/20 active:scale-95 disabled:opacity-50">
-              {isSaving ? "Saving..." : <><Save className="w-4 h-4" /> Save Changes</>}
-            </button>
-          </div>
-        </header>
-
-        {error && (
-          <div className="mx-8 mt-4 flex items-start gap-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 text-sm text-red-600">
-            <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-            <p className="flex-1">{error}</p>
-            <button onClick={() => setError(null)}><X className="w-4 h-4" /></button>
-          </div>
-        )}
-
-        {/* --- PREVIEW CANVAS --- */}
-        <div className="flex-1 p-8 md:p-12 overflow-x-hidden flex flex-col items-center justify-start bg-slate-100 dark:bg-black/50">
-          <div className="w-full max-w-[1200px] space-y-8">
-            {/* SECTION 1: NAVBAR STRIP */}
-            <div className="space-y-3">
-              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">1. Top Navigation Bar</h3>
-              <div className="bg-black text-white rounded-2xl p-4 flex items-center justify-between shadow-2xl border border-slate-800">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-black font-black text-sm uppercase">I</div>
-                  <span className="text-xl font-black tracking-tighter uppercase">IGEN.</span>
-                </div>
-                <div className="flex items-center gap-6">
-                  {data.navLinks.map((link) => (
-                    <button key={link.id} onClick={() => setSelectedId(link.id)} className={`text-xs font-bold tracking-widest uppercase px-3 py-2 rounded-lg transition-all ${selectedId === link.id ? "bg-white text-black scale-105 shadow-md" : "text-slate-400 hover:text-white hover:bg-white/10"}`}>{link.label}</button>
-                  ))}
-                  <div className="flex items-center gap-1 text-xs font-bold tracking-widest uppercase px-3 py-2 text-indigo-400 cursor-default">CATALOG <ChevronDown className="w-3 h-3" /></div>
-                </div>
-                <div className="flex gap-4 text-slate-400"><Search className="w-5 h-5" /><User className="w-5 h-5" /><ShoppingBag className="w-5 h-5" /></div>
-              </div>
-            </div>
-
-            {/* SECTION 2: MEGA MENU PANEL */}
-            <div className="space-y-3">
-              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">2. Mega Menu Content</h3>
-              <div className="bg-[#0A0A0A] rounded-2xl border border-slate-800 shadow-2xl p-2 flex min-h-[420px]">
-                {/* Left: Categories */}
-                <div className="w-1/4 p-6 border-r border-slate-900 flex flex-col">
-                  <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-6 px-3">Categories</h4>
-                  <ul className="space-y-2 flex-1">
-                    {data.categories.map((cat) => (
-                      <li key={cat.id} onClick={() => setSelectedId(cat.id)} className={`flex items-center gap-3 p-3 rounded-xl text-sm font-bold cursor-pointer transition-all ${selectedId === cat.id ? "bg-white text-black shadow-lg scale-[1.02]" : "text-slate-400 hover:bg-slate-900 hover:text-white"}`}>{renderIcon(cat.icon, "w-4 h-4")}{cat.label}</li>
-                    ))}
-                  </ul>
-                </div>
-
-                {/* Middle: Promo 1 */}
-                <div className="w-1/3 p-2">
-                  <div onClick={() => setSelectedId("promo1")} className={`h-full relative rounded-2xl overflow-hidden group cursor-pointer border-2 transition-all ${selectedId === "promo1" ? "border-indigo-500 ring-4 ring-indigo-500/20 shadow-2xl" : "border-transparent hover:opacity-90 shadow-lg"}`}>
-                    <img src={previews.promo1 || data.promo1.image} className="absolute inset-0 w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-transparent to-transparent p-6 flex flex-col justify-end">
-                      <span className="self-start bg-indigo-600 text-white text-[10px] font-bold px-2 py-0.5 rounded mb-2 uppercase tracking-wide">{data.promo1.badge}</span>
-                      <h4 className="text-white font-bold text-2xl leading-tight mb-1">{data.promo1.title}</h4>
-                      <p className="text-slate-300 text-xs">{data.promo1.subtitle}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Right: Promo 2 */}
-                <div className="w-5/12 p-2">
-                  <div onClick={() => setSelectedId("promo2")} className={`h-full relative rounded-2xl overflow-hidden group cursor-pointer border-2 transition-all bg-[#111] flex flex-col ${selectedId === "promo2" ? "border-indigo-500 ring-4 ring-indigo-500/20 shadow-2xl" : "border-transparent hover:opacity-90 shadow-lg"}`}>
-                    <div className="flex-1 flex items-center justify-center p-8"><img src={previews.promo2 || data.promo2.image} className="w-full h-auto max-h-[220px] object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.8)]" /></div>
-                    <div className="p-8 bg-gradient-to-t from-black/80 to-transparent">
-                      <h4 className="text-white font-bold text-2xl leading-tight mb-1">{data.promo2.title}</h4>
-                      <p className="text-slate-400 text-xs">{data.promo2.subtitle}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
+            <h1 className="text-xl font-bold uppercase tracking-tight">Navigation System</h1>
+            <div className="flex items-center gap-2 mt-0.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Live Connection Active</p>
             </div>
           </div>
         </div>
+
+        <div className="flex items-center gap-4">
+          {saveSuccess && (
+            <div className="flex items-center gap-2 px-4 py-2 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-800 rounded-xl">
+              <ShieldCheck className="w-4 h-4 text-emerald-500" />
+              <span className="text-xs font-bold text-emerald-600 uppercase tracking-wide">Sync Successful</span>
+            </div>
+          )}
+          <button 
+            onClick={handleSave} 
+            disabled={isSaving}
+            className="group relative flex items-center gap-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-8 py-3 rounded-2xl font-bold uppercase tracking-widest text-[11px] transition-all hover:shadow-[0_0_20px_rgba(79,70,229,0.4)] disabled:opacity-50 overflow-hidden"
+          >
+            <div className="absolute inset-x-0 bottom-0 h-1 bg-indigo-500" />
+            {isSaving ? "Uploading..." : <><Save className="w-4 h-4" /> Save Configuration</>}
+          </button>
+        </div>
       </div>
 
-      {/* 2. RIGHT PANEL: EDITOR SIDEBAR */}
-      <div className={`w-96 bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 flex flex-col h-full shadow-2xl transition-transform duration-300 ease-in-out z-[100] absolute right-0 lg:relative ${selectedId ? "translate-x-0" : "translate-x-full lg:translate-x-0 lg:hidden"}`}>
-        {selectedId ? (
-          <>
-            <div className="p-5 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-900/50">
-              <div><span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">Editing</span><h2 className="font-bold text-slate-900 dark:text-white capitalize truncate max-w-[200px]">{typeof selectedId === "number" ? "Nav Link" : selectedId.startsWith("c") ? "Menu Category" : "Promo Card"}</h2></div>
-              <button onClick={() => setSelectedId(null)} className="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg transition-colors"><X className="w-5 h-5 text-slate-400" /></button>
+      <div className="max-w-[1600px] mx-auto p-8 lg:p-12 space-y-12">
+        {error && (
+            <div className="bg-red-50 dark:bg-red-950/20 border border-red-100 dark:border-red-900 p-4 rounded-2xl flex items-center gap-3 text-red-500 text-sm font-bold">
+                <AlertCircle className="w-5 h-5" /> {error}
             </div>
-            <div className="flex-1 overflow-y-auto p-6 space-y-7">
-              {/* NAV LINK EDITOR */}
-              {typeof selectedId === "number" && (
-                <div className="space-y-4">
-                  {(() => {
-                    const link = data.navLinks.find((l) => l.id === selectedId);
-                    return link ? (
-                      <>
-                        <div><label className="text-xs font-bold text-slate-500 uppercase mb-1.5 block">Link Label</label><input value={link.label} onChange={(e) => handleLinkUpdate(selectedId, "label", e.target.value)} className="input-field font-bold py-3 shadow-sm placeholder:text-slate-400" placeholder="e.g. SHOP" /></div>
-                        <div><label className="text-xs font-bold text-slate-500 uppercase mb-1.5 block text-indigo-600 dark:text-indigo-400">Destination URL</label><input value={link.href} onChange={(e) => handleLinkUpdate(selectedId, "href", e.target.value)} className="input-field text-xs font-mono shadow-sm bg-indigo-50/30 dark:bg-indigo-900/10 border-indigo-100 dark:border-indigo-900/50" placeholder="/shop" /></div>
-                      </>
-                    ) : null;
-                  })()}
-                </div>
-              )}
-
-              {/* CATEGORY EDITOR */}
-              {typeof selectedId === "string" && selectedId.startsWith("c") && (
-                <div className="space-y-5">
-                  {(() => {
-                    const cat = data.categories.find((c) => c.id === selectedId);
-                    return cat ? (
-                      <>
-                        <div><label className="text-xs font-bold text-slate-500 uppercase mb-1.5 block">Category Name</label><input value={cat.label} onChange={(e) => handleCategoryUpdate(selectedId, "label", e.target.value)} className="input-field font-bold py-3 shadow-sm" /></div>
-                        <div>
-                          <label className="text-xs font-bold text-slate-500 uppercase mb-1.5 block">Visual Icon</label>
-                          <div className="grid grid-cols-3 gap-2">
-                            {["smartphone", "headphones", "tablet", "laptop", "watch", "refresh"].map((icon) => (
-                              <button key={icon} onClick={() => handleCategoryUpdate(selectedId, "icon", icon)} className={`flex items-center justify-center p-3 rounded-xl border-2 transition-all ${cat.icon === icon ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 scale-105 shadow-md" : "border-slate-100 dark:border-slate-800 text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"}`}>{renderIcon(icon, "w-5 h-5")}</button>
-                            ))}
-                          </div>
-                        </div>
-                        <div><label className="text-xs font-bold text-slate-500 uppercase mb-1.5 block">Category Link</label><input value={cat.href} onChange={(e) => handleCategoryUpdate(selectedId, "href", e.target.value)} className="input-field text-xs font-mono" /></div>
-                      </>
-                    ) : null;
-                  })()}
-                </div>
-              )}
-
-              {/* PROMO EDITOR */}
-              {typeof selectedId === "string" && selectedId.startsWith("promo") && (
-                <div className="space-y-5">
-                  {(() => {
-                    const promo = data[selectedId];
-                    return (
-                      <>
-                        <div className="space-y-2">
-                          <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-2 mb-1"><Upload className="w-3 h-3" /> Background Media</label>
-                          <div onClick={() => fileInputs[selectedId].current?.click()} className="group relative aspect-[16/10] rounded-2xl bg-slate-50 dark:bg-slate-800/50 border-2 border-dashed border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center cursor-pointer hover:border-indigo-500 transition-all overflow-hidden shadow-inner">
-                            {previews[selectedId] ? (
-                              <>
-                                <img src={previews[selectedId]} className="w-full h-full object-cover" />
-                                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white"><ImageIcon className="w-6 h-6 mb-2" /><span className="text-xs font-bold">Replace Image</span></div>
-                              </>
-                            ) : (
-                              <><ImageIcon className="w-8 h-8 text-slate-300 dark:text-slate-700 mb-2" /><span className="text-[10px] font-bold text-slate-400">Click to Upload</span></>
-                            )}
-                            <input type="file" ref={fileInputs[selectedId]} onChange={(e) => handleImageChange(selectedId, e)} className="hidden" accept="image/*" />
-                          </div>
-                        </div>
-                        <div className="flex gap-3 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
-                          <label className="text-[10px] font-bold text-slate-400 uppercase mt-1">Theme</label>
-                          <div className="flex-1 flex gap-2">
-                            {["light", "dark"].map(t => (
-                              <button key={t} onClick={() => handlePromoUpdate(selectedId, "theme", t)} className={`flex-1 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all ${promo.theme === t ? "bg-white dark:bg-slate-700 text-indigo-600 shadow-sm border border-slate-200 dark:border-slate-600" : "text-slate-400 hover:bg-white/50 dark:hover:bg-slate-700/50"}`}>{t}</button>
-                            ))}
-                          </div>
-                        </div>
-                        <div><label className="text-xs font-bold text-slate-500 uppercase mb-1.5 block">Card Title</label><input value={promo.title} onChange={(e) => handlePromoUpdate(selectedId, "title", e.target.value)} className="input-field font-bold text-lg" /></div>
-                        <div><label className="text-xs font-bold text-slate-500 uppercase mb-1.5 block">Description</label><textarea value={promo.subtitle} onChange={(e) => handlePromoUpdate(selectedId, "subtitle", e.target.value)} className="input-field h-24 resize-none shadow-sm" /></div>
-                        {selectedId === "promo1" && <div><label className="text-xs font-bold text-slate-500 uppercase mb-1.5 block">Badge Text</label><input value={promo.badge} onChange={(e) => handlePromoUpdate(selectedId, "badge", e.target.value)} className="input-field font-mono text-[11px] uppercase" /></div>}
-                        <div><label className="text-xs font-bold text-slate-500 uppercase mb-1.5 block">Action URL</label><input value={promo.link} onChange={(e) => handlePromoUpdate(selectedId, "link", e.target.value)} className="input-field text-xs font-mono text-indigo-600" /></div>
-                      </>
-                    );
-                  })()}
-                </div>
-              )}
-            </div>
-            <div className="p-6 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex gap-3"><button onClick={() => setSelectedId(null)} className="flex-1 flex items-center justify-center gap-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 py-3 rounded-xl font-bold hover:opacity-90 transition-all border-none shadow-xl active:scale-95"><CheckCircle2 className="w-4 h-4" /> Save Selection</button></div>
-          </>
-        ) : (
-          <div className="flex-1 flex flex-col items-center justify-center text-center p-12 text-slate-400 space-y-4">
-            <div className="w-20 h-20 bg-slate-50 dark:bg-slate-800/50 rounded-full flex items-center justify-center border border-slate-100 dark:border-slate-800 shadow-inner"><MousePointer2 className="w-8 h-8 opacity-20" /></div>
-            <div><h3 className="text-lg font-bold text-slate-700 dark:text-slate-200">Interactive Editor</h3><p className="text-sm mt-2 max-w-[200px] leading-relaxed">Click any nav link, category, or promo card in the preview to start customizing.</p></div>
-          </div>
         )}
+
+        {/* 2. MAIN CATEGORIES GRID */}
+        <section className="space-y-6">
+            <div className="flex items-center justify-between">
+                <div>
+                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white uppercase tracking-tight">Mega Menu Categories</h2>
+                    <p className="text-slate-400 text-sm font-medium mt-1">Configure the main shopping categories shown in the dropdown.</p>
+                </div>
+                <div className="relative group min-w-[300px]">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                    <input 
+                        placeholder="Search categories..."
+                        value={searchTerm}
+                        onChange={e => setSearchTerm(e.target.value)}
+                        className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl pl-11 pr-4 py-3 text-xs font-bold focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
+                    />
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                {filteredCategories.map((cat) => (
+                    <div 
+                        key={cat.id} 
+                        onClick={() => openDrawer(cat.id)}
+                        className="group bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 hover:border-indigo-500 transition-all cursor-pointer shadow-sm hover:shadow-xl hover:-translate-y-1"
+                    >
+                        <div className="w-12 h-12 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 flex items-center justify-center mb-4 group-hover:bg-indigo-600 transition-colors">
+                            {renderIcon(cat.icon, "w-6 h-6 text-slate-400 group-hover:text-white transition-colors")}
+                        </div>
+                        <h3 className="font-bold text-slate-900 dark:text-white uppercase tracking-tight">{cat.label}</h3>
+                        <p className="text-[10px] font-mono text-slate-400 mt-1 truncate">{cat.href}</p>
+                    </div>
+                ))}
+            </div>
+        </section>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+            {/* 3. NAVIGATION LINKS */}
+            <section className="space-y-6">
+                <div>
+                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white uppercase tracking-tight">Main Top Links</h2>
+                    <p className="text-slate-400 text-sm font-medium mt-1">Direct access links shown at the top of the homepage.</p>
+                </div>
+                <div className="space-y-3">
+                    {data.navLinks.map((link, i) => (
+                        <div 
+                            key={link.id}
+                            onClick={() => openDrawer(link.id)}
+                            className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 flex items-center justify-between hover:border-indigo-500 transition-all cursor-pointer group"
+                        >
+                            <div className="flex items-center gap-4">
+                                <div className="text-[10px] font-bold text-slate-300 w-6">0{i+1}</div>
+                                <h4 className="font-bold text-slate-700 dark:text-slate-300 uppercase tracking-widest">{link.label}</h4>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <span className="text-[10px] font-mono text-slate-400 px-3 py-1 bg-slate-50 dark:bg-slate-950 rounded-lg">{link.href}</span>
+                                <ChevronRight className="w-4 h-4 text-slate-300 group-hover:translate-x-1 transition-transform" />
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </section>
+
+            {/* 4. PROMO CARDS */}
+            <section className="space-y-6">
+                <div>
+                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white uppercase tracking-tight">Menu Spotlight</h2>
+                    <p className="text-slate-400 text-sm font-medium mt-1">Rich visual cards contained within the mega menu panel.</p>
+                </div>
+                <div className="grid grid-cols-2 gap-4 h-full min-h-[300px]">
+                    {["promo1", "promo2"].map(id => {
+                        const p = data[id];
+                        return (
+                            <div 
+                                key={id}
+                                onClick={() => openDrawer(id)}
+                                className="relative rounded-3xl overflow-hidden group cursor-pointer border border-slate-200 dark:border-slate-800 shadow-xl"
+                            >
+                                <img src={previews[id] || p.image} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                                <div className={`absolute inset-0 p-6 flex flex-col justify-end ${p.theme === 'dark' ? 'bg-black/60' : 'bg-white/40 backdrop-blur-[2px]'}`}>
+                                    {p.badge && <span className="self-start px-2 py-0.5 bg-indigo-600 text-[8px] font-bold text-white rounded mb-2 uppercase tracking-widest transition-transform group-hover:-translate-y-1">{p.badge}</span>}
+                                    <h3 className={`text-xl font-bold leading-tight tracking-tight uppercase ${p.theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{p.title}</h3>
+                                    <p className={`text-[10px] font-bold opacity-70 ${p.theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>{p.subtitle}</p>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            </section>
+        </div>
       </div>
-      <style jsx>{`
-        .input-field { @apply w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none text-slate-900 dark:text-white transition-all shadow-sm; }
+
+      {/* 5. SIDE DRAWER EDITOR */}
+      {isDrawerOpen && (
+        <div className="fixed inset-0 z-50 overflow-hidden">
+            <div ref={drawerOverlayRef} className="absolute inset-0 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-md" onClick={closeDrawer} />
+            <div className="absolute inset-y-0 right-0 flex max-w-full pl-10 pointer-events-none">
+                <div ref={drawerContentRef} className="pointer-events-auto w-screen max-w-md bg-white dark:bg-slate-800 shadow-2xl flex flex-col h-full border-l border-slate-200 dark:border-slate-800">
+                    
+                    {/* Header */}
+                    <div className="px-8 py-8 border-b border-slate-100 dark:border-slate-800 flex items-end justify-between bg-slate-50/50 dark:bg-slate-950/50">
+                        <div>
+                            <span className="text-[10px] font-semibold text-indigo-500 uppercase tracking-widest mb-1 block">Live Configuration</span>
+                            <h2 className="text-3xl font-bold text-slate-900 dark:text-white uppercase tracking-tight">
+                                {typeof selectedId === "number" ? "Nav Link" : selectedId.startsWith("c") ? "Category" : "Spotlight"}
+                            </h2>
+                        </div>
+                        <button onClick={closeDrawer} className="p-3 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 transition-all"><X className="w-5 h-5" /></button>
+                    </div>
+
+                    {/* Form */}
+                    <div className="flex-1 overflow-y-auto p-8 space-y-8">
+                        {/* NAV LINK FORM */}
+                        {typeof selectedId === "number" && (
+                            <div className="space-y-6">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Visible Label</label>
+                                    <div className="relative group">
+                                        <Zap className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 group-focus-within:text-indigo-500 transition-colors" />
+                                        <input 
+                                            value={selectedMember.label || ""}
+                                            onChange={e => handleUpdate(selectedId, "label", e.target.value)}
+                                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl pl-11 pr-4 py-4 text-sm font-bold focus:ring-2 focus:ring-indigo-500/10 outline-none transition-all shadow-sm focus:bg-white dark:focus:bg-slate-900"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Destination URL</label>
+                                    <div className="relative group">
+                                        <LinkIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 group-focus-within:text-indigo-500 transition-colors" />
+                                        <input 
+                                            value={selectedMember.href || ""}
+                                            onChange={e => handleUpdate(selectedId, "href", e.target.value)}
+                                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl pl-11 pr-4 py-4 text-xs font-mono focus:ring-2 focus:ring-indigo-500/10 outline-none transition-all shadow-sm focus:bg-white dark:focus:bg-slate-900"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* CATEGORY FORM */}
+                        {typeof selectedId === "string" && selectedId.startsWith("c") && (
+                            <div className="space-y-8">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Icon Style</label>
+                                    <div className="grid grid-cols-4 gap-3">
+                                        {["smartphone", "headphones", "tablet", "laptop", "watch", "refresh", "grid"].map(icon => (
+                                            <button 
+                                                key={icon}
+                                                onClick={() => handleUpdate(selectedId, "icon", icon)}
+                                                className={`flex items-center justify-center p-4 rounded-2xl border-2 transition-all ${selectedMember.icon === icon ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600' : 'border-slate-50 dark:border-slate-800 text-slate-300 hover:bg-slate-50'}`}
+                                            >
+                                                {renderIcon(icon, "w-6 h-6")}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div className="space-y-6">
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Category Label</label>
+                                        <input 
+                                            value={selectedMember.label || ""}
+                                            onChange={e => handleUpdate(selectedId, "label", e.target.value)}
+                                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl px-5 py-4 text-sm font-bold focus:ring-2 focus:ring-indigo-500/10 outline-none transition-all"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Deep Link</label>
+                                        <input 
+                                            value={selectedMember.href || ""}
+                                            onChange={e => handleUpdate(selectedId, "href", e.target.value)}
+                                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl px-5 py-4 text-xs font-mono focus:ring-2 focus:ring-indigo-500/10 outline-none transition-all"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* PROMO FORM */}
+                        {typeof selectedId === "string" && selectedId.startsWith("promo") && (
+                            <div className="space-y-8">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 text-center block mb-4">Card Presentation</label>
+                                    <div 
+                                        onClick={() => fileInputs.current[selectedId]?.click()}
+                                        className="group relative aspect-[16/10] rounded-[32px] bg-slate-50 dark:bg-slate-950 border-2 border-dashed border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center cursor-pointer hover:border-indigo-500 transition-all overflow-hidden shadow-inner"
+                                    >
+                                        {previews[selectedId] || selectedMember.image ? (
+                                            <>
+                                                <img src={previews[selectedId] || selectedMember.image} className="w-full h-full object-cover" />
+                                                <div className="absolute inset-0 bg-indigo-600/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-white transition-opacity"><Upload className="w-6 h-6 mb-2" /><span className="text-[10px] font-black uppercase tracking-widest">Update Graphic</span></div>
+                                            </>
+                                        ) : (
+                                            <><ImageIcon className="w-10 h-10 text-slate-200 mb-2" /><span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Upload Asset</span></>
+                                        )}
+                                        <input type="file" onChange={e => handleImageChange(selectedId, e)} ref={el => fileInputs.current[selectedId] = el} className="hidden" accept="image/*" />
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-4 bg-slate-50 dark:bg-slate-950 p-2 rounded-2xl border border-slate-100 dark:border-slate-800">
+                                    {["light", "dark"].map(t => (
+                                        <button 
+                                            key={t}
+                                            onClick={() => handleUpdate(selectedId, "theme", t)}
+                                            className={`flex-1 py-2 rounded-xl text-[10px] font-black uppercase transition-all ${selectedMember.theme === t ? 'bg-white dark:bg-slate-800 text-indigo-600 shadow-md border border-slate-200 dark:border-slate-700' : 'text-slate-400 hover:bg-white/50'}`}
+                                        >
+                                            {t} Theme
+                                        </button>
+                                    ))}
+                                </div>
+
+                                <div className="space-y-6">
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Card Heading</label>
+                                        <input 
+                                            value={selectedMember.title || ""}
+                                            onChange={e => handleUpdate(selectedId, "title", e.target.value)}
+                                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl px-5 py-4 text-sm font-bold"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Description</label>
+                                        <textarea 
+                                            value={selectedMember.subtitle || ""}
+                                            onChange={e => handleUpdate(selectedId, "subtitle", e.target.value)}
+                                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl px-5 py-4 text-sm font-bold min-h-[100px] resize-none"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Action Link</label>
+                                        <input 
+                                            value={selectedMember.link || ""}
+                                            onChange={e => handleUpdate(selectedId, "link", e.target.value)}
+                                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl px-5 py-4 text-xs font-mono"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Footer */}
+                    <div className="p-8 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 flex gap-4">
+                        <button onClick={closeDrawer} className="flex-1 py-4 font-bold uppercase tracking-widest text-[10px] text-slate-400 hover:text-slate-900 transition-colors">Dismiss</button>
+                        <button onClick={closeDrawer} className="flex-2 bg-indigo-600 text-white font-bold uppercase tracking-widest text-[10px] py-4 px-8 rounded-2xl shadow-xl shadow-indigo-500/20 hover:bg-indigo-700 active:scale-95 transition-all">Submit Changes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+      )}
+
+      <style jsx global>{`
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #E2E8F0; border-radius: 10px; }
+        .dark ::-webkit-scrollbar-thumb { background: #1E293B; }
       `}</style>
     </div>
-  );
-}
-
-function CheckCircle2(props) {
-  return <Check {...props} className={props.className + " bg-emerald-100 dark:bg-emerald-900/50 rounded-full p-0.5"} />;
-}
-
-function Check(props) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" {...props}>
-      <polyline points="20 6 9 17 4 12" />
-    </svg>
   );
 }
