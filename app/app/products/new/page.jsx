@@ -277,11 +277,7 @@ function CreateProductContent() {
   // Sync sidebar collapsed state from localStorage (matches layout.js)
   React.useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth < 768) {
-        setStepperOrientation("horizontal");
-      } else {
-        setStepperOrientation("vertical");
-      }
+      // Logic for horizontal stepper removed as requested
     };
     
     const checkSidebar = () => {
@@ -1335,29 +1331,7 @@ function CreateProductContent() {
             </div>
 
             <div className="flex items-center gap-2">
-              {/* Orientation Toggle (Hidden on Mobile) */}
-              <div className="hidden md:flex items-center bg-slate-100 dark:bg-slate-700/50 p-1 rounded-xl border border-slate-200 dark:border-slate-600 mr-1">
-                <button
-                  onClick={() => setStepperOrientation("horizontal")}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                    stepperOrientation === "horizontal"
-                      ? "bg-white dark:bg-slate-600 text-indigo-600 dark:text-indigo-400 shadow-sm"
-                      : "text-slate-500 hover:text-slate-700"
-                  }`}
-                >
-                  Horizontal
-                </button>
-                <button
-                  onClick={() => setStepperOrientation("vertical")}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                    stepperOrientation === "vertical"
-                      ? "bg-white dark:bg-slate-600 text-indigo-600 dark:text-indigo-400 shadow-sm"
-                      : "text-slate-500 hover:text-slate-700"
-                  }`}
-                >
-                  Vertical
-                </button>
-              </div>
+
 
               {/* SPLIT ACTION BUTTON */}
               <div className="relative flex items-stretch group" ref={saveDropdownRef}>
@@ -1413,69 +1387,7 @@ function CreateProductContent() {
             </div>
           </div>
 
-          {/* MOBILE STEP INDICATOR (Show only on < 768px) */}
-          <div className="md:hidden mt-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-            <div className="flex items-center justify-between gap-4">
-               <div className="flex flex-col">
-                  <span className="text-[10px] font-medium text-slate-400 uppercase tracking-widest leading-none mb-1">
-                     Step {STEPS.findIndex(s => s.id === activeTab) + 1} of {STEPS.length}
-                  </span>
-                  <span className="text-sm font-semibold text-indigo-600 dark:text-indigo-400 capitalize">
-                     {STEPS.find(s => s.id === activeTab)?.label}
-                  </span>
-               </div>
-               <div className="flex-1 max-w-[120px] h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-indigo-600 transition-all duration-500 rounded-full"
-                    style={{ width: `${((STEPS.findIndex(s => s.id === activeTab) + 1) / STEPS.length) * 100}%` }}
-                  />
-               </div>
-            </div>
-          </div>
 
-          {/* WIZARD STEPPER */}
-          {stepperOrientation === "horizontal" && (
-            <div className="relative flex items-center justify-between w-full max-w-5xl mx-auto px-4 py-8 pb-12">
-              {/* Background Line */}
-              <div className="absolute top-[52px] left-0 w-full h-[2px] bg-slate-100 dark:bg-slate-700 -translate-y-1/2 z-0" />
-              
-              {/* Progress Line */}
-              <div 
-                className="absolute top-[52px] left-0 h-[2px] bg-indigo-600 transition-all duration-500 -translate-y-1/2 z-0"
-                style={{ width: `${(STEPS.findIndex(s => s.id === activeTab) / (STEPS.length - 1)) * 100}%` }}
-              />
-
-              {STEPS.map((step, idx) => {
-                const isCompleted = STEPS.findIndex(s => s.id === activeTab) > idx;
-                const isActive = activeTab === step.id;
-                
-                return (
-                  <div key={step.id} className="relative z-10 flex flex-col items-center group">
-                    <button
-                      onClick={() => setActiveTab(step.id)}
-                      className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 border-2 
-                        ${isActive ? "bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-600/20 scale-110" : 
-                          isCompleted ? "bg-white dark:bg-slate-800 border-indigo-600 text-indigo-600" : 
-                          "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-400 hover:border-slate-300"}`}
-                    >
-                      {isCompleted ? <Check className="w-5 h-5 stroke-[3px]" /> : <step.icon className="w-4 h-4" />}
-                      {!isStepComplete(step.id) && (
-                        <div className="absolute -top-1 -right-1 w-4 h-4 bg-amber-500 rounded-full flex items-center justify-center border-2 border-white dark:border-slate-900 animate-pulse">
-                          <AlertCircle className="w-2.5 h-2.5 text-white" />
-                        </div>
-                      )}
-                    </button>
-                    <div className="absolute top-12 flex flex-col items-center whitespace-nowrap">
-                        <span className={`text-[10px] font-medium uppercase tracking-widest transition-colors duration-300
-                        ${isActive ? "text-indigo-600 dark:text-indigo-400" : "text-slate-400"}`}>
-                        {step.label}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
         </div>
       </header>
 
@@ -1492,7 +1404,7 @@ function CreateProductContent() {
 
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6 lg:gap-8">
           {/* VERTICAL STEPPER (Side Navigation) */}
-          <div className={`md:col-span-4 lg:col-span-3 lg:sticky lg:top-24 self-start z-30 ${stepperOrientation === "horizontal" ? "hidden md:block" : "block"}`}>
+          <div className="md:col-span-4 lg:col-span-3 lg:sticky lg:top-24 self-start z-30 block">
             <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm transition-all overflow-hidden">
               <h3 className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-4 px-2">
                 Creation Progress
