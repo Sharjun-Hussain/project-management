@@ -588,9 +588,6 @@ export default function CustomersPage() {
                   <th className="p-4 px-4 text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                     Joined
                   </th>
-                  <th className="p-4 px-4 text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                    Spent
-                  </th>
                   <th className="p-4 px-6 text-[11px] font-semibold text-slate-500 uppercase tracking-wider text-right"></th>
                 </tr>
               </thead>
@@ -647,9 +644,6 @@ export default function CustomersPage() {
                       <td className="p-4 text-sm text-slate-500 dark:text-slate-400">
                         {customer.joinedDateStr}
                       </td>
-                      <td className="p-4 px-4 text-sm font-semibold text-slate-900 dark:text-white">
-                        {symbol}{customer.totalSpent}
-                      </td>
                       <td className="p-4 px-6 text-right">
                         <button className="p-2 text-slate-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition-all opacity-0 group-hover:opacity-100">
                           <ChevronRight className="w-4 h-4" />
@@ -660,7 +654,7 @@ export default function CustomersPage() {
                 ) : (
                   <tr>
                     <td
-                      colSpan="7"
+                      colSpan="6"
                       className="p-8 text-center text-slate-400 dark:text-slate-500 font-medium"
                     >
                       No customers found.
