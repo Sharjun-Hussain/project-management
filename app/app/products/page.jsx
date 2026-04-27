@@ -97,6 +97,7 @@ const DeleteModal = ({ isOpen, onClose, onConfirm, title, message, isDeleting })
 // --- COMPONENT: PRODUCT SHEET ---
 const ProductSheet = ({ product: initialProduct, onClose, hasPermission }) => {
   const sheetRef = useRef(null);
+  const router = useRouter()
   const contentRef = useRef(null);
   const { data: session } = useSession();
   const [activeTab, setActiveTab] = useState("overview");
@@ -197,8 +198,8 @@ const ProductSheet = ({ product: initialProduct, onClose, hasPermission }) => {
                 </span>
                 <span
                   className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${(productData.status === "published" || productData.is_active)
-                      ? "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800/50"
-                      : "bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-600"
+                    ? "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800/50"
+                    : "bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-600"
                     }`}
                 >
                   {productData.status || (productData.is_active ? "published" : "draft")}
@@ -283,8 +284,8 @@ const ProductSheet = ({ product: initialProduct, onClose, hasPermission }) => {
                       key={tab}
                       onClick={() => setActiveTab(tab)}
                       className={`pb-3 text-sm font-bold transition-colors relative capitalize whitespace-nowrap ${activeTab === tab
-                          ? "text-indigo-600 dark:text-indigo-400"
-                          : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
+                        ? "text-indigo-600 dark:text-indigo-400"
+                        : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
                         }`}
                     >
                       {tab.replace("_", " ")}
@@ -406,7 +407,10 @@ const ProductSheet = ({ product: initialProduct, onClose, hasPermission }) => {
                   <div className="space-y-4">
                     <div className="flex justify-end">
                       {hasPermission("Product Variant Create") && (
-                        <button className="flex items-center gap-2 px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-lg text-xs font-bold hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors">
+                        <button
+                          onClick={() => router.push(`/app/products/new?productId=${productData.id}&step=variants`)}
+                          className="flex items-center gap-2 px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-lg text-xs font-bold hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors"
+                        >
                           <Plus className="w-3 h-3" /> Add Variant
                         </button>
                       )}
@@ -1004,8 +1008,8 @@ export default function ProductsPage() {
                   setShowFilterMenu(!showFilterMenu);
                 }}
                 className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${showFilterMenu || statusFilter !== "all" || conditionFilter !== "all" || categoryFilter !== "all" || brandFilter !== "all"
-                    ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800"
-                    : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 border border-transparent"
+                  ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800"
+                  : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 border border-transparent"
                   }`}
               >
                 <div className="relative">
@@ -1109,8 +1113,8 @@ export default function ProductsPage() {
                           key={cond.id}
                           onClick={() => setConditionFilter(cond.id)}
                           className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${conditionFilter === cond.id
-                              ? "bg-indigo-600 text-white shadow-sm"
-                              : "bg-slate-50 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-600"
+                            ? "bg-indigo-600 text-white shadow-sm"
+                            : "bg-slate-50 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-600"
                             }`}
                         >
                           {cond.label}
@@ -1126,8 +1130,8 @@ export default function ProductsPage() {
               <button
                 onClick={() => setViewMode("list")}
                 className={`p-2 rounded-md transition-all ${viewMode === "list"
-                    ? "bg-white dark:bg-slate-800 shadow-sm text-indigo-600 dark:text-indigo-400"
-                    : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+                  ? "bg-white dark:bg-slate-800 shadow-sm text-indigo-600 dark:text-indigo-400"
+                  : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
                   }`}
               >
                 <ListIcon className="w-4 h-4" />
@@ -1135,8 +1139,8 @@ export default function ProductsPage() {
               <button
                 onClick={() => setViewMode("grid")}
                 className={`p-2 rounded-md transition-all ${viewMode === "grid"
-                    ? "bg-white dark:bg-slate-800 shadow-sm text-indigo-600 dark:text-indigo-400"
-                    : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+                  ? "bg-white dark:bg-slate-800 shadow-sm text-indigo-600 dark:text-indigo-400"
+                  : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
                   }`}
               >
                 <LayoutGrid className="w-4 h-4" />
@@ -1445,8 +1449,8 @@ export default function ProductsPage() {
                           key={pageNum}
                           onClick={() => handlePageChange(pageNum)}
                           className={`w-10 h-10 rounded-lg text-sm font-bold transition-colors ${currentPage === pageNum
-                              ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/20"
-                              : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
+                            ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/20"
+                            : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
                             }`}
                         >
                           {pageNum}
