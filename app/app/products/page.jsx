@@ -562,19 +562,19 @@ const ProductSheet = ({ product: initialProduct, onClose, hasPermission }) => {
                   <div className="space-y-4">
                     <h3 className="font-bold text-slate-900 dark:text-white text-sm px-1 sheet-animate">Related Products</h3>
                     {productData.compatible_products?.length > 0 ? (
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                      <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
                         {productData.compatible_products.map((product) => (
-                          <div key={product.id} className="sheet-animate bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-3 shadow-sm hover:shadow-md transition-shadow">
-                            <div className="aspect-square rounded-lg bg-slate-100 dark:bg-slate-700 overflow-hidden mb-2 relative">
+                          <div key={product.id} className="sheet-animate bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-2 shadow-xs hover:shadow-sm transition-shadow">
+                            <div className="aspect-square rounded-md bg-slate-100 dark:bg-slate-700 overflow-hidden mb-1.5 relative">
                               {product.primary_image_path ? (
                                 <img src={getImageUrl(product.primary_image_path)} className="w-full h-full object-cover" alt={product.name} />
                               ) : (
                                 <div className="w-full h-full flex items-center justify-center text-slate-400">
-                                  <ImageIcon className="w-6 h-6" />
+                                  <ImageIcon className="w-4 h-4" />
                                 </div>
                               )}
                             </div>
-                            <h4 className="font-bold text-slate-900 dark:text-white text-xs line-clamp-2">{product.name}</h4>
+                            <h4 className="font-bold text-slate-900 dark:text-white text-[10px] leading-tight line-clamp-2">{product.name}</h4>
                           </div>
                         ))}
                       </div>
