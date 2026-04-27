@@ -23,6 +23,7 @@ import useSWR from "swr";
 import { useSession } from "next-auth/react";
 import { fetcher as globalFetcher } from "../../lib/fetcher";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { Package } from "lucide-react";
 import Link from "next/link";
@@ -51,6 +52,7 @@ const StatusBadge = ({ status }) => {
 };
 
 export default function Dashboard() {
+  const router = useRouter();
   const { data: session } = useSession();
   const [revenuePeriod, setRevenuePeriod] = useState("month");
 
@@ -255,6 +257,14 @@ export default function Dashboard() {
                 recentOrders.map((order, idx) => (
                   <div
                     key={idx}
+                    onClick={() => {
+                      const id = order.id ?? order.order_id;
+                      if (id) {
+                        router.push(`/app/orders?order_id=${id}`);
+                      } else {
+                        router.push(`/app/orders?order_number=${order.order_number}`);
+                      }
+                    }}
                     className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors cursor-pointer group gap-4"
                   >
                     <div className="flex items-center gap-3 min-w-0 flex-1">

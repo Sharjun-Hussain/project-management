@@ -33,7 +33,7 @@ import { useSession } from "next-auth/react";
 import { fetcher as globalFetcher } from "../../../lib/fetcher";
 import { getImageUrl } from "../../../lib/utils";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import PackingSlip from "../../components/PackingSlip";
 import { exportToCSV } from "@/app/lib/exportUtils";
 
@@ -47,10 +47,22 @@ const getAvatarUrl = (user) => {
 
 export default function InteractiveOrdersPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const orderIdParam = searchParams.get("order_id");
+  const orderNumberParam = searchParams.get("order_number");
   const { data: session } = useSession();
   const containerRef = useRef(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const hasAutoOpened = useRef(false);
+
+  // Auto-open order if order_id is in URL — only once on initial load
+  useEffect(() => {
+    if (orderIdParam && !hasAutoOpened.current) {
+      hasAutoOpened.current = true;
+      setSelectedOrder({ id: orderIdParam });
+    }
+  }, [orderIdParam]);
 
   // --- FILTER STATES ---
   const [activeTab, setActiveTab] = useState("All");
@@ -117,6 +129,17 @@ export default function InteractiveOrdersPage() {
   const orders = useMemo(() => ordersResponse?.data?.data || [], [ordersResponse]);
   const totalItems = ordersResponse?.data?.total || 0;
   const totalPages = ordersResponse?.data?.last_page || 1;
+
+  // Auto-open by order_number once orders are loaded — only once
+  useEffect(() => {
+    if (orderNumberParam && orders.length > 0 && !hasAutoOpened.current) {
+      const match = orders.find(o => o.order_number === orderNumberParam);
+      if (match) {
+        hasAutoOpened.current = true;
+        setSelectedOrder(match);
+      }
+    }
+  }, [orderNumberParam, orders]);
 
   // --- FILTER LOGIC ---
   const filteredOrders = useMemo(() => {
