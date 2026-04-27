@@ -1142,6 +1142,7 @@ export default function InteractiveOrdersPage() {
 
               {/* Drawer Footer & MORE ACTIONS POPUP */}
               <div className="p-5 border-t border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 flex justify-end gap-3 relative">
+                {/* More Actions — commented out
                 <div className="relative">
                   <button
                     onClick={(e) => {
@@ -1153,7 +1154,6 @@ export default function InteractiveOrdersPage() {
                     More Actions <ChevronDown className="w-3 h-3" />
                   </button>
 
-                  {/* POPUP MENU */}
                   {showActionsMenu && (
                     <div className="absolute bottom-full right-0 mb-2 w-56 bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-100 dark:border-slate-700 overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-200">
                       <button
@@ -1165,6 +1165,7 @@ export default function InteractiveOrdersPage() {
                     </div>
                   )}
                 </div>
+                */}
 
                 <div className="flex bg-slate-100 dark:bg-slate-700 p-1 rounded-xl gap-1">
                   <button
