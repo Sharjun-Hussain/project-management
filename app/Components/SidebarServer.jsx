@@ -56,13 +56,18 @@ const ALL_MENU_GROUPS = [
     label: "Design & Content",
     items: [
       {
+        title: "Happy Customers",
+        icon: "Smile",
+        href: "/app/cms/happy-customers",
+        permission: "CMS Index",
+      },
+      {
         title: "Home Page",
         icon: "Monitor",
         href: "#",
         permission: "CMS Index",
         submenu: [
           { title: "Hero Banners", href: "/app/cms/hero" },
-          { title: "Collections Grid", href: "/app/cms/collections" },
           { title: "Trending Variants", href: "/app/cms/trending" },
           { title: "Promo Banners", href: "/app/cms/featured-sections" },
           { title: "Promises", href: "/app/cms/promises" },

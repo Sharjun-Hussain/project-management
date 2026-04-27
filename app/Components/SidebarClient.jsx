@@ -26,7 +26,8 @@ import {
   ShieldCheck,
   History,
   Lock,
-  Mail
+  Mail,
+  Smile
 } from "lucide-react";
 
 import { useGlobalSettings } from "../app/context/GlobalSettingsContext";
@@ -50,6 +51,7 @@ const IconMap = {
   History,
   Lock,
   Mail,
+  Smile,
 };
 
 // --- FLOATING TOOLTIP COMPONENT ---
