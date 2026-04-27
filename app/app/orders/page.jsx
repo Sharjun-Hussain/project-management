@@ -288,111 +288,403 @@ export default function InteractiveOrdersPage() {
   const printPackingSlip = () => {
     const order = orderDetails || selectedOrder;
     if (!order) return;
+
     const isThermal = printSize === "thermal";
     const isA5 = printSize === "a5";
+
+    const address = order.delivery_address || {};
+    const recipientName = address.full_name || order.user?.name || "Customer";
+    const phone = address.phone || order.user?.phone || "";
+    const addrLines = [
+      address.address_line_1, address.address_line_2,
+      [address.city, address.state].filter(Boolean).join(", "),
+      address.postal_code, address.country,
+    ].filter(Boolean);
+
+    const orderDate = order.created_at
+      ? new Date(order.created_at).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
+      : "N/A";
+
+    const items = order.items || [];
+    const totalQty = items.reduce((s, i) => s + (i.quantity || 0), 0);
+    const subtotal = items.reduce((s, i) => s + ((i.unit_price || i.price || 0) * (i.quantity || 0)), 0);
+    const discount = parseFloat(order.discount_amount || 0);
+    const shipping = parseFloat(order.shipping_cost || 0);
+    const grandTotal = parseFloat(order.total_amount || (subtotal - discount + shipping));
+
+    const qrValue = `${typeof window !== "undefined" ? window.location.origin : ""}/track/${order.order_number}`;
+    const qrSize = isThermal ? 60 : isA5 ? 72 : 80;
+
+    const itemRowsThermal = items.map((item, idx) => `
+      <tr class="${idx % 2 === 0 ? "re" : "ro"}">
+        <td class="tm"><div class="in">${item.product_name || "Product"}</div>${item.variant_name ? `<div class="is">${item.variant_name}</div>` : ""}${item.sku ? `<div class="isk">SKU: ${item.sku}</div>` : ""}</td>
+        <td class="tc">${item.quantity || 1}</td>
+      </tr>`).join("");
+
+    const itemRowsFull = items.map((item, idx) => `
+      <tr class="${idx % 2 === 0 ? "re" : "ro"}">
+        <td class="tm"><div class="in">${item.product_name || "Product"}</div>${item.variant_name ? `<div class="is">${item.variant_name}</div>` : ""}${item.sku ? `<div class="isk">SKU: ${item.sku}</div>` : ""}</td>
+        <td class="tc">${item.quantity || 1}</td>
+        <td class="tr2">Rs. ${parseFloat(item.unit_price || item.price || 0).toLocaleString()}</td>
+        <td class="tr2 tb">Rs. ${((item.unit_price || item.price || 0) * (item.quantity || 1)).toLocaleString()}</td>
+      </tr>`).join("");
+
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>Packing Slip — ${order.order_number}</title>
+<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"><\/script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+${isThermal ? "@page{size:80mm auto;margin:4mm 3mm;}" : isA5 ? "@page{size:A5 portrait;margin:10mm;}" : "@page{size:A4 portrait;margin:12mm;}"}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',Arial,sans-serif;color:#1e293b;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+${isThermal ? `
+body{font-size:10px;width:72mm;}
+.hdr{text-align:center;border-bottom:1px dashed #94a3b8;padding-bottom:6px;margin-bottom:8px;}
+.bn{font-size:14px;font-weight:900;text-transform:uppercase;}
+.bt{font-size:7px;color:#64748b;text-transform:uppercase;letter-spacing:2px;}
+.om{text-align:center;margin-bottom:8px;}
+.on{font-size:13px;font-weight:800;}
+.od{font-size:8px;color:#64748b;}
+.sl{font-size:7px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#94a3b8;margin-bottom:4px;border-bottom:1px solid #e2e8f0;padding-bottom:2px;}
+.sb{margin-bottom:8px;}
+.rn{font-size:11px;font-weight:700;}
+.al{font-size:9px;color:#475569;line-height:1.6;}
+.pl{font-size:9px;color:#475569;font-weight:600;margin-top:3px;}
+table{width:100%;border-collapse:collapse;margin-bottom:8px;font-size:9px;}
+thead tr{background:#000;}
+thead th{padding:4px 3px;font-size:7px;font-weight:700;text-transform:uppercase;color:#fff;}
+thead th:first-child{text-align:left;}
+thead th:last-child{text-align:center;}
+.tm{padding:4px 3px;vertical-align:top;}
+.tc{padding:4px 3px;text-align:center;vertical-align:top;}
+.re{background:#fff;}.ro{background:#f8fafc;}
+.in{font-weight:600;font-size:9px;}.is{font-size:8px;color:#64748b;}.isk{font-size:7px;color:#94a3b8;font-family:monospace;}
+.dv{border:none;border-top:1px dashed #94a3b8;margin:6px 0;}
+.sr{display:flex;justify-content:space-between;font-size:9px;padding:2px 0;}
+.st{display:flex;justify-content:space-between;font-size:11px;font-weight:800;border-top:1px solid #000;padding-top:4px;margin-top:2px;}
+.ft{text-align:center;margin-top:10px;border-top:1px dashed #94a3b8;padding-top:8px;}
+.fn{font-size:7.5px;color:#94a3b8;line-height:1.6;margin-bottom:8px;}
+.qb{display:flex;flex-direction:column;align-items:center;}
+.ql{font-size:7px;color:#94a3b8;margin-top:3px;font-family:monospace;}
+` : `
+body{font-size:${isA5 ? "10px" : "11px"};}
+.hdr{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2.5px solid #1e293b;padding-bottom:10px;margin-bottom:14px;}
+.bn{font-size:${isA5 ? "17px" : "20px"};font-weight:900;color:#4f46e5;text-transform:uppercase;letter-spacing:-0.5px;line-height:1;}
+.bt{font-size:8px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:2.5px;margin-top:3px;}
+.ob{text-align:right;border-left:2px solid #e2e8f0;padding-left:14px;}
+.sl{font-size:8px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:2px;margin-bottom:3px;}
+.on{font-size:${isA5 ? "14px" : "16px"};font-weight:800;}
+.od{font-size:9px;color:#64748b;margin-top:3px;}
+.ig{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
+.ic{background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:10px 12px;}
+.icl{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#94a3b8;margin-bottom:6px;}
+.rn{font-size:${isA5 ? "12px" : "13px"};font-weight:700;color:#0f172a;margin-bottom:3px;}
+.al{font-size:10px;color:#475569;line-height:1.7;}
+.pl{font-size:10px;color:#475569;margin-top:5px;font-weight:600;}
+.mr{display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px solid #f1f5f9;font-size:10px;}
+.mr:last-child{border-bottom:none;}
+.mk{color:#64748b;}.mv{font-weight:600;}
+table{width:100%;border-collapse:collapse;margin-bottom:12px;}
+thead tr{background:#1e293b;}
+thead th{padding:7px 8px;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#e2e8f0;}
+thead th:first-child{text-align:left;}
+.tm{padding:7px 8px;vertical-align:top;}
+.tc{padding:7px 8px;text-align:center;vertical-align:top;}
+.tr2{padding:7px 8px;text-align:right;vertical-align:top;}
+.tb{font-weight:700;}
+.re{background:#fff;}.ro{background:#f8fafc;}
+.in{font-weight:600;font-size:${isA5 ? "10px" : "11px"};color:#0f172a;}
+.is{font-size:9px;color:#64748b;margin-top:1px;}
+.isk{font-size:8px;color:#94a3b8;font-family:monospace;margin-top:1px;}
+.smb{display:flex;justify-content:flex-end;margin-bottom:14px;}
+.smt{width:${isA5 ? "180px" : "210px"};border:1px solid #e2e8f0;border-radius:6px;overflow:hidden;}
+.sr{display:flex;justify-content:space-between;padding:5px 10px;font-size:10px;border-bottom:1px solid #f1f5f9;}
+.sr:last-child{border-bottom:none;}
+.sk{color:#64748b;}.sv{font-weight:600;}
+.st{background:#1e293b;color:#fff;display:flex;justify-content:space-between;padding:7px 10px;font-size:${isA5 ? "11px" : "12px"};font-weight:700;}
+.ft{display:flex;justify-content:space-between;align-items:flex-end;border-top:2px dashed #e2e8f0;padding-top:10px;}
+.fn{font-size:8.5px;color:#94a3b8;max-width:55%;line-height:1.6;}
+.fn strong{color:#64748b;display:block;margin-bottom:2px;font-size:9px;}
+.qb{text-align:center;}
+.ql{font-size:7.5px;color:#94a3b8;margin-top:4px;font-family:monospace;}
+`}
+</style>
+</head>
+<body>
+<div class="page">
+${isThermal ? `
+<div class="hdr"><div class="bn">IGEN Mobiles</div><div class="bt">Premium Tech Solutions</div></div>
+<div class="om"><div class="on">#${order.order_number}</div><div class="od">${orderDate}</div></div>
+<hr class="dv"/>
+<div class="sb">
+  <div class="sl">Ship To</div>
+  <div class="rn">${recipientName}</div>
+  <div class="al">${addrLines.join(", ")}</div>
+  ${phone ? `<div class="pl">Tel: ${phone}</div>` : ""}
+</div>
+<table><thead><tr><th>Item</th><th>Qty</th></tr></thead><tbody>${itemRowsThermal}</tbody></table>
+<hr class="dv"/>
+${subtotal > 0 ? `<div class="sr"><span>Subtotal</span><span>Rs. ${subtotal.toLocaleString()}</span></div>` : ""}
+${discount > 0 ? `<div class="sr"><span>Discount</span><span>- Rs. ${discount.toLocaleString()}</span></div>` : ""}
+${shipping > 0 ? `<div class="sr"><span>Shipping</span><span>Rs. ${shipping.toLocaleString()}</span></div>` : ""}
+<div class="st"><span>Total</span><span>Rs. ${grandTotal.toLocaleString()}</span></div>
+<div class="ft">
+  <div class="fn">Thank you! Returns within 7 days. support@igen.lk</div>
+  <div class="qb"><canvas id="qrCanvas"></canvas><div class="ql">Track order</div></div>
+</div>
+` : `
+<div class="hdr">
+  <div><div class="bn">IGEN Mobiles</div><div class="bt">Premium Tech Solutions</div></div>
+  <div class="ob"><div class="sl">Packing Slip</div><div class="on">#${order.order_number}</div><div class="od">${orderDate}</div></div>
+</div>
+<div class="ig">
+  <div class="ic">
+    <div class="icl">Ship To</div>
+    <div class="rn">${recipientName}</div>
+    <div class="al">${addrLines.join("<br/>")}</div>
+    ${phone ? `<div class="pl">&#9990; ${phone}</div>` : ""}
+  </div>
+  <div class="ic">
+    <div class="icl">Order Details</div>
+    <div class="mr"><span class="mk">Order #</span><span class="mv">${order.order_number}</span></div>
+    <div class="mr"><span class="mk">Date</span><span class="mv">${orderDate}</span></div>
+    <div class="mr"><span class="mk">Total Items</span><span class="mv">${totalQty} unit${totalQty !== 1 ? "s" : ""}</span></div>
+  </div>
+</div>
+<table>
+  <thead><tr><th>Item Description</th><th style="text-align:center">Qty</th><th style="text-align:right">Unit Price</th><th style="text-align:right">Total</th></tr></thead>
+  <tbody>${itemRowsFull}</tbody>
+</table>
+<div class="smb">
+  <div class="smt">
+    ${subtotal > 0 ? `<div class="sr"><span class="sk">Subtotal</span><span class="sv">Rs. ${subtotal.toLocaleString()}</span></div>` : ""}
+    ${discount > 0 ? `<div class="sr"><span class="sk">Discount</span><span class="sv" style="color:#dc2626">− Rs. ${discount.toLocaleString()}</span></div>` : ""}
+    ${shipping > 0 ? `<div class="sr"><span class="sk">Shipping</span><span class="sv">Rs. ${shipping.toLocaleString()}</span></div>` : ""}
+    <div class="st"><span>Grand Total</span><span>Rs. ${grandTotal.toLocaleString()}</span></div>
+  </div>
+</div>
+<div class="ft">
+  <div class="fn"><strong>Thank you for shopping with IGEN Mobiles!</strong>Please inspect items upon receipt. Returns &amp; exchanges within 7 days in original packaging. Contact: support@igen.lk</div>
+  <div class="qb"><canvas id="qrCanvas"></canvas><div class="ql">Scan to track order</div></div>
+</div>
+`}
+</div>
+<script>
+  QRCode.toCanvas(document.getElementById('qrCanvas'),'${qrValue}',{width:${qrSize},margin:1},function(){});
+  window.onload=function(){window.print();};
+<\/script>
+</body>
+</html>`;
+
+    const printWindow = window.open("", "_blank", "width=900,height=700");
+    printWindow.document.write(html);
+    printWindow.document.close();
+  };
+
     const pageSize = isThermal ? "80mm auto" : isA5 ? "A5" : "A4";
     const qrValue = `${typeof window !== "undefined" ? window.location.origin : ""}/track/${order.order_number}`;
-    const qrSize = isThermal ? 80 : isA5 ? 80 : 96;
-    const itemsHtml = (order.items || []).map((item) => `
-      <tr>
-        <td style="padding:8px 4px;border-bottom:1px solid #e2e8f0;">
-          <div style="font-weight:700">${item.product_name}</div>
-          <div style="font-size:10px;color:#94a3b8;font-style:italic">${item.variant_name}</div>
+    const qrSize = isThermal ? 72 : 88;
+
+    const address = order.delivery_address || {};
+    const recipientName = address.full_name || order.user?.name || "Customer";
+    const phone = address.phone || order.user?.phone || "";
+    const addrLines = [
+      address.address_line_1,
+      address.address_line_2,
+      [address.city, address.state].filter(Boolean).join(", "),
+      address.postal_code,
+      address.country,
+    ].filter(Boolean);
+
+    const orderDate = order.created_at ? new Date(order.created_at).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : "N/A";
+    const paymentMethod = (order.payments?.[0]?.payment_method || order.latest_payment?.payment_method || "N/A").replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+    const paymentStatus = (order.payments?.[0]?.payment_status || order.latest_payment?.payment_status || order.order_status || "Pending").replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+
+    const items = order.items || [];
+    const totalQty = items.reduce((s, i) => s + (i.quantity || 0), 0);
+    const subtotal = items.reduce((s, i) => s + ((i.unit_price || i.price || 0) * (i.quantity || 0)), 0);
+    const discount = parseFloat(order.discount_amount || 0);
+    const shipping = parseFloat(order.shipping_cost || 0);
+    const grandTotal = parseFloat(order.total_amount || subtotal - discount + shipping);
+
+    const itemsHtml = items.map((item, idx) => `
+      <tr class="${idx % 2 === 0 ? "row-even" : "row-odd"}">
+        <td class="td-main">
+          <div class="item-name">${item.product_name || "Product"}</div>
+          ${item.variant_name ? `<div class="item-variant">${item.variant_name}</div>` : ""}
+          ${item.sku ? `<div class="item-sku">SKU: ${item.sku}</div>` : ""}
         </td>
-        <td style="padding:8px 4px;border-bottom:1px solid #e2e8f0;text-align:center;font-family:monospace;font-size:11px;color:#64748b">${item.sku}</td>
-        <td style="padding:8px 4px;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:700">${item.quantity}</td>
+        <td class="td-center">${item.quantity || 1}</td>
+        <td class="td-right">Rs. ${parseFloat(item.unit_price || item.price || 0).toLocaleString()}</td>
+        <td class="td-right td-bold">Rs. ${((item.unit_price || item.price || 0) * (item.quantity || 1)).toLocaleString()}</td>
       </tr>
     `).join("");
-    const address = order.delivery_address || {};
-    const addrHtml = [address.address_line_1, address.address_line_2, `${address.city || ""}, ${address.state || ""} ${address.postal_code || ""}`.trim(), address.country].filter(Boolean).join("<br/>");
-    const totalQty = (order.items || []).reduce((a, i) => a + i.quantity, 0);
-    const paymentStatus = order.order_status || "";
+
+    const thermalOverride = isThermal ? `
+      .page { padding: 6mm; }
+      .header { flex-direction: column; align-items: flex-start; gap: 6px; }
+      .brand-block, .order-block { width: 100%; }
+      .order-block { text-align: left; border-left: none; padding-left: 0; margin-top: 8px; padding-top: 8px; border-top: 1px dashed #cbd5e1; }
+      .info-grid { grid-template-columns: 1fr; gap: 10px; }
+      .summary-row { font-size: 10px; }
+      .summary-total { font-size: 12px; }
+      .footer { flex-direction: column; gap: 12px; }
+      .footer-note { max-width: 100%; }
+      .qr-block { align-self: center; }
+      td, th { font-size: 10px; padding: 5px 3px; }
+    ` : "";
 
     const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Packing Slip - ${order.order_number}</title>
-  <style>
-    @page { size: ${pageSize}; margin: 8mm; }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: Arial, sans-serif; font-size: 12px; color: #1e293b; background: white; }
-    .header { display:flex; justify-content:space-between; align-items:flex-start; border-bottom:2px solid #1e293b; padding-bottom:12px; margin-bottom:12px; }
-    .brand { font-size:22px; font-weight:900; color:#4f46e5; text-transform:uppercase; letter-spacing:-0.5px; }
-    .brand-sub { font-size:9px; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:3px; margin-top:2px; }
-    .slip-title { text-align:right; }
-    .slip-title h2 { font-size:18px; font-weight:700; text-transform:uppercase; }
-    .slip-title .order-num { font-family:monospace; font-size:13px; margin-top:4px; color:#475569; }
-    .grid { display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-bottom:16px; }
-    .section-label { font-size:9px; font-weight:900; text-transform:uppercase; color:#94a3b8; margin-bottom:6px; letter-spacing:1px; }
-    .address-name { font-weight:700; font-size:14px; margin-bottom:4px; }
-    .address-detail { color:#475569; line-height:1.6; }
-    .meta { display:flex; justify-content:space-between; padding:4px 0; }
-    .meta-label { color:#64748b; }
-    .badge { font-weight:700; font-size:9px; border:1px solid #1e293b; border-radius:4px; padding:1px 5px; text-transform:uppercase; display:inline-block; }
-    table { width:100%; border-collapse:collapse; margin-bottom:16px; }
-    thead tr { border-top:2px solid #1e293b; border-bottom:2px solid #1e293b; background:#f8fafc; }
-    thead th { padding:6px 4px; font-size:9px; font-weight:900; text-transform:uppercase; color:#475569; }
-    thead th:first-child { text-align:left; }
-    thead th:last-child { text-align:right; }
-    thead th:nth-child(2) { text-align:center; }
-    .footer { display:flex; justify-content:space-between; align-items:flex-end; border-top:2px solid #1e293b; padding-top:12px; }
-    .footer-note { font-size:9px; color:#94a3b8; max-width:60%; line-height:1.5; font-style:italic; }
-    .qr-cell { text-align:center; }
-    .qr-label { font-family:monospace; font-size:8px; color:#94a3b8; margin-top:4px; }
-    ${isThermal ? ".header,.grid,.footer{flex-direction:column;} .slip-title{text-align:left;margin-top:12px;} .grid{grid-template-columns:1fr;} .footer-note{max-width:100%;} .qr-cell{margin-bottom:12px;}" : ""}
-  </style>
+  <title>Packing Slip — ${order.order_number}</title>
   <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+    @page { size: ${pageSize}; margin: 0; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', Arial, sans-serif; font-size: 11px; color: #1e293b; background: #fff; }
+
+    .page { padding: 10mm; max-width: 100%; }
+
+    /* ── HEADER ── */
+    .header { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 10px; margin-bottom: 12px; border-bottom: 2.5px solid #1e293b; }
+    .brand-name { font-size: 20px; font-weight: 900; color: #4f46e5; letter-spacing: -0.5px; text-transform: uppercase; line-height: 1; }
+    .brand-tagline { font-size: 8px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 2.5px; margin-top: 3px; }
+    .order-block { text-align: right; border-left: 2px solid #e2e8f0; padding-left: 14px; }
+    .slip-label { font-size: 8px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 3px; }
+    .order-number { font-size: 16px; font-weight: 800; color: #1e293b; font-variant-numeric: tabular-nums; }
+    .order-date { font-size: 9px; color: #64748b; margin-top: 3px; }
+
+    /* ── INFO GRID ── */
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+    .info-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 12px; }
+    .info-card-label { font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #94a3b8; margin-bottom: 6px; }
+    .recipient-name { font-size: 13px; font-weight: 700; color: #0f172a; margin-bottom: 3px; }
+    .address-line { font-size: 10px; color: #475569; line-height: 1.7; }
+    .phone-line { font-size: 10px; color: #475569; margin-top: 5px; font-weight: 600; }
+    .meta-row { display: flex; justify-content: space-between; align-items: center; padding: 3px 0; border-bottom: 1px solid #f1f5f9; font-size: 10px; }
+    .meta-row:last-child { border-bottom: none; }
+    .meta-key { color: #64748b; }
+    .meta-val { font-weight: 600; color: #1e293b; }
+    .status-pill { display: inline-block; padding: 1px 7px; border-radius: 20px; font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+
+    /* ── ITEMS TABLE ── */
+    table { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
+    thead tr { background: #1e293b; }
+    thead th { padding: 7px 8px; font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #e2e8f0; }
+    thead th:first-child { text-align: left; border-radius: 4px 0 0 0; }
+    thead th:last-child { border-radius: 0 4px 0 0; }
+    .td-main { padding: 7px 8px; vertical-align: top; }
+    .td-center { padding: 7px 8px; text-align: center; vertical-align: top; }
+    .td-right { padding: 7px 8px; text-align: right; vertical-align: top; }
+    .td-bold { font-weight: 700; }
+    .row-even { background: #ffffff; }
+    .row-odd { background: #f8fafc; }
+    .item-name { font-weight: 600; font-size: 11px; color: #0f172a; }
+    .item-variant { font-size: 9px; color: #64748b; margin-top: 1px; }
+    .item-sku { font-size: 8px; color: #94a3b8; font-family: monospace; margin-top: 1px; }
+
+    /* ── SUMMARY ── */
+    .summary-block { display: flex; justify-content: flex-end; margin-bottom: 14px; }
+    .summary-table { width: 220px; border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden; }
+    .summary-row { display: flex; justify-content: space-between; padding: 5px 10px; font-size: 10px; border-bottom: 1px solid #f1f5f9; }
+    .summary-row:last-child { border-bottom: none; }
+    .summary-key { color: #64748b; }
+    .summary-val { font-weight: 600; }
+    .summary-total { background: #1e293b; color: #fff; display: flex; justify-content: space-between; padding: 7px 10px; font-size: 12px; font-weight: 700; }
+
+    /* ── FOOTER ── */
+    .footer { display: flex; justify-content: space-between; align-items: flex-end; border-top: 2px dashed #e2e8f0; padding-top: 10px; }
+    .footer-note { font-size: 8.5px; color: #94a3b8; max-width: 55%; line-height: 1.6; }
+    .footer-note strong { color: #64748b; display: block; margin-bottom: 2px; font-size: 9px; }
+    .qr-block { text-align: center; }
+    .qr-label { font-size: 7.5px; color: #94a3b8; margin-top: 4px; font-family: monospace; }
+
+    ${thermalOverride}
+  </style>
 </head>
 <body>
+<div class="page">
+
+  <!-- HEADER -->
   <div class="header">
-    <div>
-      <div class="brand">IGEN MOBILES</div>
-      <div class="brand-sub">Premium Tech Solutions</div>
+    <div class="brand-block">
+      <div class="brand-name">IGEN Mobiles</div>
+      <div class="brand-tagline">Premium Tech Solutions</div>
     </div>
-    <div class="slip-title">
-      <h2>Packing Slip</h2>
-      <div class="order-num">#${order.order_number}</div>
-    </div>
-  </div>
-
-  <div class="grid">
-    <div>
-      <div class="section-label">📦 Ship To</div>
-      <div class="address-name">${address.full_name || order.user?.name || ""}</div>
-      <div class="address-detail">${addrHtml}</div>
-      <div style="margin-top:6px;font-family:monospace;font-size:11px;">📞 ${address.phone || order.customer?.phone || ""}</div>
-    </div>
-    <div>
-      <div class="section-label">🗒 Order Details</div>
-      <div class="meta"><span class="meta-label">Date:</span><strong>${new Date(order.created_at).toLocaleDateString()}</strong></div>
-      <div class="meta"><span class="meta-label">Items:</span><strong>${totalQty} Units</strong></div>
-      <div class="meta"><span class="meta-label">Status:</span><span class="badge">${paymentStatus}</span></div>
-      ${order.payments?.[0] ? `<div class="meta"><span class="meta-label">Payment:</span><strong>${(order.payments[0].payment_method || "").replace(/_/g, " ")}</strong></div>` : ""}
+    <div class="order-block">
+      <div class="slip-label">Packing Slip</div>
+      <div class="order-number">#${order.order_number}</div>
+      <div class="order-date">${orderDate}</div>
     </div>
   </div>
 
+  <!-- INFO GRID -->
+  <div class="info-grid">
+    <div class="info-card">
+      <div class="info-card-label">Ship To</div>
+      <div class="recipient-name">${recipientName}</div>
+      <div class="address-line">${addrLines.join("<br/>")}</div>
+      ${phone ? `<div class="phone-line">&#9990; ${phone}</div>` : ""}
+    </div>
+    <div class="info-card">
+      <div class="info-card-label">Order Info</div>
+      <div class="meta-row"><span class="meta-key">Order #</span><span class="meta-val">${order.order_number}</span></div>
+      <div class="meta-row"><span class="meta-key">Date</span><span class="meta-val">${orderDate}</span></div>
+      <div class="meta-row"><span class="meta-key">Items</span><span class="meta-val">${totalQty} unit${totalQty !== 1 ? "s" : ""}</span></div>
+      <div class="meta-row"><span class="meta-key">Payment</span><span class="meta-val">${paymentMethod}</span></div>
+      <div class="meta-row"><span class="meta-key">Status</span><span class="meta-val"><span class="status-pill">${paymentStatus}</span></span></div>
+    </div>
+  </div>
+
+  <!-- ITEMS TABLE -->
   <table>
     <thead>
-      <tr><th>Description</th><th>SKU</th><th style="text-align:right">Qty</th></tr>
+      <tr>
+        <th>Item Description</th>
+        <th style="text-align:center">Qty</th>
+        <th style="text-align:right">Unit Price</th>
+        <th style="text-align:right">Total</th>
+      </tr>
     </thead>
     <tbody>${itemsHtml}</tbody>
   </table>
 
-  <div class="footer">
-    <p class="footer-note">Thank you for choosing IGEN MOBILES. Please inspect items upon receipt. Returns must be initiated within 7 days in original packaging.</p>
-    <div class="qr-cell">
-      <canvas id="qrCanvas"></canvas>
-      <div class="qr-label">${order.order_number}</div>
+  <!-- SUMMARY -->
+  <div class="summary-block">
+    <div class="summary-table">
+      ${subtotal > 0 ? `<div class="summary-row"><span class="summary-key">Subtotal</span><span class="summary-val">Rs. ${subtotal.toLocaleString()}</span></div>` : ""}
+      ${discount > 0 ? `<div class="summary-row"><span class="summary-key">Discount</span><span class="summary-val" style="color:#dc2626">− Rs. ${discount.toLocaleString()}</span></div>` : ""}
+      ${shipping > 0 ? `<div class="summary-row"><span class="summary-key">Shipping</span><span class="summary-val">Rs. ${shipping.toLocaleString()}</span></div>` : ""}
+      <div class="summary-total"><span>Grand Total</span><span>Rs. ${grandTotal.toLocaleString()}</span></div>
     </div>
   </div>
 
-  <script>
-    QRCode.toCanvas(document.getElementById('qrCanvas'), '${qrValue}', { width: ${qrSize}, margin: 0 }, function(err){});
-    window.onload = function() { window.print(); };
-  </script>
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="footer-note">
+      <strong>Thank you for shopping with IGEN Mobiles!</strong>
+      Please inspect your items upon receipt. Returns &amp; exchanges must be initiated within 7 days of delivery in original, undamaged packaging. Contact us at support@igen.lk for any queries.
+    </div>
+    <div class="qr-block">
+      <canvas id="qrCanvas"></canvas>
+      <div class="qr-label">Scan to track order</div>
+    </div>
+  </div>
+
+</div>
+<script>
+  QRCode.toCanvas(document.getElementById('qrCanvas'), '${qrValue}', { width: ${qrSize}, margin: 1 }, function(){});
+  window.onload = function() { window.print(); };
+</script>
 </body>
 </html>`;
+
 
     const printWindow = window.open("", "_blank", "width=800,height=600");
     printWindow.document.write(html);
