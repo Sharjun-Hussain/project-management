@@ -1403,13 +1403,15 @@ function CreateProductContent() {
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6 lg:gap-8">
-          {/* VERTICAL STEPPER (Side Navigation) */}
+          {/* CREATION PROGRESS STEPPER */}
           <div className="md:col-span-4 lg:col-span-3 lg:sticky lg:top-24 self-start z-30 block">
-            <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm transition-all overflow-hidden">
-              <h3 className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-4 px-2">
+            <div className="bg-white dark:bg-slate-800 p-3 sm:p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm transition-all overflow-hidden">
+              <h3 className="hidden md:block text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-4 px-2">
                 Creation Progress
               </h3>
-              <div className="space-y-1.5">
+              
+              {/* Horizontal Scroll on Mobile, Vertical on Desktop */}
+              <div className="flex md:flex-col gap-1.5 overflow-x-auto md:overflow-x-visible pb-2 md:pb-0 no-scrollbar">
                 {STEPS.map((step, idx) => {
                   const isCompleted = STEPS.findIndex(s => s.id === activeTab) > idx;
                   const isActive = activeTab === step.id;
@@ -1418,25 +1420,25 @@ function CreateProductContent() {
                     <button
                       key={step.id}
                       onClick={() => setActiveTab(step.id)}
-                      className={`w-full flex items-center gap-3 p-2.5 rounded-xl transition-all duration-300 group
+                      className={`flex-none md:w-full flex items-center gap-2.5 sm:gap-3 p-2 sm:p-2.5 rounded-xl transition-all duration-300 group whitespace-nowrap
                         ${isActive ? "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 shadow-sm shadow-indigo-100/50" : 
                           "text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-900/50"}`}
                     >
-                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-300 shrink-0
+                      <div className={`w-7 h-7 sm:w-7 sm:h-7 rounded-lg flex items-center justify-center transition-all duration-300 shrink-0
                         ${isActive ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/20" : 
                           isCompleted ? "bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600" : 
                           "bg-slate-100 dark:bg-slate-700 text-slate-400 group-hover:bg-slate-200 dark:group-hover:bg-slate-600"}`}
                       >
                         {isCompleted ? <Check className="w-3.5 h-3.5 stroke-[3px]" /> : <step.icon className="w-3.5 h-3.5" />}
                       </div>
-                      <div className="flex flex-col items-start truncate min-w-0">
+                      <div className="flex flex-col items-start min-w-0">
                         <div className="flex items-center gap-1.5 min-w-0">
-                          <span className={`text-[13px] font-medium truncate ${isActive ? "text-indigo-600" : "text-slate-600 dark:text-slate-300"}`}>{step.label}</span>
+                          <span className={`text-[12px] sm:text-[13px] font-bold sm:font-medium truncate ${isActive ? "text-indigo-600" : "text-slate-600 dark:text-slate-300"}`}>{step.label}</span>
                           {!isStepComplete(step.id) && (
                             <AlertCircle className="w-3 h-3 text-amber-500 shrink-0" />
                           )}
                         </div>
-                        {isActive && <span className="text-[8px] font-medium opacity-70 uppercase tracking-tighter">Current Step</span>}
+                        {isActive && <span className="hidden md:block text-[8px] font-medium opacity-70 uppercase tracking-tighter">Current Step</span>}
                       </div>
                     </button>
                   );
@@ -1708,8 +1710,8 @@ function CreateProductContent() {
                   <h3 className="text-lg font-semibold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
                     <Star className="w-4 h-4 text-amber-500" /> Primary Image
                   </h3>
-                  <div className="flex gap-6 items-start">
-                    <div className="w-40 h-40 bg-slate-50 dark:bg-slate-900 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl flex items-center justify-center relative overflow-hidden group">
+                  <div className="flex flex-col sm:flex-row gap-6 items-center sm:items-start">
+                    <div className="w-full sm:w-40 h-56 sm:h-40 bg-slate-50 dark:bg-slate-900 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-2xl flex items-center justify-center relative overflow-hidden group shadow-inner">
                       {heroImagePreview ? (
                         <>
                           <img
@@ -1717,21 +1719,18 @@ function CreateProductContent() {
                             alt="Hero"
                             className="w-full h-full object-cover"
                           />
-                          <button
-                            onClick={handleRemoveHeroImage}
-                            className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
-                            title="Remove Image"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                             <Trash2 className="w-6 h-6 text-white cursor-pointer" onClick={handleRemoveHeroImage} />
+                          </div>
                         </>
                       ) : (
-                        <label className="w-full h-full flex flex-col items-center justify-center cursor-pointer">
-                          <div className="text-center p-2">
-                            <UploadCloud className="w-8 h-8 mx-auto text-slate-400 mb-2" />
-                            <span className="text-[10px] font-medium text-slate-400">
-                              Click to Upload
+                        <label className="w-full h-full flex flex-col items-center justify-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors">
+                          <div className="text-center p-4">
+                            <UploadCloud className="w-10 h-10 mx-auto text-slate-400 mb-2" />
+                            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                              Upload Main Product Image
                             </span>
+                            <p className="text-[10px] text-slate-400 mt-1">PNG, JPG or WEBP</p>
                           </div>
                           <input
                             ref={heroInputRef}
@@ -1743,7 +1742,6 @@ function CreateProductContent() {
                         </label>
                       )}
                       
-                      {/* Hidden input for when image is already present but user wants to change it by clicking the image */}
                       {heroImagePreview && (
                         <label className="absolute inset-0 cursor-pointer">
                           <input
@@ -1757,19 +1755,19 @@ function CreateProductContent() {
                         </label>
                       )}
                     </div>
-                    <div className="flex-1">
-                      <p className="text-sm text-slate-600 dark:text-slate-300 mb-2">
+                    <div className="flex-1 w-full text-center sm:text-left">
+                      <p className="text-sm font-medium text-slate-600 dark:text-slate-300 mb-3">
                         This is the main image used on category pages and search
                         results.
                       </p>
-                      <div className="text-xs text-slate-400 space-y-1">
-                        <p>• Recommended Size: 1200x1200px</p>
-                          <p>• Max File Size: 5MB</p>
-                          <p>• Format: JPG, PNG, WEBP</p>
-                        </div>
-                        <ErrorText message={errors.primary_image_path || errors.primary_image} />
+                      <div className="grid grid-cols-2 sm:grid-cols-1 gap-2 text-xs text-slate-400 bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-100 dark:border-slate-800/50">
+                        <p className="flex items-center gap-2"><div className="w-1 h-1 rounded-full bg-slate-300" /> 1200x1200px Recommended</p>
+                        <p className="flex items-center gap-2"><div className="w-1 h-1 rounded-full bg-slate-300" /> Max File Size: 5MB</p>
+                        <p className="flex items-center gap-2"><div className="w-1 h-1 rounded-full bg-slate-300" /> JPG, PNG, WEBP</p>
                       </div>
+                      <ErrorText message={errors.primary_image_path || errors.primary_image} />
                     </div>
+                  </div>
                   </div>
 
                 {/* Gallery */}
@@ -2466,39 +2464,42 @@ function CreateProductContent() {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-4 mb-4">
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <CustomCheckbox
-                          id="variant_is_offer"
-                          checked={currentVariant.is_offer}
-                          onCheckedChange={(checked) =>
-                            setCurrentVariant({
-                              ...currentVariant,
-                              is_offer: !!checked,
-                            })
-                          }
-                        />
-                        <span className="text-sm">On Offer</span>
-                      </label>
-                      {currentVariant.is_offer && (
-                        <div className="relative">
-                          <input
-                            type="number"
-                            value={currentVariant.offer_price}
-                            onChange={(e) =>
+                    <div className="flex flex-wrap items-center gap-x-6 gap-y-4 mb-6">
+                      <div className="flex items-center gap-4 w-full sm:w-auto">
+                        <label className="flex items-center gap-2 cursor-pointer shrink-0">
+                          <CustomCheckbox
+                            id="variant_is_offer"
+                            checked={currentVariant.is_offer}
+                            onCheckedChange={(checked) =>
                               setCurrentVariant({
                                 ...currentVariant,
-                                offer_price: e.target.value,
+                                is_offer: !!checked,
                               })
                             }
-                            className="w-full px-3 py-2 pl-10 border dark:border-slate-700 rounded-lg text-sm dark:bg-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-                            placeholder="799.00"
                           />
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-medium text-slate-400 pointer-events-none">
-                            Rs
-                          </span>
-                        </div>
-                      )}
+                          <span className="text-sm font-medium">On Offer</span>
+                        </label>
+                        {currentVariant.is_offer && (
+                          <div className="relative flex-1 sm:w-40">
+                            <input
+                              type="number"
+                              value={currentVariant.offer_price}
+                              onChange={(e) =>
+                                setCurrentVariant({
+                                  ...currentVariant,
+                                  offer_price: e.target.value,
+                                })
+                              }
+                              className="w-full px-3 py-2 pl-10 border dark:border-slate-700 rounded-lg text-sm dark:bg-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                              placeholder="799.00"
+                            />
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-medium text-slate-400 pointer-events-none">
+                              Rs
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
                       <label className="flex items-center gap-2 cursor-pointer">
                         <CustomCheckbox
                           id="variant_is_trending"
@@ -2510,8 +2511,9 @@ function CreateProductContent() {
                             })
                           }
                         />
-                        <span className="text-sm">Trending</span>
+                        <span className="text-sm font-medium">Trending</span>
                       </label>
+                      
                       <label className="flex items-center gap-2 cursor-pointer">
                         <CustomCheckbox
                           id="variant_is_featured"
@@ -2523,8 +2525,9 @@ function CreateProductContent() {
                             })
                           }
                         />
-                        <span className="text-sm">Featured</span>
+                        <span className="text-sm font-medium">Featured</span>
                       </label>
+                      
                       <label className="flex items-center gap-2 cursor-pointer">
                         <CustomCheckbox
                           id="variant_is_new_arrival"
@@ -2536,7 +2539,7 @@ function CreateProductContent() {
                             })
                           }
                         />
-                        <span className="text-sm">New Arrival</span>
+                        <span className="text-sm font-medium">New Arrival</span>
                       </label>
                     </div>
 
