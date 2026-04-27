@@ -68,11 +68,11 @@ const ALL_MENU_GROUPS = [
         permission: "CMS Index",
         submenu: [
           { title: "Hero Banners", href: "/app/cms/hero" },
-          { title: "Trending Variants", href: "/app/cms/trending" },
+
           { title: "Promo Banners", href: "/app/cms/featured-sections" },
           { title: "Promises", href: "/app/cms/promises" },
           { title: "Product Showcase", href: "/app/cms/product-showcase" },
-// { title: "Delivery Process", href: "/app/cms/delivery-process" },
+          // { title: "Delivery Process", href: "/app/cms/delivery-process" },
           { title: "FAQs", href: "/app/cms/faqs" },
           { title: "Header", href: "/app/cms/header" },
           { title: "Footer", href: "/app/cms/footer" },
@@ -121,14 +121,14 @@ const SidebarServer = async ({ isOpen }) => {
   const filteredGroups = ALL_MENU_GROUPS.map(group => {
     const filteredItems = group.items.filter(item => {
       if (isAdmin) return true;
-      
+
       // If item has no permission specified, show it to everyone (or define default behavior)
       if (!item.permission) return true;
 
       // Check if user has the specific permission
       // In this system, permissions seem to be attached to roles.
       // We'll check if any of the user's roles have the required permission.
-      return userRoles.some(role => 
+      return userRoles.some(role =>
         role.permissions?.some(p => p.name === item.permission)
       );
     });
@@ -137,9 +137,9 @@ const SidebarServer = async ({ isOpen }) => {
   }).filter(group => group.items.length > 0);
 
   return (
-    <SidebarClient 
-      menuGroups={filteredGroups} 
-      initialCollapsed={isCollapsed} 
+    <SidebarClient
+      menuGroups={filteredGroups}
+      initialCollapsed={isCollapsed}
       session={session}
       isOpen={isOpen}
     />
