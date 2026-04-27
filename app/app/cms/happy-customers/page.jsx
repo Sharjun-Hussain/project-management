@@ -1,53 +1,59 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useSession } from "next-auth/react";
-import {
-  Save,
-  ImageIcon,
-  Check,
-  X,
+import { 
+  Save, 
+  Trash2, 
+  Plus, 
+  RefreshCw, 
+  AlertCircle, 
+  CheckCircle2, 
+  Upload, 
+  User, 
+  MapPin, 
   Layout,
-  Tag,
-  RefreshCw,
-  AlertCircle,
-  Upload,
-  User,
-  MapPin,
-  CheckCircle,
+  X,
+  Search,
+  Edit3,
+  Loader2,
+  Type,
+  ImageIcon,
+  LayoutGrid,
+  List as ListIcon,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
+import { gsap } from "gsap";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
 const STORAGE_BASE = API_BASE?.replace("/api/v1", "");
 
-const INITIAL_DATA = {
-  header: {
+export default function HappyCustomersManager() {
+  const { data: session } = useSession();
+  const [header, setHeader] = useState({
     label: "OUR COMMUNITY",
     titleStart: "Happy",
     titleEnd: "Customers.",
-    description: "Join thousands of satisfied tech enthusiasts who have upgraded their digital lifestyle with Igen. Real people, real stories.",
-  },
-  cards: Array.from({ length: 12 }).map((_, i) => ({
-    id: `customer_${i}`,
-    title: `Customer ${i + 1}`,
-    badge: "COLOMBO, LK",
-    image: "https://images.unsplash.com/photo-1519085185750-7407a274359c?auto=format&fit=crop&q=80&w=600",
-  })).reduce((acc, card) => ({ ...acc, [card.id]: card }), {}),
-};
-
-export default function HappyCustomersManager() {
-  const { data: session } = useSession();
-  const [data, setData] = useState(INITIAL_DATA);
+    description: "Join thousands of satisfied tech enthusiasts who have upgraded their digital lifestyle.",
+  });
+  const [customers, setCustomers] = useState([]);
   const [previews, setPreviews] = useState({});
-  const [selectedId, setSelectedId] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  
+  // Design States (following Category page)
+  const [viewMode, setViewMode] = useState("grid");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedId, setSelectedId] = useState(null); // For Drawer
+  const [isFormOpen, setIsFormOpen] = useState(false);
 
   const fileInputs = useRef({});
+  const formOverlayRef = useRef(null);
+  const formContentRef = useRef(null);
 
-  // --- FETCH CMS DATA ---
   useEffect(() => {
     if (!session?.accessToken) return;
     const fetchData = async () => {
@@ -64,39 +70,52 @@ export default function HappyCustomersManager() {
         if (!res.ok) throw new Error(apiData.message || "Failed to fetch");
 
         const sections = apiData?.data?.home || {};
-        const newData = { ...INITIAL_DATA };
-        const newPreviews = {};
-
-        const mapSection = (sectionName) => {
-          const sec = sections[sectionName] || [];
-          if (sec.length === 0) return null;
-          const mapped = {};
-          sec.forEach((i) => (mapped[i.key] = i.value));
-          return mapped;
-        };
-
-        // 1. Header
-        const header = mapSection("collections_header");
-        if (header) {
-          newData.header = { ...newData.header, ...header };
+        
+        // 1. Map Header
+        const headerSec = sections["collections_header"] || [];
+        if (headerSec.length > 0) {
+          const mappedHeader = {};
+          headerSec.forEach(i => mappedHeader[i.key] = i.value);
+          setHeader(prev => ({ ...prev, ...mappedHeader }));
         }
 
-        // 2. Cards (Handle 12 customers)
-        Object.keys(newData.cards).forEach((id) => {
-          const card = mapSection(`collections_${id}`);
-          if (card) {
-            if (card.image && !card.image.startsWith("http")) {
-              card.image = `${STORAGE_BASE}/${card.image}`;
+        // 2. Map Customers
+        const customerList = [];
+        const newPreviews = {};
+        
+        Object.keys(sections).forEach(sectionName => {
+          if (sectionName.startsWith("collections_customer_")) {
+            const sec = sections[sectionName];
+            const mapped = { id: sectionName.replace("collections_", "") };
+            sec.forEach(i => mapped[i.key] = i.value);
+            
+            if (mapped.image && !mapped.image.startsWith("http")) {
+              mapped.image = `${STORAGE_BASE}/${mapped.image}`;
             }
-            newData.cards[id] = { ...newData.cards[id], ...card };
-            newPreviews[id] = card.image;
+            customerList.push(mapped);
+            newPreviews[mapped.id] = mapped.image;
           }
         });
 
-        setData(newData);
-        setPreviews(newPreviews);
+        customerList.sort((a, b) => {
+          const numA = parseInt(a.id.split("_")[1]);
+          const numB = parseInt(b.id.split("_")[1]);
+          return numA - numB;
+        });
+
+        if (customerList.length === 0) {
+            setCustomers(Array.from({ length: 4 }).map((_, i) => ({
+                id: `customer_${Date.now()}_${i}`,
+                title: "Customer Name",
+                badge: "City, Country",
+                image: "https://images.unsplash.com/photo-1519085185750-7407a274359c?auto=format&fit=crop&q=80&w=300"
+            })));
+        } else {
+            setCustomers(customerList);
+            setPreviews(newPreviews);
+        }
       } catch (err) {
-        console.warn("CMS defaults used for happy customers", err);
+        console.warn("CMS defaults used", err);
       } finally {
         setIsLoading(false);
       }
@@ -104,31 +123,49 @@ export default function HappyCustomersManager() {
     fetchData();
   }, [session]);
 
-  // --- HANDLERS ---
-  const handleHeaderUpdate = (field, value) => {
-    setData((prev) => ({
-      ...prev,
-      header: { ...prev.header, [field]: value },
-    }));
+  // Drawer Animation (from category page)
+  useEffect(() => {
+    if (isFormOpen && formContentRef.current) {
+        gsap.fromTo(formOverlayRef.current, { opacity: 0 }, { opacity: 1, duration: 0.4 });
+        gsap.fromTo(formContentRef.current, { x: "100%" }, { x: "0%", duration: 0.5, ease: "power4.out" });
+    }
+  }, [isFormOpen]);
+
+  const closeForm = () => {
+    gsap.to(formContentRef.current, { x: "100%", duration: 0.4, ease: "power3.in", onComplete: () => setIsFormOpen(false) });
+    gsap.to(formOverlayRef.current, { opacity: 0, duration: 0.3 });
   };
 
-  const handleCardUpdate = (cardId, field, value) => {
-    setData((prev) => ({
-      ...prev,
-      cards: {
-        ...prev.cards,
-        [cardId]: { ...prev.cards[cardId], [field]: value },
-      },
-    }));
+  const handleAdd = () => {
+    const newId = `customer_${Date.now()}`;
+    const newMember = {
+        id: newId,
+        title: "New Member",
+        badge: "Location",
+        image: "https://images.unsplash.com/photo-1519085185750-7407a274359c?auto=format&fit=crop&q=80&w=300"
+    };
+    setCustomers(prev => [...prev, newMember]);
+    // Open edit drawer for new member
+    setSelectedId(newId);
+    setIsFormOpen(true);
   };
 
-  const handleImageChange = (cardId, e) => {
+  const handleRemove = (id) => {
+    setCustomers(prev => prev.filter(c => c.id !== id));
+    if (selectedId === id) setIsFormOpen(false);
+  };
+
+  const handleUpdate = (id, field, value) => {
+    setCustomers(prev => prev.map(c => c.id === id ? { ...c, [field]: value } : c));
+  };
+
+  const handleImageChange = (id, e) => {
     const file = e.target.files[0];
     if (file) {
-      handleCardUpdate(cardId, "imageFile", file);
+      handleUpdate(id, "imageFile", file);
       const reader = new FileReader();
       reader.onloadend = () => {
-        setPreviews(prev => ({ ...prev, [cardId]: reader.result }));
+        setPreviews(prev => ({ ...prev, [id]: reader.result }));
       };
       reader.readAsDataURL(file);
     }
@@ -150,26 +187,27 @@ export default function HappyCustomersManager() {
         formData.append(`contents[${index}][key]`, key);
         formData.append(`contents[${index}][type]`, type);
         if (value instanceof File) {
-          formData.append(`contents[${index}][value]`, value);
+            formData.append(`contents[${index}][value]`, value);
         } else {
-          formData.append(`contents[${index}][value]`, value || "");
+            formData.append(`contents[${index}][value]`, value || "");
         }
         index++;
       };
 
-      // 1. Header
-      append("collections_header", "label", data.header.label, "text");
-      append("collections_header", "titleStart", data.header.titleStart, "text");
-      append("collections_header", "titleEnd", data.header.titleEnd, "text");
-      append("collections_header", "description", data.header.description, "textarea");
+      append("collections_header", "label", header.label, "text");
+      append("collections_header", "titleStart", header.titleStart, "text");
+      append("collections_header", "titleEnd", header.titleEnd, "text");
+      append("collections_header", "description", header.description, "textarea");
 
-      // 2. Cards
-      Object.keys(data.cards).forEach((id) => {
-        const card = data.cards[id];
-        append(`collections_${id}`, "title", card.title, "text");
-        append(`collections_${id}`, "badge", card.badge, "text");
-        if (card.imageFile) {
-          append(`collections_${id}`, "image", card.imageFile, "image");
+      customers.forEach((c, i) => {
+        const sectionId = `collections_customer_${i}`;
+        append(sectionId, "title", c.title, "text");
+        append(sectionId, "badge", c.badge, "text");
+        if (c.imageFile) {
+          append(sectionId, "image", c.imageFile, "image");
+        } else if (c.image) {
+           const path = c.image.split(STORAGE_BASE + "/")[1] || c.image;
+           append(sectionId, "image", path, "text");
         }
       });
 
@@ -182,8 +220,7 @@ export default function HappyCustomersManager() {
         body: formData,
       });
 
-      const resData = await res.json();
-      if (!res.ok) throw new Error(resData.message || "Save failed");
+      if (!res.ok) throw new Error("Save failed");
 
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
@@ -194,175 +231,267 @@ export default function HappyCustomersManager() {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
-        <div className="text-center">
-          <RefreshCw className="w-8 h-8 text-indigo-600 animate-spin mx-auto mb-3" />
-          <p className="text-slate-600 dark:text-slate-400 font-medium">Loading Community CMS…</p>
-        </div>
-      </div>
+  const filteredCustomers = useMemo(() => {
+    return customers.filter(c => 
+        c.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+        c.badge.toLowerCase().includes(searchTerm.toLowerCase())
     );
-  }
+  }, [customers, searchTerm]);
+
+  const selectedMember = useMemo(() => {
+    if (selectedId === "header") return null;
+    return customers.find(c => c.id === selectedId);
+  }, [customers, selectedId]);
+
+  if (isLoading) return <div className="flex h-screen items-center justify-center"><Loader2 className="w-10 h-10 animate-spin text-indigo-600" /></div>;
 
   return (
-    <div className="flex h-screen bg-slate-50 dark:bg-slate-950 overflow-hidden font-sans text-slate-900 dark:text-white">
-      {/* 1. LEFT PANEL: PREVIEW & LIST */}
-      <div className="flex-1 flex flex-col h-full overflow-y-auto">
-        <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 p-6 flex justify-between items-center sticky top-0 z-50 shrink-0 shadow-sm">
-          <div>
-            <h1 className="text-xl font-bold">Happy Customers Manager</h1>
-            <p className="text-slate-500 dark:text-slate-400 text-xs mt-0.5">Update photos and stories of our community.</p>
-          </div>
-          <div className="flex items-center gap-3">
-            {saveSuccess && (
-              <span className="flex items-center gap-1.5 text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1.5 rounded-lg">
-                <CheckCircle className="w-4 h-4" /> Live!
-              </span>
-            )}
-            <button onClick={handleSave} disabled={isSaving} className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-bold transition-all shadow-lg shadow-indigo-600/20 active:scale-95 disabled:opacity-50">
-              {isSaving ? "Publishing..." : <><Save className="w-4 h-4" /> Publish Changes</>}
-            </button>
-          </div>
-        </header>
-
-        {error && (
-          <div className="mx-8 mt-4 flex items-start gap-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 text-sm text-red-600">
-            <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-            <p className="flex-1">{error}</p>
-            <button onClick={() => setError(null)}><X className="w-4 h-4" /></button>
-          </div>
-        )}
-
-        {/* --- CONTENT MANAGER --- */}
-        <div className="flex-1 p-8 overflow-x-hidden flex flex-col items-center">
-          <div className="max-w-4xl w-full space-y-8">
-            
-            {/* A. HEADER SECTION */}
-            <div onClick={() => setSelectedId("header")} className={`group p-8 rounded-[2.5rem] bg-white dark:bg-slate-900 border-2 transition-all cursor-pointer ${selectedId === "header" ? "border-indigo-500 shadow-2xl scale-[1.02]" : "border-slate-100 dark:border-slate-800 hover:border-indigo-200"}`}>
-              <div className="flex justify-between items-start mb-6">
-                <div>
-                    <span className="text-xs font-black text-indigo-600 uppercase tracking-widest bg-indigo-50 dark:bg-indigo-900/30 px-3 py-1 rounded-full mb-3 inline-block">{data.header.label}</span>
-                    <h2 className="text-4xl font-black">{data.header.titleStart} <span className="text-slate-400">{data.header.titleEnd}</span></h2>
-                </div>
-                <div className="p-2 rounded-full group-hover:bg-indigo-50 transition-colors"><Layout className="w-5 h-5 text-slate-300 group-hover:text-indigo-500" /></div>
-              </div>
-              <p className="text-slate-500 dark:text-slate-400 leading-relaxed italic border-l-4 border-indigo-100 dark:border-indigo-900 pl-4">{data.header.description}</p>
+    <div className="min-h-screen bg-slate-50/50 dark:bg-slate-950 font-sans text-slate-900 dark:text-white px-8 py-6 overflow-x-hidden">
+      
+      {/* 1. TOP HEADER (Following Category Design) */}
+      <div className="max-w-7xl mx-auto mb-10">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
+            <div>
+                <h1 className="text-4xl font-extrabold tracking-tight mb-2">Happy Customers</h1>
+                <p className="text-slate-500 font-medium tracking-normal">Manage your community gallery and customer testimonials.</p>
             </div>
-
-            {/* B. CUSTOMER LIST */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-20">
-              {Object.values(data.cards).map((card) => (
-                <div 
-                    key={card.id} 
-                    onClick={() => setSelectedId(card.id)}
-                    className={`group relative aspect-[3/4] rounded-3xl overflow-hidden cursor-pointer border-4 transition-all shadow-md ${selectedId === card.id ? "border-indigo-500 ring-8 ring-indigo-500/10 scale-105 z-10" : "border-white dark:border-slate-900 hover:border-indigo-100 dark:hover:border-indigo-900/50"}`}
+            <div className="flex items-center gap-3">
+                <button 
+                    onClick={handleSave} 
+                    disabled={isSaving}
+                    className="flex items-center gap-2 px-6 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-white rounded-xl text-sm font-semibold hover:bg-slate-50 transition-all active:scale-95 disabled:opacity-50"
                 >
-                    <img src={previews[card.id] || card.image} className="absolute inset-0 w-full h-full object-cover grayscale-[0.5] group-hover:grayscale-0 transition-all duration-500" />
-                    <div className="absolute inset-0 bg-linear-to-t from-black/80 via-transparent to-transparent p-6 flex flex-col justify-end">
-                        <span className="text-[10px] font-bold text-white/70 uppercase tracking-widest mb-1 flex items-center gap-1"><MapPin className="w-2.5 h-2.5" /> {card.badge}</span>
-                        <h4 className="text-white font-bold text-lg group-hover:text-indigo-300 transition-colors">{card.title}</h4>
-                    </div>
-                    {selectedId === card.id && <div className="absolute top-4 right-4 bg-indigo-500 text-white p-2 rounded-full shadow-lg"><User className="w-4 h-4" /></div>}
-                </div>
-              ))}
+                    {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                    <span>{isSaving ? "Synchronizing..." : "Save Changes"}</span>
+                </button>
+                <button 
+                    onClick={handleAdd}
+                    className="flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-xl text-sm font-semibold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-600/20 active:scale-95"
+                >
+                    <Plus className="w-5 h-5" />
+                    <span>Add New Member</span>
+                </button>
             </div>
-          </div>
         </div>
+
+        {/* 2. TOOLBAR (Following Category Design) */}
+        <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200 dark:border-slate-700/50 shadow-sm rounded-2xl p-2 flex flex-col sm:flex-row gap-3 items-center justify-between mb-8">
+            <div className="relative w-full sm:w-96 group">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                <input 
+                    type="text"
+                    placeholder="Search by name or location..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="block w-full pl-10 pr-3 py-2.5 bg-transparent rounded-xl text-sm outline-none"
+                />
+            </div>
+            <div className="flex items-center gap-2 p-1 bg-slate-100/50 dark:bg-slate-900/50 rounded-xl">
+                <button onClick={() => setViewMode("grid")} className={`p-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${viewMode === "grid" ? "bg-white dark:bg-slate-800 shadow-sm text-indigo-600" : "text-slate-500"}`}>
+                    <LayoutGrid className="w-4 h-4" /> Grid
+                </button>
+                <button onClick={() => setViewMode("list")} className={`p-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${viewMode === "list" ? "bg-white dark:bg-slate-800 shadow-sm text-indigo-600" : "text-slate-500"}`}>
+                    <ListIcon className="w-4 h-4" /> List
+                </button>
+            </div>
+        </div>
+
+        {saveSuccess && <div className="bg-emerald-50 text-emerald-600 p-4 rounded-2xl mb-8 flex items-center gap-2 text-sm font-semibold border border-emerald-100"><CheckCircle2 className="w-5 h-5" /> Changes saved and published to frontend.</div>}
+
+        {/* 3. BRANDING SECTION (Integrated into Flow) */}
+        <div className="mb-12 group">
+            <div className="flex items-center justify-between mb-4 px-2">
+                <h2 className="text-xl font-bold flex items-center gap-2">
+                    <Layout className="w-5 h-5 text-indigo-600" /> Section Branding
+                </h2>
+                <button onClick={() => { setSelectedId("header"); setIsFormOpen(true); }} className="text-indigo-600 text-sm font-bold hover:underline flex items-center gap-1">
+                    <Edit3 className="w-4 h-4" /> Edit Branding
+                </button>
+            </div>
+            <div className="bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col md:flex-row gap-8 items-center cursor-pointer hover:bg-slate-50 transition-colors" onClick={() => { setSelectedId("header"); setIsFormOpen(true); }}>
+                <div className="flex-1">
+                    <span className="text-xs font-bold text-indigo-600 uppercase tracking-widest block mb-2">{header.label}</span>
+                    <h3 className="text-3xl font-extrabold mb-3">{header.titleStart} <span className="text-slate-400">{header.titleEnd}</span></h3>
+                    <p className="text-slate-500 max-w-2xl leading-relaxed">{header.description}</p>
+                </div>
+                <div className="hidden md:block p-4 border border-slate-100 rounded-2xl group-hover:bg-white shadow-sm"><Edit3 className="w-6 h-6 text-slate-300 group-hover:text-indigo-600" /></div>
+            </div>
+        </div>
+
+        {/* 4. CUSTOMER POOL (Grid/List View) */}
+        <div className="px-2 mb-4"><h2 className="text-xl font-bold flex items-center gap-2"><User className="w-5 h-5 text-indigo-600" /> Community Library ({filteredCustomers.length})</h2></div>
+        
+        {viewMode === "grid" ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
+                {filteredCustomers.map((cat, idx) => (
+                    <div 
+                        key={cat.id} 
+                        onClick={() => { setSelectedId(cat.id); setIsFormOpen(true); }}
+                        className="group relative bg-white dark:bg-slate-900 rounded-[2rem] p-4 border border-slate-100 dark:border-slate-800 hover:border-indigo-100 shadow-sm hover:shadow-xl transition-all duration-500 flex flex-col cursor-pointer"
+                    >
+                        <div className="aspect-square rounded-2xl overflow-hidden mb-4 relative">
+                            <img src={previews[cat.id] || cat.image} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt={cat.title} />
+                            <div className="absolute top-2 left-2 bg-white/20 backdrop-blur-md text-white text-[10px] font-bold px-2 py-1 rounded-lg">#{idx + 1}</div>
+                        </div>
+                        <div className="flex-1">
+                            <h4 className="font-bold text-lg mb-1 group-hover:text-indigo-600 transition-colors">{cat.title || "Untitled Member"}</h4>
+                            <div className="flex items-center gap-1.5 text-slate-400 text-xs">
+                                <MapPin className="w-3.5 h-3.5" />
+                                <span>{cat.badge || "No location"}</span>
+                            </div>
+                        </div>
+                        <div className="flex justify-between items-center mt-4 pt-3 border-t border-slate-50">
+                            <span className="text-[10px] font-bold text-slate-300">CMS SLOT</span>
+                            <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                                <button className="p-1.5 bg-slate-50 rounded-lg text-slate-400 hover:text-indigo-600"><Edit3 className="w-3.5 h-3.5" /></button>
+                                <button onClick={(e) => { e.stopPropagation(); handleRemove(cat.id); }} className="p-1.5 bg-red-50 rounded-lg text-red-400 hover:bg-red-500 hover:text-white transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
+                            </div>
+                        </div>
+                    </div>
+                ))}
+                
+                <button onClick={handleAdd} className="aspect-square rounded-[2rem] border-2 border-dashed border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center gap-3 text-slate-300 hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50/50 transition-all group">
+                    <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center group-hover:bg-white"><Plus className="w-6 h-6" /></div>
+                    <span className="text-xs font-bold uppercase">Add Customer</span>
+                </button>
+            </div>
+        ) : (
+            <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                <table className="w-full text-left">
+                    <thead className="bg-slate-50 dark:bg-slate-950 border-b border-slate-100 dark:border-slate-800">
+                        <tr>
+                            <th className="p-5 pl-8 text-xs font-bold text-slate-400 uppercase tracking-widest">Customer</th>
+                            <th className="p-5 text-xs font-bold text-slate-400 uppercase tracking-widest">Location</th>
+                            <th className="p-5 text-xs font-bold text-slate-400 uppercase tracking-widest">Slot</th>
+                            <th className="p-5 pr-8"></th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
+                        {filteredCustomers.map((cat, idx) => (
+                            <tr key={cat.id} className="group hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer" onClick={() => { setSelectedId(cat.id); setIsFormOpen(true); }}>
+                                <td className="p-4 pl-8">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-12 h-12 rounded-xl overflow-hidden border border-slate-100"><img src={previews[cat.id] || cat.image} className="w-full h-full object-cover" /></div>
+                                        <div>
+                                            <div className="font-bold text-slate-900 dark:text-white">{cat.title}</div>
+                                            <div className="text-[10px] text-slate-400 font-mono tracking-tighter uppercase">{cat.id}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td className="p-4 text-sm font-medium text-slate-500">{cat.badge}</td>
+                                <td className="p-4"><span className="px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded text-[10px] font-bold text-slate-500">#{idx + 1}</span></td>
+                                <td className="p-4 pr-8 text-right">
+                                    <div className="flex justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-white rounded-xl shadow-sm"><Edit3 className="w-4 h-4" /></button>
+                                        <button onClick={(e) => { e.stopPropagation(); handleRemove(cat.id); }} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl"><Trash2 className="w-4 h-4" /></button>
+                                    </div>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+        )}
       </div>
 
-      {/* 2. RIGHT PANEL: EDITOR SIDEBAR */}
-      {selectedId && (
-        <div className="fixed inset-0 z-[60] lg:relative lg:inset-auto w-full lg:w-[450px] bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl lg:bg-white lg:dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 flex flex-col shadow-2xl animate-in slide-in-from-right duration-300">
-            <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
-              <div>
-                <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Global Editor</span>
-                <h2 className="text-xl font-black text-slate-900 dark:text-white capitalize">{selectedId === "header" ? "Community Branding" : "Customer Slot"}</h2>
-              </div>
-              <button onClick={() => setSelectedId(null)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors"><X className="w-6 h-6 text-slate-400" /></button>
-            </div>
-
-            <div className="flex-1 overflow-y-auto p-8 space-y-8">
-              {selectedId === "header" ? (
-                <div className="space-y-6">
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Section Label</label>
-                    <input value={data.header.label} onChange={(e) => handleHeaderUpdate("label", e.target.value)} className="modern-input text-indigo-600 font-bold" />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Title Start</label>
-                        <input value={data.header.titleStart} onChange={(e) => handleHeaderUpdate("titleStart", e.target.value)} className="modern-input" />
-                    </div>
-                    <div className="space-y-2">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Title End</label>
-                        <input value={data.header.titleEnd} onChange={(e) => handleHeaderUpdate("titleEnd", e.target.value)} className="modern-input text-slate-400" />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Community Story</label>
-                    <textarea value={data.header.description} onChange={(e) => handleHeaderUpdate("description", e.target.value)} className="modern-input h-40 resize-none leading-relaxed" />
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-8">
-                  <div className="space-y-3">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Customer Photo</label>
-                    <div 
-                        onClick={() => fileInputs.current[selectedId]?.click()} 
-                        className="group relative aspect-[3/4] rounded-[2rem] bg-slate-100 dark:bg-slate-800 border-4 border-dashed border-slate-200 dark:border-slate-700 flex flex-col items-center justify-center cursor-pointer hover:border-indigo-400 hover:bg-indigo-50/10 transition-all overflow-hidden"
-                    >
-                      {previews[selectedId] ? (
-                        <>
-                          <img src={previews[selectedId]} className="w-full h-full object-cover" />
-                          <div className="absolute inset-0 bg-indigo-600/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white"><Upload className="w-8 h-8 mb-2" /><span className="text-xs font-black uppercase">Replace Photo</span></div>
-                        </>
-                      ) : (
-                        <><Upload className="w-10 h-10 text-slate-300 mb-2" /><span className="text-xs font-bold text-slate-400">Upload Customer Moment</span></>
-                      )}
-                      <input 
-                        type="file" 
-                        ref={el => fileInputs.current[selectedId] = el} 
-                        onChange={(e) => handleImageChange(selectedId, e)} 
-                        className="hidden" 
-                        accept="image/*" 
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-6">
-                    <div className="space-y-2">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Customer Name</label>
-                        <div className="relative">
-                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-indigo-500"><User className="w-4 h-4" /></span>
-                            <input value={data.cards[selectedId].title} onChange={(e) => handleCardUpdate(selectedId, "title", e.target.value)} className="modern-input pl-11 font-bold" placeholder="Full name" />
+      {/* 5. SIDE DRAWER FORM (Following Category Page Design) */}
+      {isFormOpen && (
+        <div className="fixed inset-0 z-50 overflow-hidden">
+            <div ref={formOverlayRef} className="absolute inset-0 bg-slate-900/20 dark:bg-slate-950/40 backdrop-blur-sm" onClick={closeForm} />
+            <div className="absolute inset-y-0 right-0 flex max-w-full pl-10 pointer-events-none">
+                <div ref={formContentRef} className="pointer-events-auto w-screen max-w-md bg-white dark:bg-slate-800 shadow-2xl flex flex-col h-full border-l border-slate-100 dark:border-slate-700">
+                    
+                    {/* Drawer Header */}
+                    <div className="px-6 py-6 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 flex items-start justify-between">
+                        <div>
+                            <h2 className="text-2xl font-black text-slate-900 dark:text-white">
+                                {selectedId === "header" ? "Edit Branding" : "Edit Customer"}
+                            </h2>
+                            <p className="text-sm text-slate-500 mt-1">Configure community display settings.</p>
                         </div>
+                        <button onClick={closeForm} className="rounded-full p-2 text-slate-400 hover:bg-slate-100 transition-colors"><X className="w-6 h-6" /></button>
                     </div>
-                    <div className="space-y-2">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Location / Remark</label>
-                        <div className="relative">
-                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-rose-500"><MapPin className="w-4 h-4" /></span>
-                            <input value={data.cards[selectedId].badge} onChange={(e) => handleCardUpdate(selectedId, "badge", e.target.value)} className="modern-input pl-11 font-medium" placeholder="Colombo, LK" />
-                        </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
 
-            <div className="p-8 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50">
-              <button 
-                onClick={() => setSelectedId(null)} 
-                className="w-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 py-4 rounded-[1.5rem] font-black hover:scale-[1.02] active:scale-95 transition-all shadow-xl flex items-center justify-center gap-3"
-              >
-                <Check className="w-5 h-5" /> Confirm Update
-              </button>
+                    {/* Drawer Body */}
+                    <div className="flex-1 overflow-y-auto p-8 space-y-8">
+                        {selectedId === "header" ? (
+                             <div className="space-y-6">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Section Label</label>
+                                    <div className="relative group">
+                                        <Type className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                                        <input value={header.label} onChange={(e) => setHeader({ ...header, label: e.target.value })} className="drawer-input pl-11" />
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Primary Title</label>
+                                        <input value={header.titleStart} onChange={(e) => setHeader({ ...header, titleStart: e.target.value })} className="drawer-input" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Accent Title</label>
+                                        <input value={header.titleEnd} onChange={(e) => setHeader({ ...header, titleEnd: e.target.value })} className="drawer-input text-slate-400" />
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Story Description</label>
+                                    <textarea value={header.description} onChange={(e) => setHeader({ ...header, description: e.target.value })} className="drawer-input h-40 resize-none leading-relaxed" />
+                                </div>
+                             </div>
+                        ) : selectedMember ? (
+                            <div className="space-y-8">
+                                <div className="space-y-3">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Customer Photo</label>
+                                    <div onClick={() => fileInputs.current[selectedMember.id]?.click()} className="group relative aspect-square rounded-3xl bg-slate-50 dark:bg-slate-900 border-4 border-dashed border-slate-100 dark:border-slate-800 flex flex-col items-center justify-center cursor-pointer hover:border-indigo-400 transition-all overflow-hidden">
+                                        {previews[selectedMember.id] || selectedMember.image ? (
+                                            <>
+                                                <img src={previews[selectedMember.id] || selectedMember.image} className="w-full h-full object-cover" />
+                                                <div className="absolute inset-0 bg-indigo-600/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-white transition-opacity"><Upload className="w-8 h-8 mb-2" /><span className="text-xs font-bold uppercase">Replace Photo</span></div>
+                                            </>
+                                        ) : (
+                                            <><ImageIcon className="w-10 h-10 text-slate-200 mb-2" /><span className="text-xs font-bold text-slate-400">Click to Upload</span></>
+                                        )}
+                                        <input type="file" ref={el => fileInputs.current[selectedMember.id] = el} className="hidden" onChange={(e) => handleImageChange(selectedMember.id, e)} accept="image/*" />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-6">
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Full Name</label>
+                                        <div className="relative group">
+                                            <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                                            <input value={selectedMember.title} onChange={(e) => handleUpdate(selectedMember.id, "title", e.target.value)} className="drawer-input pl-11 font-bold" />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Location Details</label>
+                                        <div className="relative group">
+                                            <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-rose-500 transition-colors" />
+                                            <input value={selectedMember.badge} onChange={(e) => handleUpdate(selectedMember.id, "badge", e.target.value)} className="drawer-input pl-11" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <button onClick={() => { handleRemove(selectedMember.id); closeForm(); }} className="w-full flex items-center justify-center gap-2 py-4 text-red-500 font-bold hover:bg-red-50 rounded-2xl transition-colors mt-12"><Trash2 className="w-5 h-5" /> Remove from Library</button>
+                            </div>
+                        ) : null}
+                    </div>
+
+                    {/* Drawer Footer */}
+                    <div className="p-6 border-t border-slate-100 dark:border-slate-700 bg-slate-50/50 flex gap-3">
+                        <button onClick={closeForm} className="flex-1 py-4 font-bold text-slate-500 hover:bg-slate-100 rounded-2xl transition-colors">Dismiss</button>
+                        <button onClick={closeForm} className="flex-2 bg-indigo-600 text-white font-bold py-4 rounded-2xl shadow-lg shadow-indigo-600/20 hover:bg-indigo-700 transition-all active:scale-95">Done</button>
+                    </div>
+                </div>
             </div>
         </div>
       )}
 
       <style jsx>{`
-        .modern-input { @apply w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 text-sm focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none text-slate-900 dark:text-white transition-all shadow-inner; }
+        .drawer-input { @apply w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 text-sm font-bold focus:bg-white dark:focus:bg-slate-800 focus:border-indigo-500 outline-none transition-all shadow-sm; }
+        .custom-tiny-scrollbar::-webkit-scrollbar { width: 3px; }
+        .custom-tiny-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-tiny-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
       `}</style>
     </div>
   );
