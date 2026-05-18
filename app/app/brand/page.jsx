@@ -505,51 +505,60 @@ function BrandContent() {
                   {sortedBrands.map((brand) => (
                     <div
                       key={brand.id}
-                      className="brand-item group relative bg-white dark:bg-slate-800 rounded-3xl p-6 border border-slate-100 dark:border-slate-700 hover:border-indigo-100 dark:hover:border-indigo-900/50 shadow-sm hover:shadow-xl transition-all duration-500 flex flex-col h-full"
+                      className="brand-item group relative bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-100 dark:border-slate-700/80 hover:border-indigo-500/20 dark:hover:border-indigo-500/30 shadow-xs hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col h-full"
                     >
-                      <div className="relative w-full h-36 rounded-2xl overflow-hidden mb-4 flex items-center justify-center p-6 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
-                        <div className={`w-20 h-20 rounded-3xl bg-linear-to-br bg-gradient-to-br ${getBrandGradient(brand.name)} text-white flex items-center justify-center text-3xl font-extrabold shadow-md transform transition-transform duration-300 group-hover:scale-105`}>
+                      <div className="relative w-full h-32 rounded-2xl overflow-hidden mb-4 flex items-center justify-center bg-slate-50/60 dark:bg-slate-900/40 border border-slate-100/50 dark:border-slate-800/50">
+                        <div className={`w-14 h-14 rounded-2xl bg-linear-to-br bg-gradient-to-br ${getBrandGradient(brand.name)} text-white flex items-center justify-center text-2xl font-bold shadow-sm transform transition-transform duration-300 group-hover:scale-105`}>
                           {brand.name.trim().charAt(0).toUpperCase() || "?"}
                         </div>
-                        <div className="absolute top-3 right-3 flex gap-1">
+                        <div className="absolute top-2.5 right-2.5 flex gap-1">
                           {brand.is_featured ? (
-                            <span className="backdrop-blur-md bg-amber-500/10 text-amber-600 dark:text-amber-400 px-2.5 py-1 rounded-full text-[10px] font-bold border border-amber-200 dark:border-amber-900/50">
+                            <span className="bg-amber-500/10 text-amber-600 dark:text-amber-400 px-2 py-0.5 rounded-lg text-[9px] font-bold border border-amber-200/30 dark:border-amber-900/30">
                               Featured
                             </span>
                           ) : null}
                           <span
-                            className={`backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] font-bold border ${brand.is_active ? "bg-green-500/10 text-green-600 dark:text-green-400 border-green-200 dark:border-green-900/50" : "bg-slate-500/10 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700"}`}
+                            className={`px-2 py-0.5 rounded-lg text-[9px] font-bold border ${brand.is_active ? "bg-green-500/10 text-green-600 dark:text-green-400 border-green-200/30 dark:border-green-900/30" : "bg-slate-500/10 text-slate-500 dark:text-slate-400 border-slate-200/30 dark:border-slate-700/30"}`}
                           >
                             {brand.is_active ? "Active" : "Inactive"}
                           </span>
                         </div>
                       </div>
 
-                      <div className="flex-1">
-                        <h3 className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors truncate">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-base font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors truncate mb-1">
                           {brand.name}
                         </h3>
-                        <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mb-4">
-                          <Globe className="w-3 h-3" />
-                          <span className="truncate">{brand.website}</span>
-                        </div>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mb-4">
-                          {brand.description}
+                        {brand.website ? (
+                          <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 mb-3 min-h-[1.25rem]">
+                            <Globe className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                            <a href={brand.website} target="_blank" rel="noopener noreferrer" className="hover:underline hover:text-indigo-600 dark:hover:text-indigo-400 truncate">
+                              {brand.website.replace(/^https?:\/\/(www\.)?/, '')}
+                            </a>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1.5 text-xs text-slate-350 dark:text-slate-600 mb-3 min-h-[1.25rem] select-none">
+                            <Globe className="w-3.5 h-3.5 text-slate-300 dark:text-slate-750 shrink-0" />
+                            <span className="italic">No website</span>
+                          </div>
+                        )}
+                        <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mb-4 h-8 leading-relaxed">
+                          {brand.description || <span className="text-slate-350 dark:text-slate-600 italic select-none">No description provided</span>}
                         </p>
                       </div>
 
-                      <div className="flex items-center justify-between pt-4 border-t border-slate-50 dark:border-slate-700/50">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                      <div className="flex items-center justify-between pt-4 border-t border-slate-100/80 dark:border-slate-700/50">
+                        <span className="text-[10px] font-extrabold tracking-wider text-slate-400 dark:text-slate-500 uppercase bg-slate-50 dark:bg-slate-900/60 px-2.5 py-1 rounded-lg">
                           {brand.products_count || 0} Products
                         </span>
                         <div className="flex gap-1">
                           {hasPermission("Brand Update") && (
-                            <button onClick={() => handleOpenEdit(brand)} className="p-2 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg transition-all">
+                            <button onClick={() => handleOpenEdit(brand)} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:text-indigo-400 dark:hover:bg-slate-700/50 rounded-xl transition-all">
                               <Edit3 className="w-4 h-4" />
                             </button>
                           )}
                           {hasPermission("Brand Delete") && (
-                            <button onClick={() => handleOpenDelete(brand)} className="p-2 text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg transition-all">
+                            <button onClick={() => handleOpenDelete(brand)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:text-red-400 dark:hover:bg-slate-700/50 rounded-xl transition-all">
                               <Trash2 className="w-4 h-4" />
                             </button>
                           )}
