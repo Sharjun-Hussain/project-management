@@ -337,13 +337,9 @@ function CreateProductContent() {
   });
 
   // MEDIA STATE
-  const heroInputRef = useRef(null);
-  const [heroImageFile, setHeroImageFile] = useState(null);
-  const [heroImagePreview, setHeroImagePreview] = useState(null);
-  const [galleryImageFiles, setGalleryImageFiles] = useState([]);
-  const [galleryImagePreviews, setGalleryImagePreviews] = useState([]);
-  const [isHeroDragging, setIsHeroDragging] = useState(false);
-  const [isGalleryDragging, setIsGalleryDragging] = useState(false);
+  const mediaInputRef = useRef(null);
+  const [productImages, setProductImages] = useState([]);
+  const [isMediaDragging, setIsMediaDragging] = useState(false);
 
   // VARIANTS STATE
   const [variants, setVariants] = useState([]);
@@ -558,12 +554,12 @@ function CreateProductContent() {
     if (formData.category_id) score++;
     if (formData.brand_id) score++;
     if (formData.type) score++;
-    if (heroImageFile || (isEditMode && formData.primary_image_path)) score++;
+    if (productImages.some(img => img.isPrimary)) score++;
     if (selectedFeatures.length > 0) score++;
     if (variants.length > 0 && variants.every(v => v.sku && v.price && v.stock_quantity !== "" && v.color && (!isPhoneCategory || (v.storage_size && v.ram_size)))) score++;
     
     return Math.round((score / total) * 100);
-  }, [formData, heroImageFile, isEditMode, selectedFeatures, variants, isPhoneCategory]);
+  }, [formData, productImages, isEditMode, selectedFeatures, variants, isPhoneCategory]);
 
   const isFormValid =
     formData.name &&
@@ -586,7 +582,7 @@ function CreateProductContent() {
       case "general":
         return !!(formData.name && formData.category_id && formData.brand_id && formData.type);
       case "media":
-        return !!(heroImageFile || (isEditMode && formData.primary_image_path));
+        return productImages.some(img => img.isPrimary);
       case "variants":
         return variants.length > 0 && variants.every(
           (v) => v.sku && v.price && v.stock_quantity !== "" && v.color && (!isPhoneCategory || (v.storage_size && v.ram_size))
@@ -843,17 +839,31 @@ function CreateProductContent() {
             setSelectedFeatures(product.features);
           }
 
-          // Load primary image
+          // Load images (both primary and gallery) into a unified list
+          const loadedImages = [];
           if (product.primary_image_path) {
-            const imageUrl = getImageUrl(product.primary_image_path);
-            setHeroImagePreview(imageUrl);
+            loadedImages.push({
+              id: `primary-${Date.now()}`,
+              file: null,
+              previewUrl: getImageUrl(product.primary_image_path),
+              isPrimary: true,
+              isExisting: true,
+              existingUrl: product.primary_image_path
+            });
           }
-
-          // Load gallery images
           if (product.images && product.images.length > 0) {
-            const galleryUrls = product.images.map(img => getImageUrl(img.image_path));
-            setGalleryImagePreviews(galleryUrls);
+            product.images.forEach((img, idx) => {
+              loadedImages.push({
+                id: `gallery-${img.id || idx}-${Date.now()}`,
+                file: null,
+                previewUrl: getImageUrl(img.image_path),
+                isPrimary: false,
+                isExisting: true,
+                existingUrl: img.image_path
+              });
+            });
           }
+          setProductImages(loadedImages);
 
           // Build details map for existing relationships
           const existingDetails = {};
@@ -907,8 +917,7 @@ function CreateProductContent() {
       specifications.length > 0 ||
       selectedTags.length > 0 ||
       selectedFeatures.length > 0 ||
-      heroImageFile !== null ||
-      galleryImageFiles.length > 0;
+      productImages.length > 0;
 
     const handleBeforeUnload = (e) => {
       if (isDirty && !isLoading) {
@@ -926,8 +935,7 @@ function CreateProductContent() {
     specifications,
     selectedTags,
     selectedFeatures,
-    heroImageFile,
-    galleryImageFiles,
+    productImages,
     isLoading,
   ]);
 
@@ -970,57 +978,56 @@ function CreateProductContent() {
   };
 
   // Image Handlers
-  const handleHeroUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setHeroImageFile(file);
-      setHeroImagePreview(URL.createObjectURL(file));
-    }
-  };
-
-  const handleRemoveHeroImage = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setHeroImageFile(null);
-    setHeroImagePreview(null);
-    if (heroInputRef.current) {
-      heroInputRef.current.value = "";
-    }
-  };
-
-  const handleGalleryUpload = (e) => {
+  const handleMediaUpload = (e) => {
     const files = Array.from(e.target.files);
-    setGalleryImageFiles((prev) => [...prev, ...files]);
-    const newPreviews = files.map((file) => URL.createObjectURL(file));
-    setGalleryImagePreviews((prev) => [...prev, ...newPreviews]);
+    if (files.length === 0) return;
+
+    const newImages = files.map((file) => ({
+      id: `new-${Date.now()}-${Math.random()}`,
+      file,
+      previewUrl: URL.createObjectURL(file),
+      isPrimary: false,
+      isExisting: false,
+    }));
+
+    setProductImages((prev) => {
+      const updated = [...prev, ...newImages];
+      if (!updated.some((img) => img.isPrimary) && updated.length > 0) {
+        updated[0].isPrimary = true;
+      }
+      return updated;
+    });
   };
 
-  const moveGalleryImage = (index, direction) => {
-    const newFiles = [...galleryImageFiles];
-    const newPreviews = [...galleryImagePreviews];
+  const handleSetPrimaryImage = (id) => {
+    setProductImages((prev) =>
+      prev.map((img) => ({
+        ...img,
+        isPrimary: img.id === id,
+      }))
+    );
+  };
 
-    if (direction === "left" && index > 0) {
-      [newFiles[index], newFiles[index - 1]] = [
-        newFiles[index - 1],
-        newFiles[index],
-      ];
-      [newPreviews[index], newPreviews[index - 1]] = [
-        newPreviews[index - 1],
-        newPreviews[index],
-      ];
-    } else if (direction === "right" && index < newFiles.length - 1) {
-      [newFiles[index], newFiles[index + 1]] = [
-        newFiles[index + 1],
-        newFiles[index],
-      ];
-      [newPreviews[index], newPreviews[index + 1]] = [
-        newPreviews[index + 1],
-        newPreviews[index],
-      ];
-    }
+  const handleRemoveMediaImage = (id) => {
+    setProductImages((prev) => {
+      const filtered = prev.filter((img) => img.id !== id);
+      if (filtered.length > 0 && !filtered.some((img) => img.isPrimary)) {
+        filtered[0].isPrimary = true;
+      }
+      return filtered;
+    });
+  };
 
-    setGalleryImageFiles(newFiles);
-    setGalleryImagePreviews(newPreviews);
+  const moveMediaImage = (index, direction) => {
+    setProductImages((prev) => {
+      const next = [...prev];
+      if (direction === "left" && index > 0) {
+        [next[index], next[index - 1]] = [next[index - 1], next[index]];
+      } else if (direction === "right" && index < next.length - 1) {
+        [next[index], next[index + 1]] = [next[index + 1], next[index]];
+      }
+      return next;
+    });
   };
 
   // Tag Handler with autocomplete
@@ -1191,13 +1198,25 @@ function CreateProductContent() {
     data.append("is_new_arrival", formData.is_new_arrival ? "1" : "0");
     data.append("condition", formData.condition || "new");
 
-    // Images
-    if (heroImageFile) {
-      data.append("primary_image_path", heroImageFile);
+    // Images (Unified primary and gallery uploads)
+    const primaryImg = productImages.find(img => img.isPrimary);
+    if (primaryImg) {
+      if (primaryImg.file) {
+        data.append("primary_image_path", primaryImg.file);
+      } else if (primaryImg.isExisting) {
+        data.append("primary_image_path", primaryImg.existingUrl);
+      }
     }
-    galleryImageFiles.forEach((file) => {
-      data.append("images[]", file);
+
+    // New gallery images upload
+    const newGalleryFiles = productImages.filter(img => !img.isPrimary && img.file);
+    newGalleryFiles.forEach((img) => {
+      data.append("images[]", img.file);
     });
+
+    // Existing gallery images retained
+    const existingGalleryPaths = productImages.filter(img => !img.isPrimary && img.isExisting).map(img => img.existingUrl);
+    data.append("existing_images", existingGalleryPaths.join(","));
 
     // Features (comma-separated names)
     if (selectedFeatures.length > 0) {
@@ -1354,7 +1373,7 @@ function CreateProductContent() {
     if (!formData.brand_id) validationList.push({ stepId: "general", stepLabel: "General Info", field: "brand_id", message: "Product Brand is required" });
     if (!formData.type) validationList.push({ stepId: "general", stepLabel: "General Info", field: "type", message: "Product Type is required" });
     
-    if (!heroImageFile && !(isEditMode && formData.primary_image_path)) {
+    if (!productImages.some(img => img.isPrimary)) {
       validationList.push({ stepId: "media", stepLabel: "Media Gallery", field: "primary_image", message: "Primary Image is required" });
     }
     
@@ -1910,191 +1929,167 @@ function CreateProductContent() {
             {/* TAB CONTENT: MEDIA */}
             {activeTab === "media" && (
               <div className="space-y-6 animate-fade-up">
-                {/* Hero Image */}
-                <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
-                  <h3 className="text-lg font-semibold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
-                    <Star className="w-4 h-4 text-amber-500" /> Primary Image
-                  </h3>
-                  <div className="flex flex-col sm:flex-row gap-6 items-center sm:items-start">
-                    <div 
-                      onDragOver={(e) => { e.preventDefault(); setIsHeroDragging(true); }}
-                      onDragLeave={() => setIsHeroDragging(false)}
-                      onDrop={(e) => {
-                        e.preventDefault();
-                        setIsHeroDragging(false);
-                        const file = e.dataTransfer.files[0];
-                        if (file && file.type.startsWith("image/")) {
-                          setHeroImageFile(file);
-                          setHeroImagePreview(URL.createObjectURL(file));
-                        }
-                      }}
-                      className={`w-full sm:w-40 h-56 sm:h-40 bg-slate-50 dark:bg-slate-900 border-2 border-dashed rounded-2xl flex items-center justify-center relative overflow-hidden group shadow-inner transition-all duration-300 ${
-                        isHeroDragging 
-                          ? "border-indigo-500 bg-indigo-50/20 dark:bg-indigo-950/10 scale-105" 
-                          : "border-slate-300 dark:border-slate-600"
-                      }`}
-                    >
-                      {heroImagePreview ? (
-                        <>
-                          <img
-                            src={heroImagePreview}
-                            alt="Hero"
-                            className="w-full h-full object-cover"
-                          />
-                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                             <Trash2 className="w-6 h-6 text-white cursor-pointer" onClick={handleRemoveHeroImage} />
-                          </div>
-                        </>
-                      ) : (
-                        <label className="w-full h-full flex flex-col items-center justify-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors">
-                          <div className="text-center p-4">
-                            <UploadCloud className={`w-10 h-10 mx-auto mb-2 transition-transform duration-300 ${isHeroDragging ? "text-indigo-500 scale-110" : "text-slate-400"}`} />
-                            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                              Upload Main Product Image
-                            </span>
-                            <p className="text-[10px] text-slate-400 mt-1">PNG, JPG or WEBP</p>
-                          </div>
-                          <input
-                            ref={heroInputRef}
-                            type="file"
-                            onChange={handleHeroUpload}
-                            className="hidden"
-                            accept="image/*"
-                          />
-                        </label>
-                      )}
-                      
-                      {heroImagePreview && (
-                        <label className="absolute inset-0 cursor-pointer">
-                          <input
-                            ref={heroInputRef}
-                            type="file"
-                            onChange={handleHeroUpload}
-                            className="hidden"
-                            accept="image/*"
-                            title=""
-                          />
-                        </label>
-                      )}
-                    </div>
-                    <div className="flex-1 w-full text-center sm:text-left">
-                      <p className="text-sm font-medium text-slate-600 dark:text-slate-300 mb-3">
-                        This is the main image used on category pages and search
-                        results.
-                      </p>
-                      <div className="grid grid-cols-2 sm:grid-cols-1 gap-2 text-xs text-slate-400 bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-100 dark:border-slate-800/50">
-                        <p className="flex items-center gap-2"><div className="w-1 h-1 rounded-full bg-slate-300" /> 1200x1200px Recommended</p>
-                        <p className="flex items-center gap-2"><div className="w-1 h-1 rounded-full bg-slate-300" /> Max File Size: 5MB</p>
-                        <p className="flex items-center gap-2"><div className="w-1 h-1 rounded-full bg-slate-300" /> JPG, PNG, WEBP</p>
-                      </div>
-                      <ErrorText message={errors.primary_image_path || errors.primary_image} />
-                    </div>
-                  </div>
-                  </div>
-
-                {/* Gallery */}
                 <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
                   <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-semibold text-slate-800 dark:text-white">
-                      Gallery Images
-                    </h3>
-                    <label className="px-4 py-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 text-sm font-medium rounded-lg cursor-pointer transition-colors">
-                      + Add Images
-                      <input
-                        type="file"
-                        multiple
-                        onChange={handleGalleryUpload}
-                        className="hidden"
-                        accept="image/*"
-                      />
-                    </label>
-                  </div>
-
-                  {galleryImagePreviews.length === 0 ? (
-                    <div 
-                      onDragOver={(e) => { e.preventDefault(); setIsGalleryDragging(true); }}
-                      onDragLeave={() => setIsGalleryDragging(false)}
-                      onDrop={(e) => {
-                        e.preventDefault();
-                        setIsGalleryDragging(false);
-                        const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith("image/"));
-                        if (files.length > 0) {
-                          setGalleryImageFiles(prev => [...prev, ...files]);
-                          setGalleryImagePreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]);
-                        }
-                      }}
-                      className={`p-8 text-center bg-slate-50 dark:bg-slate-900 rounded-xl border-2 border-dashed transition-all duration-300 ${
-                        isGalleryDragging 
-                          ? "border-indigo-500 bg-indigo-50/20 dark:bg-indigo-950/10 scale-102" 
-                          : "border-slate-200 dark:border-slate-700"
-                      }`}
-                    >
-                      <ImageIcon className={`w-10 h-10 mx-auto mb-2 transition-transform duration-300 ${isGalleryDragging ? "text-indigo-500 scale-110" : "text-slate-300"}`} />
-                      <p className="text-slate-400 text-sm">
-                        Drag and drop gallery images here.
+                    <div>
+                      <h3 className="text-lg font-semibold text-slate-800 dark:text-white flex items-center gap-2">
+                        <Star className="w-5 h-5 text-amber-500 fill-amber-500" /> Media & Gallery
+                      </h3>
+                      <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
+                        Upload your product images and choose which one is the main display photo.
                       </p>
                     </div>
-                  ) : (
-                    <div 
-                      onDragOver={(e) => { e.preventDefault(); setIsGalleryDragging(true); }}
-                      onDragLeave={() => setIsGalleryDragging(false)}
-                      onDrop={(e) => {
-                        e.preventDefault();
-                        setIsGalleryDragging(false);
-                        const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith("image/"));
-                        if (files.length > 0) {
-                          setGalleryImageFiles(prev => [...prev, ...files]);
-                          setGalleryImagePreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]);
-                        }
-                      }}
-                      className={`grid grid-cols-2 md:grid-cols-4 gap-4 p-2 rounded-xl transition-all duration-300 ${
-                        isGalleryDragging ? "bg-indigo-50/10 dark:bg-indigo-950/10 ring-2 ring-indigo-500/20" : ""
-                      }`}
-                    >
-                      {galleryImagePreviews.map((img, idx) => (
-                        <div
-                          key={idx}
-                          className="relative aspect-square group rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700"
-                        >
-                          <img
-                            src={img}
-                            alt=""
-                            className="w-full h-full object-cover"
-                          />
-                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                            <button
-                              onClick={() => moveGalleryImage(idx, "left")}
-                              className="p-1 bg-white dark:bg-slate-800 rounded hover:bg-indigo-50 dark:hover:bg-slate-700"
-                            >
-                              <MoveLeft className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => {
-                                setGalleryImageFiles(
-                                  galleryImageFiles.filter((_, i) => i !== idx),
-                                );
-                                setGalleryImagePreviews(
-                                  galleryImagePreviews.filter(
-                                    (_, i) => i !== idx,
-                                  ),
-                                );
-                              }}
-                              className="p-1 bg-white dark:bg-slate-800 rounded text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => moveGalleryImage(idx, "right")}
-                              className="p-1 bg-white dark:bg-slate-800 rounded hover:bg-indigo-50 dark:hover:bg-slate-700"
-                            >
-                              <MoveRight className="w-4 h-4" />
-                            </button>
+                  </div>
+
+                  {/* Dropzone Area */}
+                  <div
+                    onDragOver={(e) => { e.preventDefault(); setIsMediaDragging(true); }}
+                    onDragLeave={() => setIsMediaDragging(false)}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      setIsMediaDragging(false);
+                      const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith("image/"));
+                      if (files.length > 0) {
+                        const newImages = files.map((file) => ({
+                          id: `new-${Date.now()}-${Math.random()}`,
+                          file,
+                          previewUrl: URL.createObjectURL(file),
+                          isPrimary: false,
+                          isExisting: false,
+                        }));
+                        setProductImages((prev) => {
+                          const updated = [...prev, ...newImages];
+                          if (!updated.some((img) => img.isPrimary) && updated.length > 0) {
+                            updated[0].isPrimary = true;
+                          }
+                          return updated;
+                        });
+                      }
+                    }}
+                    onClick={() => mediaInputRef.current?.click()}
+                    className={`p-10 text-center rounded-2xl border-2 border-dashed cursor-pointer transition-all duration-300 flex flex-col items-center justify-center gap-2 relative ${
+                      isMediaDragging
+                        ? "border-indigo-500 bg-indigo-50/20 dark:bg-indigo-950/10 scale-[1.01]"
+                        : "border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 hover:bg-slate-50 dark:hover:bg-slate-900"
+                    }`}
+                  >
+                    <input
+                      ref={mediaInputRef}
+                      type="file"
+                      multiple
+                      onChange={handleMediaUpload}
+                      className="hidden"
+                      accept="image/*"
+                    />
+                    <UploadCloud className={`w-12 h-12 transition-transform duration-300 ${isMediaDragging ? "text-indigo-500 scale-110" : "text-slate-400 dark:text-slate-550"}`} />
+                    <div>
+                      <p className="text-slate-700 dark:text-slate-300 font-semibold text-sm">
+                        Drag & Drop or Click to Upload
+                      </p>
+                      <p className="text-xs text-slate-400 mt-1">
+                        PNG, JPG, JPEG or WEBP formats up to 5MB each. Recommended dimension: 1200x1200px.
+                      </p>
+                    </div>
+                  </div>
+
+                  <ErrorText message={errors.primary_image_path || errors.primary_image} />
+
+                  {/* Images List Grid */}
+                  {productImages.length > 0 && (
+                    <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800">
+                      <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-4 flex items-center gap-2">
+                        Uploaded Photos ({productImages.length})
+                        <span className="text-[10px] bg-slate-100 dark:bg-slate-850 px-2 py-0.5 rounded text-slate-400 font-medium normal-case">
+                          Hover to set primary, reorder or remove
+                        </span>
+                      </h4>
+
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                        {productImages.map((img, idx) => (
+                          <div
+                            key={img.id}
+                            className={`relative aspect-square group rounded-2xl overflow-hidden border transition-all duration-300 ${
+                              img.isPrimary
+                                ? "border-indigo-500 ring-2 ring-indigo-500/20 shadow-lg shadow-indigo-500/5"
+                                : "border-slate-200 dark:border-slate-700 hover:border-slate-350 dark:hover:border-slate-650"
+                            }`}
+                          >
+                            <img
+                              src={img.previewUrl}
+                              alt=""
+                              className="w-full h-full object-cover"
+                            />
+
+                            {/* Actions Overlay */}
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-between p-3 select-none">
+                              {/* Top row actions (Set Primary status) */}
+                              <div className="w-full flex justify-between items-start">
+                                {img.isPrimary ? (
+                                  <div className="px-2 py-1 bg-amber-500 text-white text-[9px] font-bold rounded flex items-center gap-1 shadow-sm">
+                                    <Star className="w-2.5 h-2.5 fill-current" /> Main
+                                  </div>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleSetPrimaryImage(img.id)}
+                                    className="px-2 py-1 bg-white hover:bg-indigo-550 text-slate-700 hover:text-indigo-600 text-[9px] font-bold rounded shadow-sm transition-all"
+                                  >
+                                    Set Main
+                                  </button>
+                                )}
+                              </div>
+
+                              {/* Center row actions (Delete & Move) */}
+                              <div className="flex items-center gap-1.5">
+                                <button
+                                  type="button"
+                                  onClick={() => moveMediaImage(idx, "left")}
+                                  disabled={idx === 0}
+                                  className="p-1.5 bg-white dark:bg-slate-800 rounded-lg hover:bg-indigo-50 dark:hover:bg-slate-700 disabled:opacity-50 disabled:pointer-events-none transition-colors shadow-sm"
+                                  title="Move Left"
+                                >
+                                  <MoveLeft className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveMediaImage(img.id)}
+                                  className="p-1.5 bg-white dark:bg-slate-800 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors shadow-sm"
+                                  title="Delete Image"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => moveMediaImage(idx, "right")}
+                                  disabled={idx === productImages.length - 1}
+                                  className="p-1.5 bg-white dark:bg-slate-800 rounded-lg hover:bg-indigo-50 dark:hover:bg-slate-700 disabled:opacity-50 disabled:pointer-events-none transition-colors shadow-sm"
+                                  title="Move Right"
+                                >
+                                  <MoveRight className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+
+                              <div className="text-[10px] text-white/80 font-medium">
+                                #{idx + 1}
+                              </div>
+                            </div>
+
+                            {/* Always visible Primary badge/indicator */}
+                            {img.isPrimary && (
+                              <div className="absolute top-2 left-2 px-2 py-0.5 bg-indigo-600/90 text-white text-[9px] font-bold rounded backdrop-blur-sm shadow flex items-center gap-1">
+                                <Star className="w-2.5 h-2.5 fill-current text-amber-400" /> Primary
+                              </div>
+                            )}
+
+                            {/* Thumbnail number when not hovered */}
+                            {!img.isPrimary && (
+                              <div className="absolute bottom-2 right-2 px-1.5 py-0.5 bg-black/40 text-white text-[9px] font-medium rounded backdrop-blur-sm">
+                                #{idx + 1}
+                              </div>
+                            )}
                           </div>
-                          <div className="absolute top-2 left-2 px-2 py-1 bg-black/50 text-white text-[10px] rounded backdrop-blur-sm font-medium">
-                            #{idx + 1}
-                          </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -3126,7 +3121,7 @@ function CreateProductContent() {
           <span className="hidden sm:inline shrink-0 uppercase opacity-60">Status:</span>
           <span className="shrink-0">VARIANTS: <span className="text-slate-900 dark:text-white font-semibold">{variants.length}</span></span>
           <span className="text-slate-300 dark:text-slate-600 mx-1">|</span>
-          <span className="shrink-0">IMAGES: <span className="text-slate-900 dark:text-white font-semibold">{galleryImagePreviews.length + (heroImagePreview ? 1 : 0)}</span></span>
+          <span className="shrink-0">IMAGES: <span className="text-slate-900 dark:text-white font-semibold">{productImages.length}</span></span>
           <span className="text-slate-300 dark:text-slate-600 mx-1">|</span>
           <span className="hidden lg:flex items-center gap-1 min-w-0">
             CATEGORY: <span className="text-slate-900 dark:text-white uppercase font-semibold truncate max-w-[100px]">{categories.find(c => String(c.id) === String(formData.category_id))?.name || "N/A"}</span>
