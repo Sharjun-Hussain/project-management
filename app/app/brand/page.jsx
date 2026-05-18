@@ -35,6 +35,22 @@ import {
 import { Suspense } from "react";
 import { FormInput, FormTextarea, FormSwitch } from "@/components/forms/reusable-fields";
 
+const getBrandGradient = (name = "") => {
+  const char = name.trim().charAt(0).toUpperCase() || "?";
+  const code = char.charCodeAt(0) || 0;
+  const gradients = [
+    "from-indigo-500 to-purple-600 shadow-indigo-500/20",
+    "from-pink-500 to-rose-600 shadow-pink-500/20",
+    "from-emerald-500 to-teal-600 shadow-emerald-500/20",
+    "from-amber-500 to-orange-600 shadow-amber-500/20",
+    "from-blue-500 to-indigo-600 shadow-blue-500/20",
+    "from-purple-500 to-fuchsia-600 shadow-purple-500/20",
+    "from-cyan-500 to-blue-600 shadow-cyan-500/20",
+    "from-teal-500 to-emerald-600 shadow-teal-500/20",
+  ];
+  return gradients[code % gradients.length];
+};
+
 function BrandContent() {
   const { data: session } = useSession();
   const { mutate } = useSWRConfig();
@@ -87,11 +103,8 @@ function BrandContent() {
     description: "",
     is_featured: 0,
     is_active: 1,
-    logo: null,
   });
   const [validationErrors, setValidationErrors] = useState({});
-  const [imagePreview, setImagePreview] = useState(null);
-  const fileInputRef = useRef(null);
 
   // --- SWR FETCHING ---
   const fetcher = async (url) => {
@@ -134,80 +147,6 @@ function BrandContent() {
     mutate(`${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/brands?${queryParams}`);
   };
 
-  const compressImage = (file, maxWidth = 1200, quality = 0.7) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = (event) => {
-        const img = new Image();
-        img.src = event.target.result;
-        img.onload = () => {
-          const canvas = document.createElement("canvas");
-          let width = img.width;
-          let height = img.height;
-
-          if (width > maxWidth) {
-            height = (maxWidth / width) * height;
-            width = maxWidth;
-          }
-
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext("2d");
-          ctx.drawImage(img, 0, 0, width, height);
-
-          canvas.toBlob(
-            (blob) => {
-              if (blob) {
-                const compressedFile = new File([blob], file.name, {
-                  type: "image/jpeg",
-                  lastModified: Date.now(),
-                });
-                resolve(compressedFile);
-              } else {
-                reject(new Error("Canvas toBlob failed"));
-              }
-            },
-            "image/jpeg",
-            quality
-          );
-        };
-        img.onerror = (err) => reject(err);
-      };
-      reader.onerror = (err) => reject(err);
-    });
-  };
-
-  const handleImageChange = async (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      if (!file.type.startsWith("image/")) {
-        toast.error("Please upload an image file");
-        return;
-      }
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error("File is too large. Max 5MB allowed.");
-        return;
-      }
-
-      setLoading(true);
-      try {
-        const compressedFile = await compressImage(file);
-        setFormData({ ...formData, logo: compressedFile });
-        if (validationErrors.logo) setValidationErrors({ ...validationErrors, logo: null });
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setImagePreview(reader.result);
-        };
-        reader.readAsDataURL(compressedFile);
-      } catch (error) {
-        console.error("Compression failed:", error);
-        toast.error("Failed to process image");
-      } finally {
-        setLoading(false);
-      }
-    }
-  };
 
   // ------------------------------------------------------------------
   // 1. PAGE LOAD ANIMATION
@@ -334,9 +273,7 @@ function BrandContent() {
       description: "",
       is_featured: 0,
       is_active: 1,
-      logo: null,
     });
-    setImagePreview(null);
     setValidationErrors({});
     setIsFormOpen(true);
   };
@@ -346,13 +283,11 @@ function BrandContent() {
     setSelectedBrand(brand);
     setFormData({
       name: brand.name,
-      website: brand.website,
+      website: brand.website || "",
       description: brand.description || "",
       is_featured: brand.is_featured ? 1 : 0,
       is_active: brand.is_active ? 1 : 0,
-      logo: null,
     });
-    setImagePreview(getImageUrl(brand.logo) || null);
     setValidationErrors({});
     setIsFormOpen(true);
   };
@@ -380,20 +315,12 @@ function BrandContent() {
         ? `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/brands/${selectedBrand.id}`
         : `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/brands`;
 
-      const body = new FormData();
-      Object.keys(formData).forEach(key => {
-        if (formData[key] !== null && formData[key] !== "") {
-          body.append(key, formData[key]);
-        }
-      });
-      
-      if (formMode === "edit") {
-        body.append("_method", "PUT");
-      }
-
       const data = await globalFetcher(url, session?.accessToken, {
-        method: "POST",
-        body,
+        method: formMode === "edit" ? "PUT" : "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
       });
       if (data && data.status === "success") {
         toast.success(formMode === "edit" ? "Brand updated" : "Brand created");
@@ -544,7 +471,7 @@ function BrandContent() {
         </div>
 
         {/* 3. CONTENT AREA */}
-        <div className="relative min-h-[400px]">
+        <div className="relative min-h-[400px] mt-6">
           {loading ? (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
               <div className="relative">
@@ -580,16 +507,10 @@ function BrandContent() {
                       key={brand.id}
                       className="brand-item group relative bg-white dark:bg-slate-800 rounded-3xl p-6 border border-slate-100 dark:border-slate-700 hover:border-indigo-100 dark:hover:border-indigo-900/50 shadow-sm hover:shadow-xl transition-all duration-500 flex flex-col h-full"
                     >
-                      <div className="relative aspect-square rounded-2xl overflow-hidden bg-linear-to-br from-indigo-50 to-indigo-100 dark:from-indigo-900/20 dark:to-indigo-800/20 mb-4 flex items-center justify-center p-6">
-                        {brand.logo ? (
-                          <img
-                            src={getImageUrl(brand.logo)}
-                            alt={brand.name}
-                            className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-700"
-                          />
-                        ) : (
-                          <ImageIcon className="w-10 h-10 text-slate-300 dark:text-slate-600" />
-                        )}
+                      <div className="relative w-full h-36 rounded-2xl overflow-hidden mb-4 flex items-center justify-center p-6 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
+                        <div className={`w-20 h-20 rounded-3xl bg-linear-to-br bg-gradient-to-br ${getBrandGradient(brand.name)} text-white flex items-center justify-center text-3xl font-extrabold shadow-md transform transition-transform duration-300 group-hover:scale-105`}>
+                          {brand.name.trim().charAt(0).toUpperCase() || "?"}
+                        </div>
                         <div className="absolute top-3 right-3 flex gap-1">
                           {brand.is_featured ? (
                             <span className="backdrop-blur-md bg-amber-500/10 text-amber-600 dark:text-amber-400 px-2.5 py-1 rounded-full text-[10px] font-bold border border-amber-200 dark:border-amber-900/50">
@@ -654,12 +575,8 @@ function BrandContent() {
                         <tr key={brand.id} className="group border-b border-slate-50 dark:border-slate-700/50 hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-colors">
                           <td className="p-4 pl-8">
                             <div className="flex items-center gap-4">
-                              <div className="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-900 overflow-hidden border border-slate-100 dark:border-slate-700 p-1.5 flex items-center justify-center">
-                                {brand.logo ? (
-                                  <img src={getImageUrl(brand.logo)} className="max-w-full max-h-full object-contain" />
-                                ) : (
-                                  <ImageIcon className="w-5 h-5 text-slate-300" />
-                                )}
+                              <div className={`w-10 h-10 rounded-xl bg-linear-to-br ${getBrandGradient(brand.name)} text-white flex items-center justify-center font-black text-sm shadow-md`}>
+                                {brand.name.trim().charAt(0).toUpperCase() || "?"}
                               </div>
                               <div className="font-semibold text-slate-900 dark:text-white">{brand.name}</div>
                             </div>
@@ -780,33 +697,6 @@ function BrandContent() {
 
               {/* Drawer Body */}
               <div className="flex-1 overflow-y-auto p-8 space-y-6">
-                {/* Logo Upload */}
-                <div className="flex flex-col items-center mb-8">
-                  <div className="relative group cursor-pointer" onClick={() => fileInputRef.current.click()}>
-                    <div className="w-32 h-32 rounded-3xl bg-slate-50 dark:bg-slate-900 border-2 border-dashed border-slate-200 dark:border-slate-700 overflow-hidden flex items-center justify-center group-hover:border-indigo-500 transition-all">
-                      {imagePreview ? (
-                        <img src={imagePreview} className="w-full h-full object-contain p-4" alt="Preview" />
-                      ) : (
-                        <Camera className="w-10 h-10 text-slate-300 group-hover:text-indigo-500 transition-colors" />
-                      )}
-                    </div>
-                    <div className="absolute -bottom-2 -right-2 p-2.5 bg-indigo-600 rounded-2xl shadow-xl text-white group-hover:scale-110 transition-transform">
-                      <Plus className="w-5 h-5" />
-                    </div>
-                  </div>
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleImageChange}
-                    className="hidden"
-                    accept="image/*"
-                  />
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-4">Brand Logo <span className="text-red-500">*</span></p>
-                  {validationErrors.logo && (
-                    <p className="text-xs text-red-500 mt-1 font-medium">{validationErrors.logo}</p>
-                  )}
-                </div>
-
                 <div className="space-y-4">
                   <FormInput
                     label="Brand Name"
@@ -869,8 +759,8 @@ function BrandContent() {
                 <button
                   onClick={handleSubmit}
                   type="button"
-                  disabled={!formData.name || (formMode === "create" && !formData.logo) || loading}
-                  className={`flex items-center justify-center gap-2 flex-2 py-3 px-4 rounded-xl font-bold text-sm text-white transition-all transform active:scale-95 ${(!formData.name || (formMode === "create" && !formData.logo) || loading) ? "bg-indigo-400 cursor-not-allowed" : "bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-500/30"}`}
+                  disabled={!formData.name || loading}
+                  className={`flex items-center justify-center gap-2 flex-2 py-3 px-4 rounded-xl font-bold text-sm text-white transition-all transform active:scale-95 ${(!formData.name || loading) ? "bg-indigo-400 cursor-not-allowed" : "bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-500/30"}`}
                 >
                   {loading ? (
                     <>
