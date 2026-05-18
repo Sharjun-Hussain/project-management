@@ -173,9 +173,12 @@ export const FormSwitch = React.memo(({
 }) => {
   return (
     <div className={cn("flex flex-row items-center justify-between rounded-xl border border-slate-200 dark:border-slate-700 p-4 bg-white dark:bg-slate-800/50 shadow-sm", className)}>
-      <div className="space-y-0.5">
-        {label && <Label className="text-sm font-semibold text-slate-800 dark:text-white">{label}</Label>}
-        {description && <p className="text-[11px] text-slate-500 dark:text-slate-400">{description}</p>}
+      <div 
+        className="space-y-0.5 cursor-pointer select-none flex-1 mr-4"
+        onClick={() => onCheckedChange && onCheckedChange(!checked)}
+      >
+        {label && <Label className="text-sm font-semibold text-slate-800 dark:text-white cursor-pointer">{label}</Label>}
+        {description && <p className="text-[11px] text-slate-500 dark:text-slate-400 cursor-pointer">{description}</p>}
       </div>
       <Switch
         checked={checked}

@@ -763,7 +763,7 @@ function SubCategoryContent() {
                     <FormSwitch
                       label="Active"
                       checked={!!formData.is_active}
-                      onChange={(checked) => setFormData({ ...formData, is_active: checked ? 1 : 0 })}
+                      onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked ? 1 : 0 })}
                     />
                   </div>
 
