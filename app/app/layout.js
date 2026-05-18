@@ -25,7 +25,8 @@ export async function generateMetadata() {
       const json = await res.json();
       const data = json.data || {};
       const title = data.admin_dashboard_title || "Admin Dashboard";
-      const favicon = data.site_favicon ? (data.site_favicon.startsWith('http') ? data.site_favicon : `${BASE_URL}/${data.site_favicon}`) : "/favicon.ico";
+      const cleanFavicon = data.site_favicon.startsWith('/') ? data.site_favicon : `/${data.site_favicon}`;
+      const favicon = data.site_favicon.startsWith('http') ? data.site_favicon : `${BASE_URL}${cleanFavicon}`;
 
       return {
         title: title,
