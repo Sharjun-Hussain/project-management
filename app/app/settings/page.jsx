@@ -93,6 +93,8 @@ export default function SettingsPage() {
     adminName, 
     updateSettings,
     refreshSettings,
+    accentColorsMap,
+    accentColor,
   } = useGlobalSettings();
 
   // --- STATE ---
@@ -103,6 +105,11 @@ export default function SettingsPage() {
   const [isBackingUp, setIsBackingUp] = useState(false);
 
   const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [selectedAccentColor, setSelectedAccentColor] = useState("indigo");
+
+  useEffect(() => {
+    if (accentColor) setSelectedAccentColor(accentColor);
+  }, [accentColor]);
 
   // Form A: Profile Details (Read-only by default, toggled with edit button)
   const {
@@ -593,6 +600,52 @@ export default function SettingsPage() {
                   </div>
                 </div>
 
+                {/* Brand Accent Color */}
+                <div className="p-5 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-slate-800">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                      <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full bg-indigo-600 animate-pulse" />
+                        Brand Accent Color
+                      </h3>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                        Select the primary accent color applied across your shop dashboard.
+                      </p>
+                    </div>
+                    
+                    <div className="flex flex-wrap gap-2.5">
+                      {accentColorsMap && Object.entries(accentColorsMap).map(([key, value]) => {
+                        const isSelected = selectedAccentColor === key;
+                        return (
+                          <button
+                            key={key}
+                            type="button"
+                            onClick={() => {
+                              setSelectedAccentColor(key);
+                              // Real-time preview by updating css variables instantly!
+                              document.documentElement.style.setProperty("--accent-color", value.primary);
+                              document.documentElement.style.setProperty("--accent-hover", value.hover);
+                              document.documentElement.style.setProperty("--accent-light", value.light);
+                              setHasChanges(true);
+                            }}
+                            title={value.name}
+                            className={`w-8 h-8 rounded-full transition-all flex items-center justify-center relative hover:scale-110 active:scale-95 cursor-pointer ${
+                              isSelected ? "ring-2 ring-slate-800 dark:ring-white ring-offset-2 dark:ring-offset-slate-900 scale-105" : "hover:shadow-sm"
+                            }`}
+                            style={{ backgroundColor: value.primary }}
+                          >
+                            {isSelected && (
+                              <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                              </svg>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase">
@@ -629,11 +682,8 @@ export default function SettingsPage() {
                     <input
                       type="email"
                       value={store.email}
-                      onChange={(e) => {
-                        setStore((prev) => ({ ...prev, email: e.target.value }));
-                        setHasChanges(true);
-                      }}
-                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm dark:text-white focus:bg-white dark:focus:bg-slate-800 focus:border-indigo-500 outline-none transition-all font-medium"
+                      disabled
+                      className="w-full bg-slate-100/70 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-500 dark:text-slate-400 outline-none transition-all font-medium cursor-not-allowed"
                     />
                   </div>
                   <div className="space-y-2">
@@ -695,6 +745,7 @@ export default function SettingsPage() {
                       fd.append("shop_address", store.address || "");
                       fd.append("admin_dashboard_title", store.dashboardTitle || "");
                       fd.append("footer_text", footerText || "");
+                      fd.append("site_accent_color", selectedAccentColor);
                       
                       const logoFile = logoFileRef.current?.files[0];
                       if (logoFile) fd.append("site_logo", logoFile);
@@ -769,17 +820,9 @@ export default function SettingsPage() {
                     <input
                       type="email"
                       {...registerProfile("adminEmail")}
-                      readOnly={!isEditingProfile}
-                      onChange={(e) => {
-                        registerProfile("adminEmail").onChange(e);
-                        updateSettings({ adminEmail: e.target.value });
-                        setHasChanges(true);
-                      }}
-                      className={`w-full border rounded-xl px-4 py-3 text-sm dark:text-white outline-none transition-all font-medium ${
-                        isEditingProfile 
-                          ? "bg-slate-50 dark:bg-slate-900 border-indigo-500 focus:bg-white dark:focus:bg-slate-800 focus:border-indigo-600" 
-                          : "bg-slate-100/70 dark:bg-slate-900/50 border-slate-200 dark:border-slate-700 cursor-not-allowed text-slate-500"
-                      }`}
+                      readOnly
+                      disabled
+                      className="w-full border bg-slate-100/70 dark:bg-slate-900/50 border-slate-200 dark:border-slate-700 cursor-not-allowed text-slate-500 rounded-xl px-4 py-3 text-sm outline-none transition-all font-medium"
                     />
                     {profileErrors.adminEmail && (
                       <p className="text-xs font-bold text-rose-500 mt-1.5 flex items-center gap-1.5 animate-pulse">

@@ -23,6 +23,17 @@ const formatUrl = (path) => {
 
 const GlobalSettingsContext = createContext();
 
+const ACCENT_COLORS = {
+  indigo: { name: "Indigo", primary: "#6366f1", hover: "#4f46e5", light: "#eef2ff" },
+  blue: { name: "Ocean Blue", primary: "#3b82f6", hover: "#2563eb", light: "#eff6ff" },
+  rose: { name: "Rose Crimson", primary: "#f43f5e", hover: "#e11d48", light: "#fff1f2" },
+  emerald: { name: "Mint Emerald", primary: "#10b981", hover: "#059669", light: "#ecfdf5" },
+  amber: { name: "Gold Amber", primary: "#f59e0b", hover: "#d97706", light: "#fef3c7" },
+  purple: { name: "Royal Purple", primary: "#a855f7", hover: "#9333ea", light: "#faf5ff" },
+  orange: { name: "Sunset Orange", primary: "#f97316", hover: "#ea580c", light: "#fff7ed" },
+  teal: { name: "Teal Breeze", primary: "#0d9488", hover: "#0f766e", light: "#f0fdfa" },
+};
+
 export const GlobalSettingsProvider = ({ children }) => {
   const { data: session, status } = useSession();
 
@@ -35,6 +46,7 @@ export const GlobalSettingsProvider = ({ children }) => {
     adminName: "",
     dashboardTitle: "",
     faviconUrl: null,
+    accentColor: "indigo",
   });
 
   const [isLoading, setIsLoading] = useState(false);
@@ -62,6 +74,7 @@ export const GlobalSettingsProvider = ({ children }) => {
         adminName: data.admin_name || "Admin User",
         dashboardTitle: data.admin_dashboard_title || defaultShopName,
         faviconUrl: formatUrl(data.site_favicon),
+        accentColor: data.site_accent_color || "indigo",
         // persist the raw data so the settings page can access all keys
         raw: data,
       });
@@ -80,6 +93,8 @@ export const GlobalSettingsProvider = ({ children }) => {
     setSettings((prev) => ({ ...prev, ...newSettings }));
   };
 
+  const selectedAccent = ACCENT_COLORS[settings.accentColor] || ACCENT_COLORS.indigo;
+
   return (
     <GlobalSettingsContext.Provider
       value={{
@@ -87,8 +102,16 @@ export const GlobalSettingsProvider = ({ children }) => {
         isLoading,
         updateSettings,
         refreshSettings: fetchSettings,
+        accentColorsMap: ACCENT_COLORS,
       }}
     >
+      <style dangerouslySetInnerHTML={{ __html: `
+        :root {
+          --accent-color: ${selectedAccent.primary};
+          --accent-hover: ${selectedAccent.hover};
+          --accent-light: ${selectedAccent.light};
+        }
+      `}} />
       {children}
     </GlobalSettingsContext.Provider>
   );
