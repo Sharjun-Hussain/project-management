@@ -1756,7 +1756,7 @@ function CreateProductContent() {
 
                       <div className="flex flex-col items-start min-w-0">
                         <div className="flex items-center gap-2 min-w-0">
-                          <span className={`text-[13px] font-bold tracking-wide truncate ${isActive ? "text-indigo-600 dark:text-indigo-400" : "text-slate-700 dark:text-slate-300 group-hover:text-slate-800 dark:group-hover:text-slate-100"}`}>
+                          <span className={`text-[13px] font-semibold truncate ${isActive ? "text-indigo-600 dark:text-indigo-400" : "text-slate-700 dark:text-slate-300 group-hover:text-slate-800 dark:group-hover:text-slate-100"}`}>
                             {step.label}
                           </span>
                           {!isCurrentStepComplete && (
@@ -1766,7 +1766,7 @@ function CreateProductContent() {
                             </span>
                           )}
                         </div>
-                        <span className={`text-[9px] font-bold uppercase tracking-widest mt-0.5 ${isActive ? "text-indigo-500 dark:text-indigo-500" : "text-slate-400 dark:text-slate-600"}`}>
+                        <span className={`text-[9px] font-semibold uppercase mt-0.5 ${isActive ? "text-indigo-500 dark:text-indigo-500" : "text-slate-400 dark:text-slate-600"}`}>
                           {isActive ? "Current Step" : isCompleted ? "Completed" : "Pending"}
                         </span>
                       </div>
