@@ -25,6 +25,9 @@ import { useGlobalSettings } from "../context/GlobalSettingsContext";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { getSettings, saveSettings, exportDatabaseBackup } from "../../lib/api/settings";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 
 // --- SUB-COMPONENTS ---
 const SaveBtn = ({ sectionKey, onClick, isSaving }) => (
@@ -68,6 +71,21 @@ const formatUrl = (path) => {
   return `${BASE_URL}${cleanPath}`;
 };
 
+const profileSchema = z.object({
+  adminName: z.string().min(2, "Display name must be at least 2 characters"),
+  adminEmail: z.string().email("Invalid email address"),
+  currentPassword: z.string().optional().or(z.literal("")),
+  newPassword: z.string().optional().or(z.literal("")),
+}).refine((data) => {
+  if (data.newPassword && !data.currentPassword) {
+    return false;
+  }
+  return true;
+}, {
+  message: "Current password is required to change password",
+  path: ["currentPassword"],
+});
+
 export default function SettingsPage() {
   const containerRef = useRef(null);
   const { data: session } = useSession();
@@ -89,9 +107,27 @@ export default function SettingsPage() {
   const [sectionSaving, setSectionSaving] = useState({});
   const [isBackingUp, setIsBackingUp] = useState(false);
 
-  // Password states for Profile section
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
+  // React Hook Form & Zod setup for Profile Settings validation
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(profileSchema),
+    defaultValues: {
+      adminName: "",
+      adminEmail: "",
+      currentPassword: "",
+      newPassword: "",
+    },
+  });
+
+  // Sync loaded settings from global context to form fields
+  useEffect(() => {
+    if (adminName) setValue("adminName", adminName);
+    if (adminEmail) setValue("adminEmail", adminEmail);
+  }, [adminName, adminEmail, setValue]);
 
   // Logo & Favicon file refs for upload
   const logoFileRef = useRef(null);
@@ -291,65 +327,6 @@ export default function SettingsPage() {
 
     setSectionSaving((prev) => ({ ...prev, [sectionKey]: true }));
     try {
-      if (sectionKey === "profile") {
-        // 1. Save general site fallback settings (admin fallback details)
-        const formData = buildFormData();
-        await saveSettings(session.accessToken, formData);
-
-        // 2. Update real logged-in user profile account in the database (PUT /api/v1/admin/profile)
-        const profileRes = await fetch(`${API_BASE_URL}/admin/profile`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${session.accessToken}`,
-            "Accept": "application/json"
-          },
-          body: JSON.stringify({
-            name: adminName,
-            email: adminEmail
-          })
-        });
-
-        if (!profileRes.ok) {
-          const errData = await profileRes.json();
-          throw new Error(errData.message || "Failed to update admin account profile");
-        }
-
-        // 3. If password fields are filled, update the password securely (PUT /api/v1/admin/update-password)
-        if (currentPassword || newPassword) {
-          if (!currentPassword || !newPassword) {
-            throw new Error("Both current and new password are required to change password");
-          }
-
-          const pwRes = await fetch(`${API_BASE_URL}/admin/update-password`, {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${session.accessToken}`,
-              "Accept": "application/json"
-            },
-            body: JSON.stringify({
-              currentPassword,
-              newPassword
-            })
-          });
-
-          if (!pwRes.ok) {
-            const errData = await pwRes.json();
-            throw new Error(errData.message || "Failed to update account password");
-          }
-
-          setCurrentPassword("");
-          setNewPassword("");
-        }
-
-        toast.success("Profile and security credentials updated successfully!");
-        setHasChanges(false);
-        refreshSettings();
-        return;
-      }
-
-      // Default save settings flow for all other EAV sections
       const formData = buildFormData();
       const response = await saveSettings(session.accessToken, formData);
       
@@ -361,6 +338,74 @@ export default function SettingsPage() {
       toast.error(error.message || `Failed to save ${sectionKey} settings`);
     } finally {
       setSectionSaving((prev) => ({ ...prev, [sectionKey]: false }));
+    }
+  };
+
+  const onProfileSubmit = async (data) => {
+    if (!session?.accessToken) {
+      toast.error("Authentication required. Please log in again.");
+      return;
+    }
+
+    setSectionSaving((prev) => ({ ...prev, profile: true }));
+    try {
+      // 1. Save general site EAV fallback settings
+      const fd = new FormData();
+      fd.append("admin_name", data.adminName);
+      fd.append("shop_email", data.adminEmail);
+      await saveSettings(session.accessToken, fd);
+
+      // 2. Update real logged-in user profile account in the database (PUT /api/v1/admin/profile)
+      const profileRes = await fetch(`${API_BASE_URL}/admin/profile`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${session.accessToken}`,
+          "Accept": "application/json"
+        },
+        body: JSON.stringify({
+          name: data.adminName,
+          email: data.adminEmail
+        })
+      });
+
+      if (!profileRes.ok) {
+        const errData = await profileRes.json();
+        throw new Error(errData.message || "Failed to update admin account profile");
+      }
+
+      // 3. If password fields are filled, update the password securely (PUT /api/v1/admin/update-password)
+      if (data.currentPassword || data.newPassword) {
+        const pwRes = await fetch(`${API_BASE_URL}/admin/update-password`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${session.accessToken}`,
+            "Accept": "application/json"
+          },
+          body: JSON.stringify({
+            currentPassword: data.currentPassword,
+            newPassword: data.newPassword
+          })
+        });
+
+        if (!pwRes.ok) {
+          const errData = await pwRes.json();
+          throw new Error(errData.message || "Failed to update account password");
+        }
+
+        setValue("currentPassword", "");
+        setValue("newPassword", "");
+      }
+
+      toast.success("Profile and security credentials updated successfully!");
+      setHasChanges(false);
+      refreshSettings();
+    } catch (error) {
+      console.error(`[Settings] Profile save error:`, error);
+      toast.error(error.message || `Failed to save profile settings`);
+    } finally {
+      setSectionSaving((prev) => ({ ...prev, profile: false }));
     }
   };
 
@@ -658,13 +703,20 @@ export default function SettingsPage() {
                     </label>
                     <input
                       type="text"
-                      value={adminName}
+                      {...register("adminName")}
                       onChange={(e) => {
+                        register("adminName").onChange(e);
                         updateSettings({ adminName: e.target.value });
                         setHasChanges(true);
                       }}
                       className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm dark:text-white focus:bg-white dark:focus:bg-slate-800 focus:border-indigo-500 outline-none transition-all font-medium"
                     />
+                    {errors.adminName && (
+                      <p className="text-xs font-bold text-rose-500 mt-1.5 flex items-center gap-1.5 animate-pulse">
+                        <AlertCircle className="w-3.5 h-3.5" />
+                        {errors.adminName.message}
+                      </p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase">
@@ -672,13 +724,20 @@ export default function SettingsPage() {
                     </label>
                     <input
                       type="email"
-                      value={adminEmail}
+                      {...register("adminEmail")}
                       onChange={(e) => {
+                        register("adminEmail").onChange(e);
                         updateSettings({ adminEmail: e.target.value });
                         setHasChanges(true);
                       }}
                       className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm dark:text-white focus:bg-white dark:focus:bg-slate-800 focus:border-indigo-500 outline-none transition-all font-medium"
                     />
+                    {errors.adminEmail && (
+                      <p className="text-xs font-bold text-rose-500 mt-1.5 flex items-center gap-1.5 animate-pulse">
+                        <AlertCircle className="w-3.5 h-3.5" />
+                        {errors.adminEmail.message}
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -692,13 +751,19 @@ export default function SettingsPage() {
                       <input
                         type="password"
                         placeholder="••••••••"
-                        value={currentPassword}
+                        {...register("currentPassword")}
                         onChange={(e) => {
-                          setCurrentPassword(e.target.value);
+                          register("currentPassword").onChange(e);
                           setHasChanges(true);
                         }}
                         className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm dark:text-white focus:bg-white dark:focus:bg-slate-800 focus:border-rose-500 outline-none transition-all font-medium"
                       />
+                      {errors.currentPassword && (
+                        <p className="text-xs font-bold text-rose-500 mt-1.5 flex items-center gap-1.5 animate-pulse">
+                          <AlertCircle className="w-3.5 h-3.5" />
+                          {errors.currentPassword.message}
+                        </p>
+                      )}
                     </div>
                     <div className="space-y-2">
                       <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase">
@@ -707,13 +772,19 @@ export default function SettingsPage() {
                       <input
                         type="password"
                         placeholder="••••••••"
-                        value={newPassword}
+                        {...register("newPassword")}
                         onChange={(e) => {
-                          setNewPassword(e.target.value);
+                          register("newPassword").onChange(e);
                           setHasChanges(true);
                         }}
                         className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm dark:text-white focus:bg-white dark:focus:bg-slate-800 focus:border-rose-500 outline-none transition-all font-medium"
                       />
+                      {errors.newPassword && (
+                        <p className="text-xs font-bold text-rose-500 mt-1.5 flex items-center gap-1.5 animate-pulse">
+                          <AlertCircle className="w-3.5 h-3.5" />
+                          {errors.newPassword.message}
+                        </p>
+                      )}
                     </div>
                    </div>
                 </div>
@@ -723,14 +794,7 @@ export default function SettingsPage() {
                 <SaveBtn
                   sectionKey="profile"
                   isSaving={sectionSaving["profile"]}
-                  onClick={() =>
-                    saveSection("profile", () => {
-                      const fd = new FormData();
-                      fd.append("admin_name", adminName || "");
-                      fd.append("shop_email", adminEmail || "");
-                      return fd;
-                    })
-                  }
+                  onClick={handleSubmit(onProfileSubmit)}
                 />
               </div>
             </div>
