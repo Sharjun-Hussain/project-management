@@ -1495,13 +1495,13 @@ function CreateProductContent() {
 
   if (!productSetupType && !isEditMode) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-slate-900/90 backdrop-blur-md rounded-2xl border border-slate-800 p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-4 transition-all duration-300">
+        <div className="max-w-md w-full bg-white dark:bg-slate-900/90 backdrop-blur-md rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-2xl dark:shadow-slate-950/50 animate-in fade-in zoom-in-95 duration-200">
           <div className="text-center space-y-1 mb-6">
-            <h1 className="text-base font-extrabold text-white tracking-tight">
+            <h1 className="text-base font-extrabold text-slate-900 dark:text-white tracking-tight">
               Select Product Setup Type
             </h1>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               Choose the catalog configuration for your product.
             </p>
           </div>
@@ -1535,16 +1535,16 @@ function CreateProductContent() {
                   }
                 ]);
               }}
-              className="group w-full flex items-center gap-4 p-3.5 bg-slate-950/60 hover:bg-indigo-950/20 border border-slate-850 hover:border-indigo-500 rounded-xl transition-all duration-300 hover:shadow-md cursor-pointer animate-in fade-in slide-in-from-top-1"
+              className="group w-full flex items-center gap-4 p-3.5 bg-slate-50 dark:bg-slate-950/60 hover:bg-indigo-50/50 dark:hover:bg-indigo-950/20 border border-slate-200 dark:border-slate-800 hover:border-indigo-500 dark:hover:border-indigo-500 rounded-xl transition-all duration-300 hover:shadow-md cursor-pointer animate-in fade-in slide-in-from-top-1"
             >
-              <div className="w-10 h-10 rounded-xl bg-indigo-950 flex items-center justify-center text-indigo-400 shrink-0 group-hover:scale-105 transition-transform">
+              <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0 group-hover:scale-105 transition-transform">
                 <Box className="w-5 h-5" />
               </div>
               <div className="text-left">
-                <h3 className="text-xs font-bold text-white group-hover:text-indigo-400 transition-colors">
+                <h3 className="text-xs font-bold text-slate-800 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                   Direct Product
                 </h3>
-                <p className="text-[10px] text-slate-400 mt-0.5 leading-normal">
+                <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 leading-normal">
                   Standard single item. Direct SKU, pricing, and properties without variants.
                 </p>
               </div>
@@ -1556,27 +1556,27 @@ function CreateProductContent() {
               onClick={() => {
                 setProductSetupType("variant");
               }}
-              className="group w-full flex items-center gap-4 p-3.5 bg-slate-950/60 hover:bg-indigo-950/20 border border-slate-850 hover:border-indigo-500 rounded-xl transition-all duration-300 hover:shadow-md cursor-pointer animate-in fade-in slide-in-from-top-2"
+              className="group w-full flex items-center gap-4 p-3.5 bg-slate-50 dark:bg-slate-950/60 hover:bg-indigo-50/50 dark:hover:bg-indigo-950/20 border border-slate-200 dark:border-slate-800 hover:border-indigo-500 dark:hover:border-indigo-500 rounded-xl transition-all duration-300 hover:shadow-md cursor-pointer animate-in fade-in slide-in-from-top-2"
             >
-              <div className="w-10 h-10 rounded-xl bg-indigo-950 flex items-center justify-center text-indigo-400 shrink-0 group-hover:scale-105 transition-transform">
+              <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0 group-hover:scale-105 transition-transform">
                 <Layers className="w-5 h-5" />
               </div>
               <div className="text-left">
-                <h3 className="text-xs font-bold text-white group-hover:text-indigo-400 transition-colors">
+                <h3 className="text-xs font-bold text-slate-800 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                   Variant Product
                 </h3>
-                <p className="text-[10px] text-slate-400 mt-0.5 leading-normal">
+                <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 leading-normal">
                   Configurable items. Multiple variations of color, size, storage, each with pricing.
                 </p>
               </div>
             </button>
           </div>
 
-          <div className="mt-6 pt-4 border-t border-slate-800/50 flex justify-center">
+          <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800/50 flex justify-center">
             <button
               type="button"
               onClick={() => router.push("/app/products")}
-              className="text-xs font-semibold text-slate-400 hover:text-indigo-400 transition-colors cursor-pointer"
+              className="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors cursor-pointer"
             >
               Back to Products List
             </button>
