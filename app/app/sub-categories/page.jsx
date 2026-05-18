@@ -751,21 +751,11 @@ function SubCategoryContent() {
                     icon={<Tag className="w-4 h-4" />}
                   />
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormInput
-                      label="Slug"
-                      value={formData.slug}
-                      readOnly
-                      placeholder="wireless-headphones"
-                      icon={<Info className="w-4 h-4" />}
-                    />
-                    
-                    <FormSwitch
-                      label="Active"
-                      checked={!!formData.is_active}
-                      onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked ? 1 : 0 })}
-                    />
-                  </div>
+                  <FormSwitch
+                    label="Active"
+                    checked={!!formData.is_active}
+                    onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked ? 1 : 0 })}
+                  />
 
                   <FormSelect
                     label="Parent Category"
