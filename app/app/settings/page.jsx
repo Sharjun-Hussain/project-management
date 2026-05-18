@@ -71,19 +71,14 @@ const formatUrl = (path) => {
   return `${BASE_URL}${cleanPath}`;
 };
 
-const profileSchema = z.object({
+const profileDetailsSchema = z.object({
   adminName: z.string().min(2, "Display name must be at least 2 characters"),
   adminEmail: z.string().email("Invalid email address"),
-  currentPassword: z.string().optional().or(z.literal("")),
-  newPassword: z.string().optional().or(z.literal("")),
-}).refine((data) => {
-  if (data.newPassword && !data.currentPassword) {
-    return false;
-  }
-  return true;
-}, {
-  message: "Current password is required to change password",
-  path: ["currentPassword"],
+});
+
+const passwordSchema = z.object({
+  currentPassword: z.string().min(1, "Current password is required"),
+  newPassword: z.string().min(6, "New password must be at least 6 characters"),
 });
 
 export default function SettingsPage() {
@@ -107,17 +102,32 @@ export default function SettingsPage() {
   const [sectionSaving, setSectionSaving] = useState({});
   const [isBackingUp, setIsBackingUp] = useState(false);
 
-  // React Hook Form & Zod setup for Profile Settings validation
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+
+  // Form A: Profile Details (Read-only by default, toggled with edit button)
   const {
-    register,
-    handleSubmit,
-    setValue,
-    formState: { errors },
+    register: registerProfile,
+    handleSubmit: handleProfileSubmit,
+    setValue: setProfileValue,
+    formState: { errors: profileErrors },
   } = useForm({
-    resolver: zodResolver(profileSchema),
+    resolver: zodResolver(profileDetailsSchema),
     defaultValues: {
       adminName: "",
       adminEmail: "",
+    },
+  });
+
+  // Form B: Password Security (Always active, separated button)
+  const {
+    register: registerPassword,
+    handleSubmit: handlePasswordSubmit,
+    setValue: setPasswordValue,
+    formState: { errors: passwordErrors },
+    reset: resetPasswordForm,
+  } = useForm({
+    resolver: zodResolver(passwordSchema),
+    defaultValues: {
       currentPassword: "",
       newPassword: "",
     },
@@ -125,9 +135,9 @@ export default function SettingsPage() {
 
   // Sync loaded settings from global context to form fields
   useEffect(() => {
-    if (adminName) setValue("adminName", adminName);
-    if (adminEmail) setValue("adminEmail", adminEmail);
-  }, [adminName, adminEmail, setValue]);
+    if (adminName) setProfileValue("adminName", adminName);
+    if (adminEmail) setProfileValue("adminEmail", adminEmail);
+  }, [adminName, adminEmail, setProfileValue]);
 
   // Logo & Favicon file refs for upload
   const logoFileRef = useRef(null);
@@ -341,7 +351,7 @@ export default function SettingsPage() {
     }
   };
 
-  const onProfileSubmit = async (data) => {
+  const onProfileDetailsSubmit = async (data) => {
     if (!session?.accessToken) {
       toast.error("Authentication required. Please log in again.");
       return;
@@ -374,38 +384,52 @@ export default function SettingsPage() {
         throw new Error(errData.message || "Failed to update admin account profile");
       }
 
-      // 3. If password fields are filled, update the password securely (PUT /api/v1/admin/update-password)
-      if (data.currentPassword || data.newPassword) {
-        const pwRes = await fetch(`${API_BASE_URL}/admin/update-password`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${session.accessToken}`,
-            "Accept": "application/json"
-          },
-          body: JSON.stringify({
-            currentPassword: data.currentPassword,
-            newPassword: data.newPassword
-          })
-        });
-
-        if (!pwRes.ok) {
-          const errData = await pwRes.json();
-          throw new Error(errData.message || "Failed to update account password");
-        }
-
-        setValue("currentPassword", "");
-        setValue("newPassword", "");
-      }
-
-      toast.success("Profile and security credentials updated successfully!");
+      toast.success("Profile details updated successfully!");
+      setIsEditingProfile(false);
       setHasChanges(false);
       refreshSettings();
     } catch (error) {
-      console.error(`[Settings] Profile save error:`, error);
-      toast.error(error.message || `Failed to save profile settings`);
+      console.error(`[Settings] Profile details save error:`, error);
+      toast.error(error.message || `Failed to save profile details`);
     } finally {
       setSectionSaving((prev) => ({ ...prev, profile: false }));
+    }
+  };
+
+  const onPasswordSubmit = async (data) => {
+    if (!session?.accessToken) {
+      toast.error("Authentication required.");
+      return;
+    }
+
+    setSectionSaving((prev) => ({ ...prev, password: true }));
+    try {
+      const pwRes = await fetch(`${API_BASE_URL}/admin/update-password`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${session.accessToken}`,
+          "Accept": "application/json"
+        },
+        body: JSON.stringify({
+          currentPassword: data.currentPassword,
+          newPassword: data.newPassword
+        })
+      });
+
+      if (!pwRes.ok) {
+        const errData = await pwRes.json();
+        throw new Error(errData.message || "Failed to update account password");
+      }
+
+      toast.success("Password updated successfully!");
+      resetPasswordForm();
+      setHasChanges(false);
+    } catch (error) {
+      console.error(`[Settings] Password update error:`, error);
+      toast.error(error.message || `Failed to update password`);
+    } finally {
+      setSectionSaving((prev) => ({ ...prev, password: false }));
     }
   };
 
@@ -688,14 +712,29 @@ export default function SettingsPage() {
 
           {/* NEW SECTION: PROFILE SETTINGS */}
           <section id="profile" className="animate-section scroll-mt-32">
-            <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-8">
-              <SectionHeader
-                icon={Users}
-                title="Profile Settings"
-                description="Update your personal details and account credentials."
-                colorClass="bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400"
-              />
-              <div className="space-y-8">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-8 space-y-8">
+              
+              {/* BLOCK A: PROFILE DETAILS */}
+              <div>
+                <div className="flex justify-between items-center mb-6">
+                  <SectionHeader
+                    icon={Users}
+                    title="Profile Details"
+                    description="Your personal information displayed across the system."
+                    colorClass="bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400"
+                  />
+                  {!isEditingProfile && (
+                    <button
+                      type="button"
+                      onClick={() => setIsEditingProfile(true)}
+                      className="px-4 py-2 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950 dark:hover:bg-indigo-900 text-indigo-600 dark:text-indigo-400 text-xs font-bold rounded-xl transition-all active:scale-95 flex items-center gap-1.5"
+                    >
+                      <Users className="w-3.5 h-3.5" />
+                      Edit Details
+                    </button>
+                  )}
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase">
@@ -703,18 +742,23 @@ export default function SettingsPage() {
                     </label>
                     <input
                       type="text"
-                      {...register("adminName")}
+                      {...registerProfile("adminName")}
+                      readOnly={!isEditingProfile}
                       onChange={(e) => {
-                        register("adminName").onChange(e);
+                        registerProfile("adminName").onChange(e);
                         updateSettings({ adminName: e.target.value });
                         setHasChanges(true);
                       }}
-                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm dark:text-white focus:bg-white dark:focus:bg-slate-800 focus:border-indigo-500 outline-none transition-all font-medium"
+                      className={`w-full border rounded-xl px-4 py-3 text-sm dark:text-white outline-none transition-all font-medium ${
+                        isEditingProfile 
+                          ? "bg-slate-50 dark:bg-slate-900 border-indigo-500 focus:bg-white dark:focus:bg-slate-800 focus:border-indigo-600" 
+                          : "bg-slate-100/70 dark:bg-slate-900/50 border-slate-200 dark:border-slate-700 cursor-not-allowed text-slate-500"
+                      }`}
                     />
-                    {errors.adminName && (
+                    {profileErrors.adminName && (
                       <p className="text-xs font-bold text-rose-500 mt-1.5 flex items-center gap-1.5 animate-pulse">
                         <AlertCircle className="w-3.5 h-3.5" />
-                        {errors.adminName.message}
+                        {profileErrors.adminName.message}
                       </p>
                     )}
                   </div>
@@ -724,79 +768,122 @@ export default function SettingsPage() {
                     </label>
                     <input
                       type="email"
-                      {...register("adminEmail")}
+                      {...registerProfile("adminEmail")}
+                      readOnly={!isEditingProfile}
                       onChange={(e) => {
-                        register("adminEmail").onChange(e);
+                        registerProfile("adminEmail").onChange(e);
                         updateSettings({ adminEmail: e.target.value });
                         setHasChanges(true);
                       }}
-                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm dark:text-white focus:bg-white dark:focus:bg-slate-800 focus:border-indigo-500 outline-none transition-all font-medium"
+                      className={`w-full border rounded-xl px-4 py-3 text-sm dark:text-white outline-none transition-all font-medium ${
+                        isEditingProfile 
+                          ? "bg-slate-50 dark:bg-slate-900 border-indigo-500 focus:bg-white dark:focus:bg-slate-800 focus:border-indigo-600" 
+                          : "bg-slate-100/70 dark:bg-slate-900/50 border-slate-200 dark:border-slate-700 cursor-not-allowed text-slate-500"
+                      }`}
                     />
-                    {errors.adminEmail && (
+                    {profileErrors.adminEmail && (
                       <p className="text-xs font-bold text-rose-500 mt-1.5 flex items-center gap-1.5 animate-pulse">
                         <AlertCircle className="w-3.5 h-3.5" />
-                        {errors.adminEmail.message}
+                        {profileErrors.adminEmail.message}
                       </p>
                     )}
                   </div>
                 </div>
 
-                <div className="pt-6 border-t border-slate-100 dark:border-slate-700">
-                   <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-4">Security & Password</h3>
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase">
-                        Current Password
-                      </label>
-                      <input
-                        type="password"
-                        placeholder="••••••••"
-                        {...register("currentPassword")}
-                        onChange={(e) => {
-                          register("currentPassword").onChange(e);
-                          setHasChanges(true);
-                        }}
-                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm dark:text-white focus:bg-white dark:focus:bg-slate-800 focus:border-rose-500 outline-none transition-all font-medium"
-                      />
-                      {errors.currentPassword && (
-                        <p className="text-xs font-bold text-rose-500 mt-1.5 flex items-center gap-1.5 animate-pulse">
-                          <AlertCircle className="w-3.5 h-3.5" />
-                          {errors.currentPassword.message}
-                        </p>
-                      )}
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase">
-                        New Password
-                      </label>
-                      <input
-                        type="password"
-                        placeholder="••••••••"
-                        {...register("newPassword")}
-                        onChange={(e) => {
-                          register("newPassword").onChange(e);
-                          setHasChanges(true);
-                        }}
-                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm dark:text-white focus:bg-white dark:focus:bg-slate-800 focus:border-rose-500 outline-none transition-all font-medium"
-                      />
-                      {errors.newPassword && (
-                        <p className="text-xs font-bold text-rose-500 mt-1.5 flex items-center gap-1.5 animate-pulse">
-                          <AlertCircle className="w-3.5 h-3.5" />
-                          {errors.newPassword.message}
-                        </p>
-                      )}
-                    </div>
-                   </div>
+                {isEditingProfile && (
+                  <div className="flex justify-end gap-3 mt-6 pt-5 border-t border-slate-100 dark:border-slate-700 animate-fadeIn">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setProfileValue("adminName", adminName);
+                        setProfileValue("adminEmail", adminEmail);
+                        setIsEditingProfile(false);
+                      }}
+                      className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-white rounded-xl text-xs font-bold transition-all"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleProfileSubmit(onProfileDetailsSubmit)}
+                      disabled={sectionSaving["profile"]}
+                      className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-60 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-indigo-600/20 active:scale-95"
+                    >
+                      <Save className="w-3.5 h-3.5" />
+                      {sectionSaving["profile"] ? "Saving..." : "Save Details"}
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* BLOCK B: SECURITY & PASSWORD */}
+              <div className="pt-8 border-t border-slate-100 dark:border-slate-700">
+                <SectionHeader
+                  icon={Shield}
+                  title="Security & Password"
+                  description="Change your login credentials to secure your account."
+                  colorClass="bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400"
+                  className="mb-6"
+                />
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase">
+                      Current Password
+                    </label>
+                    <input
+                      type="password"
+                      placeholder="••••••••"
+                      {...registerPassword("currentPassword")}
+                      onChange={(e) => {
+                        registerPassword("currentPassword").onChange(e);
+                        setHasChanges(true);
+                      }}
+                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm dark:text-white focus:bg-white dark:focus:bg-slate-800 focus:border-rose-500 outline-none transition-all font-medium"
+                    />
+                    {passwordErrors.currentPassword && (
+                      <p className="text-xs font-bold text-rose-500 mt-1.5 flex items-center gap-1.5 animate-pulse">
+                        <AlertCircle className="w-3.5 h-3.5" />
+                        {passwordErrors.currentPassword.message}
+                      </p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase">
+                      New Password
+                    </label>
+                    <input
+                      type="password"
+                      placeholder="••••••••"
+                      {...registerPassword("newPassword")}
+                      onChange={(e) => {
+                        registerPassword("newPassword").onChange(e);
+                        setHasChanges(true);
+                      }}
+                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm dark:text-white focus:bg-white dark:focus:bg-slate-800 focus:border-rose-500 outline-none transition-all font-medium"
+                    />
+                    {passwordErrors.newPassword && (
+                      <p className="text-xs font-bold text-rose-500 mt-1.5 flex items-center gap-1.5 animate-pulse">
+                        <AlertCircle className="w-3.5 h-3.5" />
+                        {passwordErrors.newPassword.message}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex justify-end pt-5 border-t border-slate-100 dark:border-slate-700">
+                  <button
+                    type="button"
+                    onClick={handlePasswordSubmit(onPasswordSubmit)}
+                    disabled={sectionSaving["password"]}
+                    className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-60 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-indigo-600/20 active:scale-95"
+                  >
+                    <Shield className="w-3.5 h-3.5" />
+                    {sectionSaving["password"] ? "Updating..." : "Update Password"}
+                  </button>
                 </div>
               </div>
-              {/* Section Save */}
-              <div className="flex justify-end mt-6 pt-5 border-t border-slate-100 dark:border-slate-700">
-                <SaveBtn
-                  sectionKey="profile"
-                  isSaving={sectionSaving["profile"]}
-                  onClick={handleSubmit(onProfileSubmit)}
-                />
-              </div>
+
             </div>
           </section>
 
