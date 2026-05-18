@@ -556,7 +556,7 @@ function CreateProductContent() {
     if (formData.type) score++;
     if (productImages.some(img => img.isPrimary)) score++;
     if (selectedFeatures.length > 0) score++;
-    if (variants.length > 0 && variants.every(v => v.sku && v.price && v.stock_quantity !== "" && v.color && (!isPhoneCategory || (v.storage_size && v.ram_size)))) score++;
+    if (variants.length > 0 && variants.every(v => v.sku && v.price && v.stock_quantity !== "" && (!isPhoneCategory || (v.storage_size && v.ram_size)))) score++;
     
     return Math.round((score / total) * 100);
   }, [formData, productImages, isEditMode, selectedFeatures, variants, isPhoneCategory]);
@@ -573,7 +573,6 @@ function CreateProductContent() {
         v.sku &&
         v.price &&
         v.stock_quantity !== "" &&
-        v.color &&
         (!isPhoneCategory || (v.storage_size && v.ram_size))
     );
 
@@ -585,7 +584,7 @@ function CreateProductContent() {
         return productImages.some(img => img.isPrimary);
       case "variants":
         return variants.length > 0 && variants.every(
-          (v) => v.sku && v.price && v.stock_quantity !== "" && v.color && (!isPhoneCategory || (v.storage_size && v.ram_size))
+          (v) => v.sku && v.price && v.stock_quantity !== "" && (!isPhoneCategory || (v.storage_size && v.ram_size))
         );
       case "specs":
         return selectedFeatures.length > 0;
@@ -1393,7 +1392,6 @@ function CreateProductContent() {
         } else if (Number(v.stock_quantity) < 0) {
           validationList.push({ stepId: "variants", stepLabel: "Pricing & Variants", field: `variants.${idx}.stock_quantity`, message: `${prefix} Stock Quantity must be non-negative` });
         }
-        if (!v.color) validationList.push({ stepId: "variants", stepLabel: "Pricing & Variants", field: `variants.${idx}.color`, message: `${prefix} Color is required` });
         if (isPhoneCategory) {
           if (!v.storage_size) validationList.push({ stepId: "variants", stepLabel: "Pricing & Variants", field: `variants.${idx}.storage_size`, message: `${prefix} Storage is required for Phones` });
           if (!v.ram_size) validationList.push({ stepId: "variants", stepLabel: "Pricing & Variants", field: `variants.${idx}.ram_size`, message: `${prefix} RAM is required for Phones` });
@@ -2586,7 +2584,6 @@ function CreateProductContent() {
                           value={directVariant.color || ""}
                           onChange={(e) => updateDirectVariant("color", e.target.value)}
                           error={errors[`variants.0.color`]}
-                          required
                         />
                         
                         <FormInput
@@ -2774,7 +2771,6 @@ function CreateProductContent() {
                         value={currentVariant.color}
                         onChange={(e) => setCurrentVariant({ ...currentVariant, color: e.target.value })}
                         error={editingVariantId ? errors[`variants.${variants.findIndex(v => v.id === editingVariantId)}.color`] : null}
-                        required
                       />
                     </div>
 
