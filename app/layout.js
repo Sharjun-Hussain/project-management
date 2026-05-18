@@ -70,7 +70,7 @@ export default async function RootLayout({ children }) {
         >
           <AllProvider session={session}>
             {children}
-            <Toaster />
+            <Toaster position="top-center" richColors />
           </AllProvider>
         </ThemeProvider>
       </body>
