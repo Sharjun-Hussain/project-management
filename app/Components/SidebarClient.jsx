@@ -93,6 +93,7 @@ const SCROLLBAR_STYLES = `
 export default function SidebarClient({ menuGroups, initialCollapsed, session, toggleSidebarMobile }) {
   const pathname = usePathname();
   const { dashboardTitle } = useGlobalSettings(); // logoUrl handled by layout/server usually
+  const defaultShopName = process.env.NEXT_PUBLIC_SHOP_NAME || "Foreign Emporium";
   const [isCollapsed, setIsCollapsed] = useState(initialCollapsed);
   const [isOpen, setIsOpen] = useState(false);
   const [openSubmenu, setOpenSubmenu] = useState("");
@@ -253,7 +254,7 @@ export default function SidebarClient({ menuGroups, initialCollapsed, session, t
         <div className={`h-20 flex items-center px-4 border-b border-slate-200 dark:border-slate-800 shrink-0 transition-all duration-300 ${isCollapsed ? "justify-center" : "justify-between sticky top-0 z-10 bg-white dark:bg-slate-900"}`}>
           <Link
             href="/app"
-            onMouseEnter={(e) => showTooltip(e, dashboardTitle || "IGEN")}
+            onMouseEnter={(e) => showTooltip(e, dashboardTitle || defaultShopName)}
             onMouseLeave={hideTooltip}
             className="flex items-center gap-3 group overflow-hidden shrink-0"
           >
@@ -262,8 +263,8 @@ export default function SidebarClient({ menuGroups, initialCollapsed, session, t
             </div>
             {!isCollapsed && (
               <div className="animate-in fade-in slide-in-from-left-2 duration-300">
-                <h1 className="font-bold text-lg tracking-tight leading-none text-slate-900 dark:text-white truncate max-w-[120px]">
-                  Igen
+                <h1 className="font-bold text-base tracking-tight leading-none text-slate-900 dark:text-white truncate max-w-[120px]">
+                  {dashboardTitle || defaultShopName}
                 </h1>
                 <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 tracking-widest uppercase">
                   Admin Dashboard
@@ -425,7 +426,7 @@ export default function SidebarClient({ menuGroups, initialCollapsed, session, t
                     {session?.user?.name || "Admin User"}
                   </p>
                   <p className="text-[10px] text-slate-500 truncate">
-                    {session?.user?.email || "admin@igen.com"}
+                    {session?.user?.email || `admin@${defaultShopName.toLowerCase().replace(/\s+/g, "")}.com`}
                   </p>
                 </div>
                 <button

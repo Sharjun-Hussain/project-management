@@ -30,6 +30,7 @@ import {
   Info,
 } from "lucide-react";
 import { Suspense } from "react";
+import { FormInput, FormTextarea, FormSwitch } from "@/components/forms/reusable-fields";
 
 function CategoriesContent() {
   const containerRef = useRef(null);
@@ -688,72 +689,41 @@ function CategoriesContent() {
               {/* Drawer Body */}
               <div className="flex-1 overflow-y-auto p-8 space-y-6 custom-tiny-scrollbar">
                 <div className="space-y-4">
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">
-                      Category Name <span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative group">
-                      <Tag className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
-                      <input
-                        required
-                        type="text"
-                        value={formData.name}
-                        onChange={(e) => {
-                          setFormData({ ...formData, name: e.target.value });
-                          if (validationErrors.name) setValidationErrors({ ...validationErrors, name: null });
-                        }}
-                        className={`w-full bg-slate-50 dark:bg-slate-900 border rounded-2xl pl-11 pr-4 py-3.5 text-sm font-bold dark:text-white focus:bg-white dark:focus:bg-slate-800 outline-none transition-all ${validationErrors.name ? "border-red-500 focus:border-red-500" : "border-slate-200 dark:border-slate-700 focus:border-indigo-500"}`}
-                        placeholder="e.g. Wireless Headphones"
-                      />
-                    </div>
-                    {validationErrors.name && (
-                      <p className="text-xs text-red-500 mt-1 font-medium ml-1 flex items-center gap-1">
-                        <AlertCircle className="w-3 h-3" />
-                        {validationErrors.name}
-                      </p>
-                    )}
-                  </div>
+                  <FormInput
+                    label="Category Name"
+                    required
+                    value={formData.name}
+                    onChange={(e) => {
+                      setFormData({ ...formData, name: e.target.value });
+                      if (validationErrors.name) setValidationErrors({ ...validationErrors, name: null });
+                    }}
+                    placeholder="e.g. Wireless Headphones"
+                    error={validationErrors.name}
+                    icon={<Tag className="w-4 h-4" />}
+                  />
 
                   <div className="grid grid-cols-2 gap-4">
-                    <button
-                      type="button"
-                      onClick={() => setFormData({ ...formData, is_featured: formData.is_featured ? 0 : 1 })}
-                      className={`flex items-center justify-between p-4 rounded-2xl border transition-all ${formData.is_featured ? "bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-400" : "bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-500"}`}
-                    >
-                      <span className="text-xs font-bold uppercase tracking-wider">Featured</span>
-                      {formData.is_featured ? <ToggleRight className="w-6 h-6" /> : <ToggleLeft className="w-6 h-6" />}
-                    </button>
+                    <FormSwitch
+                      label="Featured"
+                      checked={!!formData.is_featured}
+                      onChange={(checked) => setFormData({ ...formData, is_featured: checked ? 1 : 0 })}
+                    />
 
-                    <button
-                      type="button"
-                      onClick={() => setFormData({ ...formData, is_active: formData.is_active ? 0 : 1 })}
-                      className={`flex items-center justify-between p-4 rounded-2xl border transition-all ${formData.is_active ? "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-700 dark:text-green-400" : "bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-500"}`}
-                    >
-                      <span className="text-xs font-bold uppercase tracking-wider">Active</span>
-                      {formData.is_active ? <ToggleRight className="w-6 h-6" /> : <ToggleLeft className="w-6 h-6" />}
-                    </button>
+                    <FormSwitch
+                      label="Active"
+                      checked={!!formData.is_active}
+                      onChange={(checked) => setFormData({ ...formData, is_active: checked ? 1 : 0 })}
+                    />
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">
-                      Description
-                    </label>
-                    <div className="relative group">
-                      <Info className="absolute left-4 top-4 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
-                      <textarea
-                        rows="4"
-                        value={formData.description}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            description: e.target.value,
-                          })
-                        }
-                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl pl-11 pr-4 py-3.5 text-sm font-bold dark:text-white focus:bg-white dark:focus:bg-slate-800 focus:border-indigo-500 outline-none transition-all resize-none min-h-[120px]"
-                        placeholder="Add a description for this category..."
-                      ></textarea>
-                    </div>
-                  </div>
+                  <FormTextarea
+                    label="Description"
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    placeholder="Add a description for this category..."
+                    rows={4}
+                    icon={<Info className="w-4 h-4" />}
+                  />
                 </div>
               </div>
 

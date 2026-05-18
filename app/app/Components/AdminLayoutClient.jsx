@@ -10,7 +10,7 @@ import GlobalSearch from "./GlobalSearch";
 import { useGlobalSettings } from "../context/GlobalSettingsContext";
 
 export default function AdminLayoutClient({ children, sidebar, initialCollapsed }) {
-  const { dashboardTitle, faviconUrl } = useGlobalSettings();
+  const { dashboardTitle, faviconUrl, footerText } = useGlobalSettings();
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(initialCollapsed);
   const [quickCreateOpen, setQuickCreateOpen] = useState(false);
@@ -205,7 +205,7 @@ export default function AdminLayoutClient({ children, sidebar, initialCollapsed 
 
         {/* FOOTER */}
         <footer className="py-6 px-4 sm:px-6 lg:px-8 border-t border-slate-200 dark:border-slate-700 text-center text-xs font-medium text-slate-500 dark:text-slate-400">
-          © 2026 Igen LK. All rights reserved. | Powered by Inzeedo (PVT) Ltd
+          {footerText || "© 2026 Foreign Emporium. All rights reserved."}
         </footer>
 
       </div >

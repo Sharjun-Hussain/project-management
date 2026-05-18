@@ -6,8 +6,8 @@ import AuthLayout from "@/components/auth/AuthLayout";
 import LoginForm from "./LoginForm";
 
 export const metadata = {
-  title: "Login | Igen Admin Dashboard",
-  description: "Secure login for the Igen Admin Dashboard.",
+  title: "Login | Foreign Emporium Admin Dashboard",
+  description: "Secure login for the Foreign Emporium Admin Dashboard.",
 };
 
 /**
@@ -26,11 +26,14 @@ export default async function LoginPage(props) {
     redirect("/app");
   }
 
+  const defaultShopName = process.env.NEXT_PUBLIC_SHOP_NAME || "Foreign Emporium";
+  const defaultFooter = `© 2026 ${defaultShopName}. All rights reserved.`;
+
   // Fetch settings on the server - following the pattern in layout.js
   let settings = {
-    dashboardTitle: "Igen",
-    logoUrl: "/igen_mobiles_logo.png",
-    footerText: "© 2026 Igen LK. All rights reserved. | Powered by Inzeedo (PVT) Ltd"
+    dashboardTitle: defaultShopName,
+    logoUrl: "/favicon.ico",
+    footerText: defaultFooter
   };
 
   try {
@@ -46,9 +49,9 @@ export default async function LoginPage(props) {
       const BASE_URL = API_BASE ? new URL(API_BASE).origin : "";
       
       settings = {
-        dashboardTitle: data.admin_dashboard_title || "Igen",
-        logoUrl: data.site_logo ? (data.site_logo.startsWith('http') ? data.site_logo : `${BASE_URL}/${data.site_logo}`) : "/igen_mobiles_logo.png",
-        footerText: data.footer_text || "© 2026 Igen LK. All rights reserved. | Powered by Inzeedo (PVT) Ltd"
+        dashboardTitle: data.admin_dashboard_title || defaultShopName,
+        logoUrl: data.site_logo ? (data.site_logo.startsWith('http') ? data.site_logo : `${BASE_URL}/${data.site_logo}`) : "/favicon.ico",
+        footerText: data.footer_text || defaultFooter
       };
     }
   } catch (err) {

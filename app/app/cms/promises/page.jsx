@@ -23,9 +23,9 @@ const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
 const INITIAL_HEADER = {
   id: "promises_header",
   type: "header",
-  titleStart: "The Igen",
+  titleStart: `Our ${process.env.NEXT_PUBLIC_SHOP_NAME || "Foreign Emporium"}`,
   titleHighlight: "Promise",
-  subtitle: "We don't just sell tech; we provide a seamless experience from checkout to unboxing.",
+  subtitle: "We don't just sell products; we provide a seamless experience from checkout to unboxing.",
 };
 
 const INITIAL_CARDS = [

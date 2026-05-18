@@ -6,8 +6,8 @@ import AuthLayout from "@/components/auth/AuthLayout";
 import ForgotPasswordForm from "./ForgotPasswordForm";
 
 export const metadata = {
-  title: "Forgot Password | Igen Admin Dashboard",
-  description: "Recover your Igen account access securely.",
+  title: "Forgot Password | Foreign Emporium Admin Dashboard",
+  description: "Recover your Foreign Emporium account access securely.",
 };
 
 /**
@@ -21,11 +21,14 @@ export default async function ForgotPasswordPage() {
     redirect("/app");
   }
 
+  const defaultShopName = process.env.NEXT_PUBLIC_SHOP_NAME || "Foreign Emporium";
+  const defaultFooter = `© 2026 ${defaultShopName}. All rights reserved.`;
+
   // Fetch settings on the server
   let settings = {
-    dashboardTitle: "Igen",
-    logoUrl: "/igen_mobiles_logo.png",
-    footerText: "© 2026 Igen LK. All rights reserved. | Powered by Inzeedo (PVT) Ltd"
+    dashboardTitle: defaultShopName,
+    logoUrl: "/favicon.ico",
+    footerText: defaultFooter
   };
 
   try {
@@ -41,9 +44,9 @@ export default async function ForgotPasswordPage() {
       const BASE_URL = API_BASE ? new URL(API_BASE).origin : "";
       
       settings = {
-        dashboardTitle: data.admin_dashboard_title || "Igen",
-        logoUrl: data.site_logo ? (data.site_logo.startsWith('http') ? data.site_logo : `${BASE_URL}/${data.site_logo}`) : "/igen_mobiles_logo.png",
-        footerText: data.footer_text || "© 2026 Igen LK. All rights reserved. | Powered by Inzeedo (PVT) Ltd"
+        dashboardTitle: data.admin_dashboard_title || defaultShopName,
+        logoUrl: data.site_logo ? (data.site_logo.startsWith('http') ? data.site_logo : `${BASE_URL}/${data.site_logo}`) : "/favicon.ico",
+        footerText: data.footer_text || defaultFooter
       };
     }
   } catch (err) {

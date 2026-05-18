@@ -45,7 +45,7 @@ export async function generateMetadata() {
   }
 
   return {
-    title: "Admin Dashboard | Igen",
+    title: "Admin Dashboard | Foreign Emporium",
     description: "Developed By : Inzeedo",
   };
 }

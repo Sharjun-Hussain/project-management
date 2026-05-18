@@ -16,6 +16,7 @@ import {
   CheckCircle2,
   CircleDashed,
 } from "lucide-react";
+import { FormInput, FormSelect, FormTextarea } from "@/components/forms/reusable-fields";
 
 // --- MOCK DATA ---
 const INITIAL_SUB_CATEGORIES = [
@@ -529,86 +530,53 @@ export default function SubCategoryManagementPage() {
               <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-tiny-scrollbar">
                 
                 <div className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-2">
-                      Sub Category Name
-                    </label>
-                    <input
-                      required
-                      type="text"
-                      value={formData.name}
-                      onChange={handleNameChange}
-                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm dark:text-white focus:bg-white dark:focus:bg-slate-800 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all"
-                      placeholder="e.g. Running Shoes"
+                  <FormInput
+                    label="Sub Category Name"
+                    required
+                    value={formData.name}
+                    onChange={handleNameChange}
+                    placeholder="e.g. Running Shoes"
+                  />
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormInput
+                      label="Slug"
+                      value={formData.slug}
+                      readOnly
+                      placeholder="running-shoes"
+                    />
+                    <FormSelect
+                      label="Status"
+                      value={formData.status}
+                      onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                      options={[
+                        { value: "Active", label: "Active" },
+                        { value: "Draft", label: "Draft" },
+                        { value: "Hidden", label: "Hidden" },
+                      ]}
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-2">
-                        Slug
-                      </label>
-                      <input
-                        type="text"
-                        readOnly
-                        value={formData.slug}
-                        className="w-full bg-slate-100 dark:bg-slate-900 border-transparent text-slate-500 dark:text-slate-400 rounded-xl px-4 py-3 text-sm cursor-not-allowed outline-none font-mono"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-2">
-                        Status
-                      </label>
-                      <select
-                        value={formData.status}
-                        onChange={(e) =>
-                          setFormData({ ...formData, status: e.target.value })
-                        }
-                        className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm dark:text-white focus:border-indigo-500 outline-none appearance-none"
-                      >
-                        <option className="dark:bg-slate-800" value="Active">Active</option>
-                        <option className="dark:bg-slate-800" value="Draft">Draft</option>
-                        <option className="dark:bg-slate-800" value="Hidden">Hidden</option>
-                      </select>
-                    </div>
-                  </div>
+                  <FormSelect
+                    label="Parent Category"
+                    value={formData.parent}
+                    onChange={(e) => setFormData({ ...formData, parent: e.target.value })}
+                    options={[
+                      { value: "Shoes", label: "Shoes" },
+                      { value: "Laptops", label: "Laptops" },
+                      { value: "Audio", label: "Audio" },
+                      { value: "Cameras", label: "Cameras" },
+                      { value: "Wearables", label: "Wearables" },
+                    ]}
+                  />
 
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-2">
-                      Parent Category
-                    </label>
-                    <select
-                      value={formData.parent}
-                      onChange={(e) =>
-                        setFormData({ ...formData, parent: e.target.value })
-                      }
-                      className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm dark:text-white focus:border-indigo-500 outline-none"
-                    >
-                      <option className="dark:bg-slate-800" value="Shoes">Shoes</option>
-                      <option className="dark:bg-slate-800" value="Laptops">Laptops</option>
-                      <option className="dark:bg-slate-800" value="Audio">Audio</option>
-                      <option className="dark:bg-slate-800" value="Cameras">Cameras</option>
-                      <option className="dark:bg-slate-800" value="Wearables">Wearables</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-2">
-                      Description
-                    </label>
-                    <textarea
-                      rows="4"
-                      value={formData.description}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          description: e.target.value,
-                        })
-                      }
-                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm dark:text-white focus:bg-white dark:focus:bg-slate-800 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all resize-none"
-                      placeholder="Add a description for this sub category..."
-                    ></textarea>
-                  </div>
+                  <FormTextarea
+                    label="Description"
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    placeholder="Add a description for this sub category..."
+                    rows={4}
+                  />
                 </div>
               </div>
 

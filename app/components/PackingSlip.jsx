@@ -37,8 +37,8 @@ const PackingSlip = ({ order, variant = "a4" }) => {
         {/* HEADER */}
         <div className={`flex ${isThermal ? "flex-col items-center text-center" : "justify-between items-start"} border-b-2 border-black pb-4 mb-4`}>
           <div>
-            <h1 className="text-2xl font-black uppercase tracking-tighter text-indigo-600">IGEN MOBILES</h1>
-            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Premium Tech Solutions</p>
+            <h1 className="text-2xl font-black uppercase tracking-tighter text-indigo-600">{process.env.NEXT_PUBLIC_SHOP_NAME || "FOREIGN EMPORIUM"}</h1>
+            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Official Invoice & Packing Slip</p>
           </div>
           <div className={`${isThermal ? "mt-4 text-center" : "text-right"}`}>
             <h2 className="text-xl font-bold uppercase">Packing Slip</h2>
@@ -120,7 +120,7 @@ const PackingSlip = ({ order, variant = "a4" }) => {
         <div className={`flex ${isThermal ? "flex-col" : "justify-between"} items-center border-t-2 border-black pt-4 mt-auto`}>
           <div className={`${isThermal ? "order-2 mt-4 text-center" : "max-w-[60%]"}`}>
             <p className="text-[10px] text-slate-500 leading-tight italic">
-              Thank you for choosing IGEN MOBILES. Please inspect your items immediately upon receipt. 
+              Thank you for choosing {process.env.NEXT_PUBLIC_SHOP_NAME || "FOREIGN EMPORIUM"}. Please inspect your items immediately upon receipt. 
               Returns must be initiated within 7 days in original packaging.
             </p>
           </div>

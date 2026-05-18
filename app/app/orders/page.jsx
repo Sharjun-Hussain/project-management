@@ -288,6 +288,7 @@ export default function InteractiveOrdersPage() {
   const printPackingSlip = () => {
     const order = orderDetails || selectedOrder;
     if (!order) return;
+    const defaultShopName = process.env.NEXT_PUBLIC_SHOP_NAME || "Foreign Emporium";
     const isThermal = printSize === "thermal";
     const isA5 = printSize === "a5";
     const pageSize = isThermal ? "80mm auto" : isA5 ? "A5" : "A4";
@@ -420,8 +421,8 @@ export default function InteractiveOrdersPage() {
   <!-- HEADER -->
   <div class="header">
     <div class="brand-block">
-      <div class="brand-name">IGEN Mobiles</div>
-      <div class="brand-tagline">Premium Tech Solutions</div>
+      <div class="brand-name">\${defaultShopName}</div>
+      <div class="brand-tagline">Official Invoice & Packing Slip</div>
     </div>
     <div class="order-block">
       <div class="slip-label">Packing Slip</div>
@@ -474,8 +475,8 @@ export default function InteractiveOrdersPage() {
   <!-- FOOTER -->
   <div class="footer">
     <div class="footer-note">
-      <strong>Thank you for shopping with IGEN Mobiles!</strong>
-      Please inspect your items upon receipt. Returns &amp; exchanges must be initiated within 7 days of delivery in original, undamaged packaging. Contact us at support@igen.lk for any queries.
+      <strong>Thank you for shopping with \${defaultShopName}!</strong>
+      Please inspect your items upon receipt. Returns &amp; exchanges must be initiated within 7 days of delivery in original, undamaged packaging. Contact us at support@\${defaultShopName.toLowerCase().replace(/\s+/g, '')}.com for any queries.
     </div>
     <div class="qr-block">
       <canvas id="qrCanvas"></canvas>
@@ -1392,7 +1393,7 @@ export default function InteractiveOrdersPage() {
                       })
                     }
                     className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-indigo-500 transition-colors"
-                    placeholder="IGEN-LX-XXXXXX"
+                    placeholder="FE-LX-XXXXXX"
                   />
                 </div>
               </div>

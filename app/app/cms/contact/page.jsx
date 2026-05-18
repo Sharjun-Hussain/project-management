@@ -38,7 +38,7 @@ const CardIcon = ({ icon }) => {
 export default function ContactPageManager() {
   const { data: session } = useSession();
   const [heroFields, setHeroFields] = useState({ title: "Get In Touch.", subtitle: "We're here to help. Reach us and we'll get back to you as soon as possible.", link_text: "Send a Message", link_url: "/contact-us", image: "" });
-  const [infoFields, setInfoFields] = useState({ address: "123 Main Street, Colombo 03, Sri Lanka", phone: "+94 77 123 4567", email: "hello@igen.lk" });
+  const [infoFields, setInfoFields] = useState({ address: "123 Main Street, Colombo 03, Sri Lanka", phone: "+94 77 123 4567", email: `info@${(process.env.NEXT_PUBLIC_SHOP_NAME || "Foreign Emporium").toLowerCase().replace(/\s+/g, '')}.com` });
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [selectedKey, setSelectedKey] = useState(null);

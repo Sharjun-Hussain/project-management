@@ -50,13 +50,17 @@ export const GlobalSettingsProvider = ({ children }) => {
     try {
       const data = await getSettings(session.accessToken);
       // data is a flat { key: string_value } object
+      const defaultShopName = process.env.NEXT_PUBLIC_SHOP_NAME || "Foreign Emporium";
+      const defaultFooter = `© 2026 ${defaultShopName}. All rights reserved.`;
+      const defaultEmail = `support@${defaultShopName.toLowerCase().replace(/\s+/g, '')}.com`;
+
       setSettings({
-        businessName: data.site_name || "Igen",
+        businessName: data.site_name || defaultShopName,
         logoUrl: formatUrl(data.site_logo),
-        footerText: data.footer_text || "© 2026 Igen LK. All rights reserved. | Powered by Inzeedo (PVT) Ltd",
-        adminEmail: data.shop_email || "admin@igen.lk",
+        footerText: data.footer_text || defaultFooter,
+        adminEmail: data.shop_email || defaultEmail,
         adminName: data.admin_name || "Admin User",
-        dashboardTitle: data.admin_dashboard_title || "Inzeedo",
+        dashboardTitle: data.admin_dashboard_title || defaultShopName,
         faviconUrl: formatUrl(data.site_favicon),
         // persist the raw data so the settings page can access all keys
         raw: data,

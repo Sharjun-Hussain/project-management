@@ -321,7 +321,7 @@ export default function SettingsPage() {
       
       // Filename with timestamp
       const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
-      link.setAttribute("download", `igen_backup_${timestamp}.sql`);
+      link.setAttribute("download", `backup_${timestamp}.sql`);
       
       document.body.appendChild(link);
       link.click();

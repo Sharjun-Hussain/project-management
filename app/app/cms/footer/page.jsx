@@ -94,7 +94,7 @@ const INITIAL_DATA = {
     placeholder: "Enter email address",
   },
   bottom: {
-    copyright: "© 2026 Igen LK. All rights reserved. | Solution By Inzeedo",
+    copyright: `© 2026 ${process.env.NEXT_PUBLIC_SHOP_NAME || "Foreign Emporium"}. All rights reserved.`,
   },
 };
 
@@ -426,10 +426,10 @@ export default function FooterManager() {
                 >
                   <div className="flex items-center gap-2 mb-6">
                     <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-black font-black text-sm">
-                      I
+                      {(process.env.NEXT_PUBLIC_SHOP_NAME || "Foreign Emporium").charAt(0).toUpperCase()}
                     </div>
                     <span className="text-xl font-black tracking-tighter text-white">
-                      IGEN.
+                      {process.env.NEXT_PUBLIC_SHOP_NAME || "Foreign Emporium"}
                     </span>
                   </div>
                   <p className="text-sm leading-relaxed mb-6">

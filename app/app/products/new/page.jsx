@@ -39,7 +39,10 @@ import {
   ChevronDown,
   ChevronUp,
   Copy,
+  Sparkles,
 } from "lucide-react";
+import { FormInput, FormSelect, FormTextarea, FormCheckbox, FormSwitch } from "@/components/forms/reusable-fields";
+import { Button } from "@/components/ui/button";
 
 const ProductRelationshipSelector = ({
   title,
@@ -196,29 +199,6 @@ const ProductRelationshipSelector = ({
             </div>
           )}
         </div>
-      </div>
-    </div>
-  );
-};
-
-const CustomCheckbox = ({ id, checked, onCheckedChange }) => {
-  return (
-    <div className="relative w-5 h-5 shrink-0">
-      <input
-        type="checkbox"
-        id={id}
-        checked={checked}
-        onChange={(e) => onCheckedChange(e.target.checked)}
-        className="absolute inset-0 opacity-0 cursor-pointer z-10"
-      />
-      <div
-        className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${
-          checked
-            ? "bg-indigo-600 border-indigo-600 shadow-lg shadow-indigo-600/20"
-            : "bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 hover:border-indigo-400"
-        }`}
-      >
-        {checked && <Check className="w-3.5 h-3.5 text-white stroke-[3px]" />}
       </div>
     </div>
   );
@@ -1457,175 +1437,99 @@ function CreateProductContent() {
                     Basic Information
                   </h3>
                   <div className="space-y-4">
-                    <div>
-                      <label className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 block">
-                        Product Name <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.name}
-                        onChange={(e) =>
-                          setFormData({ ...formData, name: e.target.value })
-                        }
-                        className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all dark:text-white"
-                        placeholder="e.g. Apple iPhone 15 Pro"
-                      />
-                      <ErrorText message={errors.name} />
-                    </div>
+                    <FormInput
+                      label="Product Name"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      placeholder="e.g. Apple iPhone 15 Pro"
+                      error={errors.name}
+                      required
+                    />
 
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 block">
-                          Product Code
-                        </label>
-                        <div className="flex gap-2">
-                          <input
-                            type="text"
-                            value={formData.code}
-                            onChange={(e) =>
-                              setFormData({ ...formData, code: e.target.value })
-                            }
-                            className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-600 dark:text-slate-300 text-sm"
-                            placeholder="APL-IP15P-TIT"
-                          />
-                          <button
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormInput
+                        label="Product Code"
+                        value={formData.code}
+                        onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                        placeholder="APL-IP15P-TIT"
+                        error={errors.code}
+                        suffix={
+                          <Button
+                            type="button"
+                            variant="outline"
                             onClick={generateCode}
-                            className="px-3 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-xl text-slate-600 dark:text-slate-300 text-xs font-semibold"
+                            className="h-11 px-3 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-xl text-slate-600 dark:text-slate-300 text-xs font-semibold"
                           >
+                            <Sparkles className="w-3.5 h-3.5 mr-1 text-indigo-500" />
                             Generate
-                          </button>
-                        </div>
-                        <ErrorText message={errors.code} />
-                      </div>
-                      <div>
-                        <label className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 block">
-                          Product Type <span className="text-red-500">*</span>
-                        </label>
-                        <select
-                          value={formData.type}
-                          onChange={(e) =>
-                            setFormData({ ...formData, type: e.target.value })
-                          }
-                          className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:text-white"
-                        >
-                          <option value="physical">Physical Product</option>
-                          <option value="digital">Digital Asset</option>
-                          <option value="service">Service</option>
-                        </select>
-                        <ErrorText message={errors.type} />
-                      </div>
-                      <div>
-                        <label className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 block">
-                          Condition <span className="text-red-500">*</span>
-                        </label>
-                        <select
-                          value={formData.condition}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              condition: e.target.value,
-                            })
-                          }
-                          className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:text-white"
-                        >
-                          <option value="new">New</option>
-                          <option value="used">Used</option>
-                          <option value="refurbished">Refurbished</option>
-                        </select>
-                        <ErrorText message={errors.condition} />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 block">
-                          Category <span className="text-red-500">*</span>
-                        </label>
-                        <select
-                          value={formData.category_id}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              category_id: e.target.value,
-                            })
-                          }
-                          className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:text-white"
-                        >
-                          <option value="">Select Category</option>
-                          {categories.map((cat) => (
-                            <option key={cat.id} value={cat.id}>
-                              {cat.name}
-                            </option>
-                          ))}
-                        </select>
-                        <ErrorText message={errors.category_id} />
-                      </div>
-                      <div>
-                        <label className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 block">
-                          Brand <span className="text-red-500">*</span>
-                        </label>
-                        <select
-                          value={formData.brand_id}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              brand_id: e.target.value,
-                            })
-                          }
-                          className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:text-white"
-                        >
-                          <option value="">Select Brand</option>
-                          {brands.map((brand) => (
-                            <option key={brand.id} value={brand.id}>
-                              {brand.name}
-                            </option>
-                          ))}
-                        </select>
-                        <ErrorText message={errors.brand_id} />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="text-xs font-medium text-slate-500 mb-1 block">
-                        Short Description (Excerpt)
-                      </label>
-                      <textarea
-                        rows="2"
-                        value={formData.short_description}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            short_description: e.target.value,
-                          })
+                          </Button>
                         }
-                        className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm dark:text-white"
-                        placeholder="Brief summary for list views..."
-                        maxLength="160"
-                      ></textarea>
-                      <ErrorText message={errors.short_description} />
-                      <p className="text-[10px] text-right text-slate-400">
-                        {formData.short_description.length}/160
-                      </p>
+                      />
+                      <FormSelect
+                        label="Product Type"
+                        value={formData.type}
+                        onChange={(val) => setFormData({ ...formData, type: val })}
+                        options={[
+                          { label: "Physical Product", value: "physical" },
+                          { label: "Digital Asset", value: "digital" },
+                          { label: "Service", value: "service" },
+                        ]}
+                        error={errors.type}
+                        required
+                      />
+                      <FormSelect
+                        label="Condition"
+                        value={formData.condition}
+                        onChange={(val) => setFormData({ ...formData, condition: val })}
+                        options={[
+                          { label: "New", value: "new" },
+                          { label: "Used", value: "used" },
+                          { label: "Refurbished", value: "refurbished" },
+                        ]}
+                        error={errors.condition}
+                        required
+                      />
                     </div>
 
-                    <div>
-                      <label className="text-xs font-medium text-slate-500 mb-1 block">
-                        Full Description
-                      </label>
-                      <textarea
-                        className="w-full p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 resize-none text-sm dark:text-white"
-                        placeholder="Write your full product description here..."
-                        value={formData.full_description}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            full_description: e.target.value,
-                          })
-                        }
-                        rows="8"
-                      ></textarea>
-                      <ErrorText message={errors.full_description} />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormSelect
+                        label="Category"
+                        value={formData.category_id}
+                        onChange={(val) => setFormData({ ...formData, category_id: val })}
+                        options={categories.map(cat => ({ label: cat.name, value: cat.id }))}
+                        placeholder="Select Category"
+                        error={errors.category_id}
+                        required
+                      />
+                      <FormSelect
+                        label="Brand"
+                        value={formData.brand_id}
+                        onChange={(val) => setFormData({ ...formData, brand_id: val })}
+                        options={brands.map(brand => ({ label: brand.name, value: brand.id }))}
+                        placeholder="Select Brand"
+                        error={errors.brand_id}
+                        required
+                      />
                     </div>
+
+                    <FormTextarea
+                      label="Short Description (Excerpt)"
+                      value={formData.short_description}
+                      onChange={(e) => setFormData({ ...formData, short_description: e.target.value })}
+                      placeholder="Brief summary for list views..."
+                      error={errors.short_description}
+                      description={`${formData.short_description.length}/160`}
+                      maxLength={160}
+                    />
+
+                    <FormTextarea
+                      label="Full Description"
+                      value={formData.full_description}
+                      onChange={(e) => setFormData({ ...formData, full_description: e.target.value })}
+                      placeholder="Write your full product description here..."
+                      error={errors.full_description}
+                      rows={8}
+                    />
 
                     {/* Badges */}
                     <div>
@@ -1633,58 +1537,50 @@ function CreateProductContent() {
                         Product Badges
                       </label>
                       <div className="flex flex-wrap gap-3">
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <CustomCheckbox
-                            id="is_featured"
-                            checked={formData.is_featured}
-                            onCheckedChange={(checked) =>
-                              setFormData({
-                                ...formData,
-                                is_featured: !!checked,
-                              })
-                            }
-                          />
-                          <span className="text-sm">Featured</span>
-                        </label>
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <CustomCheckbox
-                            id="is_trending"
-                            checked={formData.is_trending}
-                            onCheckedChange={(checked) =>
-                              setFormData({
-                                ...formData,
-                                is_trending: !!checked,
-                              })
-                            }
-                          />
-                          <span className="text-sm">Trending</span>
-                        </label>
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <CustomCheckbox
-                            id="is_new_arrival"
-                            checked={formData.is_new_arrival}
-                            onCheckedChange={(checked) =>
-                              setFormData({
-                                ...formData,
-                                is_new_arrival: !!checked,
-                              })
-                            }
-                          />
-                          <span className="text-sm">New Arrival</span>
-                        </label>
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <CustomCheckbox
-                            id="is_active"
-                            checked={formData.is_active}
-                            onCheckedChange={(checked) =>
-                              setFormData({
-                                ...formData,
-                                is_active: !!checked,
-                              })
-                            }
-                          />
-                          <span className="text-sm">Active</span>
-                        </label>
+                        <FormCheckbox
+                          label="Featured"
+                          checked={formData.is_featured}
+                          onCheckedChange={(checked) =>
+                            setFormData({
+                              ...formData,
+                              is_featured: !!checked,
+                            })
+                          }
+                          className="border-none p-0 bg-transparent shadow-none"
+                        />
+                        <FormCheckbox
+                          label="Trending"
+                          checked={formData.is_trending}
+                          onCheckedChange={(checked) =>
+                            setFormData({
+                              ...formData,
+                              is_trending: !!checked,
+                            })
+                          }
+                          className="border-none p-0 bg-transparent shadow-none"
+                        />
+                        <FormCheckbox
+                          label="New Arrival"
+                          checked={formData.is_new_arrival}
+                          onCheckedChange={(checked) =>
+                            setFormData({
+                              ...formData,
+                              is_new_arrival: !!checked,
+                            })
+                          }
+                          className="border-none p-0 bg-transparent shadow-none"
+                        />
+                        <FormCheckbox
+                          label="Active"
+                          checked={formData.is_active}
+                          onCheckedChange={(checked) =>
+                            setFormData({
+                              ...formData,
+                              is_active: !!checked,
+                            })
+                          }
+                          className="border-none p-0 bg-transparent shadow-none"
+                        />
                       </div>
                     </div>
                   </div>
@@ -2019,47 +1915,28 @@ function CreateProductContent() {
                   <h3 className="text-lg font-semibold text-slate-800 dark:text-white mb-4">
                     Technical Specifications
                   </h3>
-                  <div className="flex gap-2 mb-4 items-end">
-                    <div className="flex-1">
-                      <label className="text-xs font-medium text-slate-400">
-                        Label <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:text-white"
-                        placeholder="e.g. Display"
-                        value={specInput.specification_name}
-                        onChange={(e) =>
-                          setSpecInput({
-                            ...specInput,
-                            specification_name: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <label className="text-xs font-medium text-slate-400">
-                        Value <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:text-white"
-                        placeholder="e.g. 6.1-inch OLED"
-                        value={specInput.specification_value}
-                        onChange={(e) =>
-                          setSpecInput({
-                            ...specInput,
-                            specification_value: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                    <button
+                  <div className="flex gap-4 mb-6 items-end">
+                    <FormInput
+                      label="Spec Label"
+                      placeholder="e.g. Display"
+                      value={specInput.specification_name}
+                      onChange={(e) => setSpecInput({ ...specInput, specification_name: e.target.value })}
+                      containerClassName="flex-1"
+                    />
+                    <FormInput
+                      label="Value"
+                      placeholder="e.g. 6.1-inch OLED"
+                      value={specInput.specification_value}
+                      onChange={(e) => setSpecInput({ ...specInput, specification_value: e.target.value })}
+                      containerClassName="flex-1"
+                    />
+                    <Button
+                      type="button"
                       onClick={handleAddSpec}
-                      className="bg-indigo-600 text-white px-4 py-2 rounded-xl h-[38px]"
+                      className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl h-11 px-4 shadow-md shadow-indigo-600/20 active:scale-95 transition-all"
                     >
                       <Plus className="w-5 h-5" />
-                    </button>
+                    </Button>
                   </div>
 
                   <div className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden">
@@ -2221,326 +2098,153 @@ function CreateProductContent() {
                         </button>
                       </div>
                     )}
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
-                      <div>
-                        <label className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 block">
-                          Variant Name <span className="text-slate-400 font-normal">(Optional)</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={currentVariant.variant_name}
-                          onChange={(e) =>
-                            setCurrentVariant({
-                              ...currentVariant,
-                              variant_name: e.target.value,
-                            })
-                          }
-                          className="w-full px-3 py-2 border dark:border-slate-700 rounded-lg text-sm dark:bg-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-                          placeholder="e.g. Summer Edition"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 block">
-                          SKU <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={currentVariant.sku}
-                          onChange={(e) =>
-                            setCurrentVariant({
-                              ...currentVariant,
-                              sku: e.target.value,
-                            })
-                          }
-                          className="w-full px-3 py-2 border dark:border-slate-700 rounded-lg text-sm dark:bg-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-                          placeholder="IP15P-256-NT"
-                        />
-                        <ErrorText message={editingVariantId ? errors[`variants.${variants.findIndex(v => v.id === editingVariantId)}.sku`] : null} />
-                      </div>
-                      <div>
-                        <label className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 block">
-                          Barcode
-                        </label>
-                        <input
-                          type="text"
-                          value={currentVariant.barcode}
-                          onChange={(e) => {
-                            const val = e.target.value.replace(/\D/g, "");
-                            setCurrentVariant({
-                              ...currentVariant,
-                              barcode: val,
-                            });
-                          }}
-                          className="w-full px-3 py-2 border dark:border-slate-700 rounded-lg text-sm dark:bg-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-                          placeholder="195949000123"
-                        />
-                      </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                      <FormInput
+                        label="Variant Name"
+                        placeholder="e.g. Summer Edition"
+                        value={currentVariant.variant_name}
+                        onChange={(e) => setCurrentVariant({ ...currentVariant, variant_name: e.target.value })}
+                        description="(Optional)"
+                      />
+                      <FormInput
+                        label="SKU"
+                        placeholder="IP15P-256-NT"
+                        value={currentVariant.sku}
+                        onChange={(e) => setCurrentVariant({ ...currentVariant, sku: e.target.value })}
+                        error={editingVariantId ? errors[`variants.${variants.findIndex(v => v.id === editingVariantId)}.sku`] : null}
+                        required
+                      />
+                      <FormInput
+                        label="Barcode"
+                        placeholder="195949000123"
+                        value={currentVariant.barcode}
+                        onChange={(e) => setCurrentVariant({ ...currentVariant, barcode: e.target.value.replace(/\D/g, "") })}
+                      />
                       {isPhoneCategory && (
-                        <div>
-                          <label className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 block">
-                            IMEI
-                          </label>
-                          <input
-                            type="text"
-                            value={currentVariant.imei}
-                            onChange={(e) =>
-                              setCurrentVariant({
-                                ...currentVariant,
-                                imei: e.target.value,
-                              })
-                            }
-                            className="w-full px-3 py-2 border dark:border-slate-700 rounded-lg text-sm dark:bg-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-                            placeholder="IMEI Number"
-                          />
-                        </div>
-                      )}
-                      <div>
-                        <label className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 block">
-                          Warranty Period
-                        </label>
-                        <input
-                          type="text"
-                          value={currentVariant.warranty_period}
-                          onChange={(e) =>
-                            setCurrentVariant({
-                              ...currentVariant,
-                              warranty_period: e.target.value,
-                            })
-                          }
-                          className="w-full px-3 py-2 border dark:border-slate-700 rounded-lg text-sm dark:bg-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-                          placeholder="e.g. 1 Year"
+                        <FormInput
+                          label="IMEI"
+                          placeholder="IMEI Number"
+                          value={currentVariant.imei}
+                          onChange={(e) => setCurrentVariant({ ...currentVariant, imei: e.target.value })}
                         />
-                      </div>
+                      )}
+                      <FormInput
+                        label="Warranty Period"
+                        placeholder="e.g. 1 Year"
+                        value={currentVariant.warranty_period}
+                        onChange={(e) => setCurrentVariant({ ...currentVariant, warranty_period: e.target.value })}
+                      />
                       {isPhoneCategory && (
                         <>
-                          <div>
-                            <label className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 block">
-                              Storage <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                              type="text"
-                              value={currentVariant.storage_size}
-                              onChange={(e) =>
-                                setCurrentVariant({
-                                  ...currentVariant,
-                                  storage_size: e.target.value,
-                                })
-                              }
-                              className="w-full px-3 py-2 border dark:border-slate-700 rounded-lg text-sm dark:bg-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-                              placeholder="256GB"
-                            />
-                            <ErrorText message={editingVariantId ? errors[`variants.${variants.findIndex(v => v.id === editingVariantId)}.storage_size`] : null} />
-                          </div>
-                          <div>
-                            <label className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 block">
-                              RAM <span className="text-red-500">*</span>
-                            </label>
-                            <div className="relative">
-                              <input
-                                type="number"
-                                min="0"
-                                value={currentVariant.ram_size}
-                                onChange={(e) => {
-                                  const val = e.target.value;
-                                  if (val === "" || Number(val) >= 0) {
-                                    setCurrentVariant({
-                                      ...currentVariant,
-                                      ram_size: val,
-                                    });
-                                  }
-                                }}
-                                className="w-full px-3 py-2 pr-10 border dark:border-slate-700 rounded-lg text-sm dark:bg-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-                                placeholder="8"
-                              />
-                              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-slate-400 pointer-events-none">
-                                GB
-                              </span>
-                            </div>
-                            <ErrorText message={editingVariantId ? errors[`variants.${variants.findIndex(v => v.id === editingVariantId)}.ram_size`] : null} />
-                          </div>
+                          <FormInput
+                            label="Storage"
+                            placeholder="256GB"
+                            value={currentVariant.storage_size}
+                            onChange={(e) => setCurrentVariant({ ...currentVariant, storage_size: e.target.value })}
+                            error={editingVariantId ? errors[`variants.${variants.findIndex(v => v.id === editingVariantId)}.storage_size`] : null}
+                            required
+                          />
+                          <FormInput
+                            label="RAM"
+                            type="number"
+                            placeholder="8"
+                            value={currentVariant.ram_size}
+                            onChange={(e) => (e.target.value === "" || Number(e.target.value) >= 0) && setCurrentVariant({ ...currentVariant, ram_size: e.target.value })}
+                            suffix={<span className="text-xs font-medium text-slate-400 mt-3.5 block">GB</span>}
+                            error={editingVariantId ? errors[`variants.${variants.findIndex(v => v.id === editingVariantId)}.ram_size`] : null}
+                            required
+                          />
                         </>
                       )}
-                      <div>
-                        <label className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 block">
-                          Color <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={currentVariant.color}
-                          onChange={(e) =>
-                            setCurrentVariant({
-                              ...currentVariant,
-                              color: e.target.value,
-                            })
-                          }
-                          className="w-full px-3 py-2 border dark:border-slate-700 rounded-lg text-sm dark:bg-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-                          placeholder="Natural Titanium"
-                        />
-                        <ErrorText message={editingVariantId ? errors[`variants.${variants.findIndex(v => v.id === editingVariantId)}.color`] : null} />
-                      </div>
+                      <FormInput
+                        label="Color"
+                        placeholder="Natural Titanium"
+                        value={currentVariant.color}
+                        onChange={(e) => setCurrentVariant({ ...currentVariant, color: e.target.value })}
+                        error={editingVariantId ? errors[`variants.${variants.findIndex(v => v.id === editingVariantId)}.color`] : null}
+                        required
+                      />
                     </div>
 
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                      <div>
-                        <label className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 block">
-                          Price <span className="text-red-500">*</span>
-                        </label>
-                        <div className="relative">
-                          <input
-                            type="number"
-                            value={currentVariant.price}
-                            onChange={(e) =>
-                              setCurrentVariant({
-                                ...currentVariant,
-                                price: e.target.value,
-                              })
-                            }
-                            className="w-full px-3 py-2 pl-10 border dark:border-slate-700 rounded-lg text-sm dark:bg-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-                            placeholder="149900"
-                          />
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-medium text-slate-400 pointer-events-none">
-                            Rs
-                          </span>
-                        </div>
-                        <ErrorText message={editingVariantId ? errors[`variants.${variants.findIndex(v => v.id === editingVariantId)}.price`] : null} />
-                      </div>
-                      <div>
-                        <label className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 block">
-                          Sales Price
-                        </label>
-                        <div className="relative">
-                          <input
-                            type="number"
-                            value={currentVariant.sales_price}
-                            onChange={(e) =>
-                              setCurrentVariant({
-                                ...currentVariant,
-                                sales_price: e.target.value,
-                              })
-                            }
-                            className="w-full px-3 py-2 pl-10 border dark:border-slate-700 rounded-lg text-sm dark:bg-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-                            placeholder="144900"
-                          />
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-medium text-slate-400 pointer-events-none">
-                            Rs
-                          </span>
-                        </div>
-                        <ErrorText message={editingVariantId ? errors[`variants.${variants.findIndex(v => v.id === editingVariantId)}.sales_price`] : null} />
-                      </div>
-                      <div>
-                        <label className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 block">
-                          Stock Quantity <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="number"
-                          value={currentVariant.stock_quantity}
-                          onChange={(e) =>
-                            setCurrentVariant({
-                              ...currentVariant,
-                              stock_quantity: e.target.value,
-                            })
-                          }
-                          className="w-full px-3 py-2 border dark:border-slate-700 rounded-lg text-sm dark:bg-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-                          placeholder="50"
-                        />
-                        <ErrorText message={editingVariantId ? errors[`variants.${variants.findIndex(v => v.id === editingVariantId)}.stock_quantity`] : null} />
-                      </div>
-                      <div>
-                        <label className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 block">
-                          Low Stock Alert
-                        </label>
-                        <input
-                          type="number"
-                          value={currentVariant.low_stock_threshold}
-                          onChange={(e) =>
-                            setCurrentVariant({
-                              ...currentVariant,
-                              low_stock_threshold: e.target.value,
-                            })
-                          }
-                          className="w-full px-3 py-2 border dark:border-slate-700 rounded-lg text-sm dark:bg-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-                          placeholder="5"
-                        />
-                      </div>
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                      <FormInput
+                        label="Price"
+                        type="number"
+                        placeholder="149900"
+                        value={currentVariant.price}
+                        onChange={(e) => setCurrentVariant({ ...currentVariant, price: e.target.value })}
+                        suffix={<span className="text-xs font-medium text-slate-400 mt-3.5 block">Rs</span>}
+                        error={editingVariantId ? errors[`variants.${variants.findIndex(v => v.id === editingVariantId)}.price`] : null}
+                        required
+                      />
+                      <FormInput
+                        label="Sales Price"
+                        type="number"
+                        placeholder="144900"
+                        value={currentVariant.sales_price}
+                        onChange={(e) => setCurrentVariant({ ...currentVariant, sales_price: e.target.value })}
+                        suffix={<span className="text-xs font-medium text-slate-400 mt-3.5 block">Rs</span>}
+                        error={editingVariantId ? errors[`variants.${variants.findIndex(v => v.id === editingVariantId)}.sales_price`] : null}
+                      />
+                      <FormInput
+                        label="Stock Quantity"
+                        type="number"
+                        placeholder="50"
+                        value={currentVariant.stock_quantity}
+                        onChange={(e) => setCurrentVariant({ ...currentVariant, stock_quantity: e.target.value })}
+                        error={editingVariantId ? errors[`variants.${variants.findIndex(v => v.id === editingVariantId)}.stock_quantity`] : null}
+                        required
+                      />
+                      <FormInput
+                        label="Low Stock Alert"
+                        type="number"
+                        placeholder="5"
+                        value={currentVariant.low_stock_threshold}
+                        onChange={(e) => setCurrentVariant({ ...currentVariant, low_stock_threshold: e.target.value })}
+                      />
                     </div>
 
                     <div className="flex flex-wrap items-center gap-x-6 gap-y-4 mb-6">
                       <div className="flex items-center gap-4 w-full sm:w-auto">
-                        <label className="flex items-center gap-2 cursor-pointer shrink-0">
-                          <CustomCheckbox
-                            id="variant_is_offer"
-                            checked={currentVariant.is_offer}
-                            onCheckedChange={(checked) =>
-                              setCurrentVariant({
-                                ...currentVariant,
-                                is_offer: !!checked,
-                              })
-                            }
-                          />
-                          <span className="text-sm font-medium">On Offer</span>
-                        </label>
+                        <FormCheckbox
+                          label="On Offer"
+                          checked={currentVariant.is_offer}
+                          onCheckedChange={(checked) => setCurrentVariant({ ...currentVariant, is_offer: !!checked })}
+                          className="border-none p-0 bg-transparent shadow-none"
+                        />
                         {currentVariant.is_offer && (
-                          <div className="relative flex-1 sm:w-40">
-                            <input
-                              type="number"
-                              value={currentVariant.offer_price}
-                              onChange={(e) =>
-                                setCurrentVariant({
-                                  ...currentVariant,
-                                  offer_price: e.target.value,
-                                })
-                              }
-                              className="w-full px-3 py-2 pl-10 border dark:border-slate-700 rounded-lg text-sm dark:bg-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-                              placeholder="799.00"
-                            />
-                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-medium text-slate-400 pointer-events-none">
-                              Rs
-                            </span>
-                          </div>
+                          <FormInput
+                            type="number"
+                            placeholder="799.00"
+                            value={currentVariant.offer_price}
+                            onChange={(e) => setCurrentVariant({ ...currentVariant, offer_price: e.target.value })}
+                            suffix={<span className="text-xs font-medium text-slate-400 mt-3.5 block">Rs</span>}
+                            containerClassName="flex-1 sm:w-40"
+                            hideLabel
+                          />
                         )}
                       </div>
 
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <CustomCheckbox
-                          id="variant_is_trending"
-                          checked={currentVariant.is_trending}
-                          onCheckedChange={(checked) =>
-                            setCurrentVariant({
-                              ...currentVariant,
-                              is_trending: !!checked,
-                            })
-                          }
-                        />
-                        <span className="text-sm font-medium">Trending</span>
-                      </label>
+                      <FormCheckbox
+                        label="Trending"
+                        checked={currentVariant.is_trending}
+                        onCheckedChange={(checked) => setCurrentVariant({ ...currentVariant, is_trending: !!checked })}
+                        className="border-none p-0 bg-transparent shadow-none"
+                      />
                       
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <CustomCheckbox
-                          id="variant_is_featured"
-                          checked={currentVariant.is_featured}
-                          onCheckedChange={(checked) =>
-                            setCurrentVariant({
-                              ...currentVariant,
-                              is_featured: !!checked,
-                            })
-                          }
-                        />
-                        <span className="text-sm font-medium">Featured</span>
-                      </label>
+                      <FormCheckbox
+                        label="Featured"
+                        checked={currentVariant.is_featured}
+                        onCheckedChange={(checked) => setCurrentVariant({ ...currentVariant, is_featured: !!checked })}
+                        className="border-none p-0 bg-transparent shadow-none"
+                      />
                       
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <CustomCheckbox
-                          id="variant_is_new_arrival"
-                          checked={currentVariant.is_new_arrival}
-                          onCheckedChange={(checked) =>
-                            setCurrentVariant({
-                              ...currentVariant,
-                              is_new_arrival: !!checked,
-                            })
-                          }
-                        />
-                        <span className="text-sm font-medium">New Arrival</span>
-                      </label>
+                      <FormCheckbox
+                        label="New Arrival"
+                        checked={currentVariant.is_new_arrival}
+                        onCheckedChange={(checked) => setCurrentVariant({ ...currentVariant, is_new_arrival: !!checked })}
+                        className="border-none p-0 bg-transparent shadow-none"
+                      />
                     </div>
 
                     <div className="flex gap-3">

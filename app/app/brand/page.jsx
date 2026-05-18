@@ -33,6 +33,7 @@ import {
   ToggleRight,
 } from "lucide-react";
 import { Suspense } from "react";
+import { FormInput, FormTextarea, FormSwitch } from "@/components/forms/reusable-fields";
 
 function BrandContent() {
   const { data: session } = useSession();
@@ -806,79 +807,53 @@ function BrandContent() {
                   )}
                 </div>
 
-                <div className="space-y-6">
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Brand Name <span className="text-red-500">*</span></label>
-                    <div className="relative group">
-                      <ImageIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
-                      <input
-                        type="text"
-                        value={formData.name}
-                        onChange={(e) => {
-                          setFormData({ ...formData, name: e.target.value });
-                          if (validationErrors.name) setValidationErrors({ ...validationErrors, name: null });
-                        }}
-                        className={`w-full bg-slate-50 dark:bg-slate-900 border rounded-2xl pl-11 pr-4 py-3.5 text-sm font-bold dark:text-white focus:bg-white dark:focus:bg-slate-800 outline-none transition-all ${validationErrors.name ? "border-red-500 focus:border-red-500" : "border-slate-200 dark:border-slate-700 focus:border-indigo-500"}`}
-                        placeholder="e.g. Samsung"
-                      />
-                    </div>
-                    {validationErrors.name && (
-                      <p className="text-xs text-red-500 mt-1 font-medium ml-1">{validationErrors.name}</p>
-                    )}
-                  </div>
+                <div className="space-y-4">
+                  <FormInput
+                    label="Brand Name"
+                    required
+                    value={formData.name}
+                    onChange={(e) => {
+                      setFormData({ ...formData, name: e.target.value });
+                      if (validationErrors.name) setValidationErrors({ ...validationErrors, name: null });
+                    }}
+                    placeholder="e.g. Sony"
+                    error={validationErrors.name}
+                  />
 
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Website URL</label>
-                    <div className="relative group">
-                      <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
-                      <input
-                        type="text"
-                        value={formData.website}
-                        onChange={(e) => {
-                          setFormData({ ...formData, website: e.target.value });
-                          if (validationErrors.website) setValidationErrors({ ...validationErrors, website: null });
-                        }}
-                        className={`w-full bg-slate-50 dark:bg-slate-900 border rounded-2xl pl-11 pr-4 py-3.5 text-sm font-bold dark:text-white focus:bg-white dark:focus:bg-slate-800 outline-none transition-all ${validationErrors.website ? "border-red-500 focus:border-red-500" : "border-slate-200 dark:border-slate-700 focus:border-indigo-500"}`}
-                        placeholder="https://website.com"
-                      />
-                    </div>
-                    {validationErrors.website && (
-                      <p className="text-xs text-red-500 mt-1 font-medium ml-1">{validationErrors.website}</p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Description</label>
-                    <div className="relative group">
-                      <Info className="absolute left-4 top-4 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
-                      <textarea
-                        value={formData.description}
-                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl pl-11 pr-4 py-3.5 text-sm font-bold dark:text-white focus:bg-white dark:focus:bg-slate-800 focus:border-indigo-500 outline-none transition-all min-h-[120px] resize-none"
-                        placeholder="Brief description of the brand..."
-                      />
-                    </div>
-                  </div>
+                  <FormInput
+                    label="Website"
+                    value={formData.website}
+                    onChange={(e) => {
+                      setFormData({ ...formData, website: e.target.value });
+                      if (validationErrors.website) setValidationErrors({ ...validationErrors, website: null });
+                    }}
+                    placeholder="https://sony.com"
+                    error={validationErrors.website}
+                    icon={<Globe className="w-4 h-4" />}
+                  />
 
                   <div className="grid grid-cols-2 gap-4">
-                    <button
-                      type="button"
-                      onClick={() => setFormData({ ...formData, is_featured: formData.is_featured ? 0 : 1 })}
-                      className={`flex items-center justify-between p-4 rounded-2xl border transition-all ${formData.is_featured ? "bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-400" : "bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-500"}`}
-                    >
-                      <span className="text-xs font-bold uppercase tracking-wider">Featured</span>
-                      {formData.is_featured ? <ToggleRight className="w-6 h-6" /> : <ToggleLeft className="w-6 h-6" />}
-                    </button>
+                    <FormSwitch
+                      label="Featured"
+                      checked={!!formData.is_featured}
+                      onChange={(checked) => setFormData({ ...formData, is_featured: checked ? 1 : 0 })}
+                    />
 
-                    <button
-                      type="button"
-                      onClick={() => setFormData({ ...formData, is_active: formData.is_active ? 0 : 1 })}
-                      className={`flex items-center justify-between p-4 rounded-2xl border transition-all ${formData.is_active ? "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-700 dark:text-green-400" : "bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-500"}`}
-                    >
-                      <span className="text-xs font-bold uppercase tracking-wider">Active</span>
-                      {formData.is_active ? <ToggleRight className="w-6 h-6" /> : <ToggleLeft className="w-6 h-6" />}
-                    </button>
+                    <FormSwitch
+                      label="Active"
+                      checked={!!formData.is_active}
+                      onChange={(checked) => setFormData({ ...formData, is_active: checked ? 1 : 0 })}
+                    />
                   </div>
+
+                  <FormTextarea
+                    label="Description"
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    placeholder="Brief description of the brand..."
+                    rows={4}
+                    icon={<Info className="w-4 h-4" />}
+                  />
                 </div>
               </div>
 

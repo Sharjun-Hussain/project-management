@@ -36,6 +36,7 @@ import {
   Info,
   Filter,
 } from "lucide-react";
+import { FormInput, FormTextarea, FormSwitch } from "@/components/forms/reusable-fields";
 import { Suspense, useRef, useState, useEffect } from "react";
 import { Calendar as CalendarComponent } from "../../../components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "../../../components/ui/popover";
@@ -692,105 +693,73 @@ function CouponsContent() {
             <form onSubmit={handleSave} className="flex-1 overflow-y-auto p-8 space-y-8">
               {/* Code & Basic Status Section */}
               <div className="space-y-4 p-5 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm transition-colors mb-6">
-                <div className="space-y-2">
-                  <label className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider ml-1">
-                    Coupon Code <span className="text-red-500">*</span>
-                  </label>
-                  <div className="flex gap-2 relative group">
-                    <div className="flex-1 relative">
-                      <Tag className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
-                      <input
-                        required
-                        type="text"
-                        value={formData.code}
-                        onChange={(e) => {
-                          setFormData({ ...formData, code: e.target.value.toUpperCase() });
-                          if (validationErrors.code) setValidationErrors({ ...validationErrors, code: null });
-                        }}
-                        placeholder="e.g. SUMMER2026"
-                        className={`w-full bg-white dark:bg-slate-900 border rounded-xl pl-11 pr-4 py-2.5 text-sm font-mono font-medium uppercase outline-none transition-all ${validationErrors.code ? "border-red-500 focus:border-red-500" : "border-slate-200 dark:border-slate-800 focus:border-indigo-500 shadow-sm text-slate-900 dark:text-white"}`}
-                      />
-                    </div>
-                    <button
-                      type="button"
-                      onClick={generateCode}
-                      className="px-4 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-600/20 active:scale-95 flex items-center justify-center translate-y-px"
-                    >
-                      <Wand2 className="w-5 h-5" />
-                    </button>
+                <div className="flex gap-2 items-end">
+                  <div className="flex-1">
+                    <FormInput
+                      label="Coupon Code"
+                      required
+                      value={formData.code}
+                      onChange={(e) => {
+                        setFormData({ ...formData, code: e.target.value.toUpperCase() });
+                        if (validationErrors.code) setValidationErrors({ ...validationErrors, code: null });
+                      }}
+                      placeholder="e.g. SUMMER2026"
+                      error={validationErrors.code}
+                      icon={<Tag className="w-4 h-4" />}
+                      className="font-mono uppercase"
+                    />
                   </div>
-                  {validationErrors.code && (
-                    <p className="text-xs text-red-500 mt-1 font-medium ml-1 flex items-center gap-1">
-                      <AlertCircle className="w-3 h-3" />
-                      {validationErrors.code}
-                    </p>
-                  )}
+                  <button
+                    type="button"
+                    onClick={generateCode}
+                    className="h-[46px] px-4 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-600/20 active:scale-95 flex items-center justify-center mb-1"
+                  >
+                    <Wand2 className="w-5 h-5" />
+                  </button>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <button
-                    type="button"
-                    onClick={() => setFormData({ ...formData, is_active: formData.is_active ? 0 : 1 })}
-                    className={`flex items-center justify-between p-4 rounded-xl border transition-all ${formData.is_active ? "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-700 dark:text-green-400" : "bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-500"}`}
-                  >
-                    <span className="text-[10px] font-bold uppercase tracking-widest font-sans">Status</span>
-                    {formData.is_active ? <ToggleRight className="w-6 h-6" /> : <ToggleLeft className="w-6 h-6" />}
-                  </button>
+                  <FormSwitch
+                    label="Active"
+                    checked={!!formData.is_active}
+                    onChange={(checked) => setFormData({ ...formData, is_active: checked })}
+                  />
 
-                  <button
-                    type="button"
+                  <div
                     onClick={() => setFormData({ ...formData, appliesTo: formData.appliesTo === "all" ? "specific" : "all" })}
-                    className={`flex items-center justify-between p-4 rounded-xl border transition-all ${formData.appliesTo === "all" ? "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-400" : "bg-indigo-50 dark:bg-indigo-900/20 border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-400"}`}
+                    className={`flex items-center justify-between p-4 rounded-xl border transition-all cursor-pointer ${formData.appliesTo === "all" ? "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-400" : "bg-indigo-50 dark:bg-indigo-900/20 border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-400"}`}
                   >
                     <span className="text-[10px] font-bold uppercase tracking-widest font-sans">
                       {formData.appliesTo === "all" ? "Site-wide" : "Specific"}
                     </span>
                     {formData.appliesTo === "all" ? <Layers className="w-5 h-5" /> : <Package className="w-5 h-5" />}
-                  </button>
+                  </div>
                 </div>
               </div>
 
               {/* Name & Description */}
               <div className="space-y-6">
-                <div className="space-y-2">
-                  <label className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider ml-1">
-                    Coupon Name <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative group">
-                    <Ticket className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
-                    <input
-                      required
-                      type="text"
-                      value={formData.name}
-                      onChange={(e) => {
-                        setFormData({ ...formData, name: e.target.value });
-                        if (validationErrors.name) setValidationErrors({ ...validationErrors, name: null });
-                      }}
-                      placeholder="e.g. Summer Sale 2026"
-                      className={`w-full bg-slate-50 dark:bg-slate-900 border rounded-xl pl-11 pr-4 py-2.5 text-sm font-medium dark:text-white focus:bg-white dark:focus:bg-slate-800 outline-none transition-all ${validationErrors.name ? "border-red-500 focus:border-red-500" : "border-slate-200 dark:border-slate-800 focus:border-indigo-500"}`}
-                    />
-                  </div>
-                  {validationErrors.name && (
-                    <p className="text-xs text-red-500 mt-1 font-medium ml-1 flex items-center gap-1">
-                      <AlertCircle className="w-3 h-3" />
-                      {validationErrors.name}
-                    </p>
-                  )}
-                </div>
+                <FormInput
+                  label="Coupon Name"
+                  required
+                  value={formData.name}
+                  onChange={(e) => {
+                    setFormData({ ...formData, name: e.target.value });
+                    if (validationErrors.name) setValidationErrors({ ...validationErrors, name: null });
+                  }}
+                  placeholder="e.g. Summer Sale 2026"
+                  error={validationErrors.name}
+                  icon={<Ticket className="w-4 h-4" />}
+                />
 
-                <div className="space-y-2">
-                  <label className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider ml-1">Description</label>
-                  <div className="relative group">
-                    <Info className="absolute left-4 top-4 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
-                    <textarea
-                      value={formData.description}
-                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                      placeholder="Special discount for our summer collection..."
-                      rows={2}
-                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl pl-11 pr-4 py-2.5 text-sm font-medium dark:text-white focus:bg-white dark:focus:bg-slate-800 focus:border-indigo-500 outline-none transition-all shadow-sm resize-none min-h-[80px]"
-                    />
-                  </div>
-                </div>
+                <FormTextarea
+                  label="Description"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="Special discount for our summer collection..."
+                  rows={2}
+                  icon={<Info className="w-4 h-4" />}
+                />
               </div>
 
               {/* PRODUCT SELECTION LOGIC */}
