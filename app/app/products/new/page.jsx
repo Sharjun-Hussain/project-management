@@ -1383,9 +1383,15 @@ function CreateProductContent() {
       variants.forEach((v, idx) => {
         const prefix = productSetupType === "direct" ? "Product" : `Variant "${v.variant_name || 'Default'}"`;
         if (!v.sku) validationList.push({ stepId: "variants", stepLabel: "Pricing & Variants", field: `variants.${idx}.sku`, message: `${prefix} SKU is required` });
-        if (!v.price) validationList.push({ stepId: "variants", stepLabel: "Pricing & Variants", field: `variants.${idx}.price`, message: `${prefix} Price is required` });
+        if (!v.price) {
+          validationList.push({ stepId: "variants", stepLabel: "Pricing & Variants", field: `variants.${idx}.price`, message: `${prefix} Price is required` });
+        } else if (Number(v.price) < 0) {
+          validationList.push({ stepId: "variants", stepLabel: "Pricing & Variants", field: `variants.${idx}.price`, message: `${prefix} Price must be non-negative` });
+        }
         if (v.stock_quantity === undefined || v.stock_quantity === "") {
           validationList.push({ stepId: "variants", stepLabel: "Pricing & Variants", field: `variants.${idx}.stock_quantity`, message: `${prefix} Stock Quantity is required` });
+        } else if (Number(v.stock_quantity) < 0) {
+          validationList.push({ stepId: "variants", stepLabel: "Pricing & Variants", field: `variants.${idx}.stock_quantity`, message: `${prefix} Stock Quantity must be non-negative` });
         }
         if (!v.color) validationList.push({ stepId: "variants", stepLabel: "Pricing & Variants", field: `variants.${idx}.color`, message: `${prefix} Color is required` });
         if (isPhoneCategory) {
@@ -2528,9 +2534,15 @@ function CreateProductContent() {
                         <FormInput
                           label="Price"
                           type="number"
+                          min="0"
                           placeholder="149900"
                           value={directVariant.price || ""}
-                          onChange={(e) => updateDirectVariant("price", e.target.value)}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (val === "" || (!val.includes("-") && Number(val) >= 0)) {
+                              updateDirectVariant("price", val);
+                            }
+                          }}
                           suffix={<span className="text-xs font-medium text-slate-400 mt-3.5 block">Rs</span>}
                           error={errors[`variants.0.price`]}
                           required
@@ -2538,18 +2550,30 @@ function CreateProductContent() {
                         <FormInput
                           label="Sales Price"
                           type="number"
+                          min="0"
                           placeholder="144900"
                           value={directVariant.sales_price || ""}
-                          onChange={(e) => updateDirectVariant("sales_price", e.target.value)}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (val === "" || (!val.includes("-") && Number(val) >= 0)) {
+                              updateDirectVariant("sales_price", val);
+                            }
+                          }}
                           suffix={<span className="text-xs font-medium text-slate-400 mt-3.5 block">Rs</span>}
                           error={errors[`variants.0.sales_price`]}
                         />
                         <FormInput
                           label="Stock Quantity"
                           type="number"
+                          min="0"
                           placeholder="50"
                           value={directVariant.stock_quantity !== undefined ? directVariant.stock_quantity : ""}
-                          onChange={(e) => updateDirectVariant("stock_quantity", e.target.value)}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (val === "" || (!val.includes("-") && Number(val) >= 0)) {
+                              updateDirectVariant("stock_quantity", val);
+                            }
+                          }}
                           error={errors[`variants.0.stock_quantity`]}
                           required
                         />
@@ -2568,9 +2592,15 @@ function CreateProductContent() {
                         <FormInput
                           label="Low Stock Alert"
                           type="number"
+                          min="0"
                           placeholder="5"
                           value={directVariant.low_stock_threshold !== undefined ? directVariant.low_stock_threshold : ""}
-                          onChange={(e) => updateDirectVariant("low_stock_threshold", e.target.value)}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (val === "" || (!val.includes("-") && Number(val) >= 0)) {
+                              updateDirectVariant("low_stock_threshold", val);
+                            }
+                          }}
                         />
 
                         {isPhoneCategory && (
@@ -2617,9 +2647,15 @@ function CreateProductContent() {
                           {directVariant.is_offer && (
                             <FormInput
                               type="number"
+                              min="0"
                               placeholder="799.00"
                               value={directVariant.offer_price || ""}
-                              onChange={(e) => updateDirectVariant("offer_price", e.target.value)}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                if (val === "" || (!val.includes("-") && Number(val) >= 0)) {
+                                  updateDirectVariant("offer_price", val);
+                                }
+                              }}
                               suffix={<span className="text-xs font-medium text-slate-400 mt-3.5 block">Rs</span>}
                               containerClassName="flex-1 sm:w-40"
                               hideLabel
@@ -2746,9 +2782,15 @@ function CreateProductContent() {
                       <FormInput
                         label="Price"
                         type="number"
+                        min="0"
                         placeholder="149900"
                         value={currentVariant.price}
-                        onChange={(e) => setCurrentVariant({ ...currentVariant, price: e.target.value })}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (val === "" || (!val.includes("-") && Number(val) >= 0)) {
+                            setCurrentVariant({ ...currentVariant, price: val });
+                          }
+                        }}
                         suffix={<span className="text-xs font-medium text-slate-400 mt-3.5 block">Rs</span>}
                         error={editingVariantId ? errors[`variants.${variants.findIndex(v => v.id === editingVariantId)}.price`] : null}
                         required
@@ -2756,27 +2798,45 @@ function CreateProductContent() {
                       <FormInput
                         label="Sales Price"
                         type="number"
+                        min="0"
                         placeholder="144900"
                         value={currentVariant.sales_price}
-                        onChange={(e) => setCurrentVariant({ ...currentVariant, sales_price: e.target.value })}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (val === "" || (!val.includes("-") && Number(val) >= 0)) {
+                            setCurrentVariant({ ...currentVariant, sales_price: val });
+                          }
+                        }}
                         suffix={<span className="text-xs font-medium text-slate-400 mt-3.5 block">Rs</span>}
                         error={editingVariantId ? errors[`variants.${variants.findIndex(v => v.id === editingVariantId)}.sales_price`] : null}
                       />
                       <FormInput
                         label="Stock Quantity"
                         type="number"
+                        min="0"
                         placeholder="50"
                         value={currentVariant.stock_quantity}
-                        onChange={(e) => setCurrentVariant({ ...currentVariant, stock_quantity: e.target.value })}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (val === "" || (!val.includes("-") && Number(val) >= 0)) {
+                            setCurrentVariant({ ...currentVariant, stock_quantity: val });
+                          }
+                        }}
                         error={editingVariantId ? errors[`variants.${variants.findIndex(v => v.id === editingVariantId)}.stock_quantity`] : null}
                         required
                       />
                       <FormInput
                         label="Low Stock Alert"
                         type="number"
+                        min="0"
                         placeholder="5"
                         value={currentVariant.low_stock_threshold}
-                        onChange={(e) => setCurrentVariant({ ...currentVariant, low_stock_threshold: e.target.value })}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (val === "" || (!val.includes("-") && Number(val) >= 0)) {
+                            setCurrentVariant({ ...currentVariant, low_stock_threshold: val });
+                          }
+                        }}
                       />
                     </div>
 
@@ -2791,9 +2851,15 @@ function CreateProductContent() {
                         {currentVariant.is_offer && (
                           <FormInput
                             type="number"
+                            min="0"
                             placeholder="799.00"
                             value={currentVariant.offer_price}
-                            onChange={(e) => setCurrentVariant({ ...currentVariant, offer_price: e.target.value })}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              if (val === "" || (!val.includes("-") && Number(val) >= 0)) {
+                                setCurrentVariant({ ...currentVariant, offer_price: val });
+                              }
+                            }}
                             suffix={<span className="text-xs font-medium text-slate-400 mt-3.5 block">Rs</span>}
                             containerClassName="flex-1 sm:w-40"
                             hideLabel
