@@ -2519,7 +2519,7 @@ function CreateProductContent() {
                               updateDirectVariant("price", val);
                             }
                           }}
-                          suffix={<span className="text-xs font-medium text-slate-400 mt-3.5 block">Rs</span>}
+                          prefix="Rs."
                           error={errors[`variants.0.price`]}
                           required
                         />
@@ -2535,7 +2535,7 @@ function CreateProductContent() {
                               updateDirectVariant("sales_price", val);
                             }
                           }}
-                          suffix={<span className="text-xs font-medium text-slate-400 mt-3.5 block">Rs</span>}
+                          prefix="Rs."
                           error={errors[`variants.0.sales_price`]}
                         />
                         <FormInput
@@ -2631,7 +2631,7 @@ function CreateProductContent() {
                                   updateDirectVariant("offer_price", val);
                                 }
                               }}
-                              suffix={<span className="text-xs font-medium text-slate-400 mt-3.5 block">Rs</span>}
+                              prefix="Rs."
                               containerClassName="flex-1 sm:w-40"
                               hideLabel
                             />
@@ -2744,7 +2744,7 @@ function CreateProductContent() {
                             setCurrentVariant({ ...currentVariant, price: val });
                           }
                         }}
-                        suffix={<span className="text-xs font-medium text-slate-400 mt-3.5 block">Rs</span>}
+                        prefix="Rs."
                         error={editingVariantId ? errors[`variants.${variants.findIndex(v => v.id === editingVariantId)}.price`] : null}
                         required
                       />
@@ -2760,7 +2760,7 @@ function CreateProductContent() {
                             setCurrentVariant({ ...currentVariant, sales_price: val });
                           }
                         }}
-                        suffix={<span className="text-xs font-medium text-slate-400 mt-3.5 block">Rs</span>}
+                        prefix="Rs."
                         error={editingVariantId ? errors[`variants.${variants.findIndex(v => v.id === editingVariantId)}.sales_price`] : null}
                       />
                       <FormInput
@@ -2813,7 +2813,7 @@ function CreateProductContent() {
                                 setCurrentVariant({ ...currentVariant, offer_price: val });
                               }
                             }}
-                            suffix={<span className="text-xs font-medium text-slate-400 mt-3.5 block">Rs</span>}
+                            prefix="Rs."
                             containerClassName="flex-1 sm:w-40"
                             hideLabel
                           />

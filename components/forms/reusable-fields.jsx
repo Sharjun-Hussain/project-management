@@ -42,20 +42,27 @@ export const FormInput = React.memo(({
   className,
   containerClassName,
   suffix,
+  prefix,
   ...props
 }) => {
   return (
     <FieldWrapper label={label} error={error} description={description} required={required} className={containerClassName}>
-      <div className="flex gap-2">
+      <div className="relative flex items-center w-full">
+        {prefix && (
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none select-none text-slate-400 dark:text-slate-500 text-xs font-semibold tracking-wide">
+            {prefix}
+          </div>
+        )}
         <Input
           className={cn(
-            "p-3 h-11 bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all dark:text-white",
+            "p-3 h-11 bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all dark:text-white w-full",
+            prefix && "pl-12",
             error && "border-red-500 focus:border-red-500 focus:ring-red-500/20",
             className
           )}
           {...props}
         />
-        {suffix && <div className="flex-none">{suffix}</div>}
+        {suffix && <div className="ml-2 flex-none">{suffix}</div>}
       </div>
     </FieldWrapper>
   );
