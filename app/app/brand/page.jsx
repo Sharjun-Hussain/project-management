@@ -507,47 +507,58 @@ function BrandContent() {
                       key={brand.id}
                       className="brand-item group relative bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-100 dark:border-slate-700/80 hover:border-indigo-500/20 dark:hover:border-indigo-500/30 shadow-xs hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col h-full"
                     >
-                      <div className="relative w-full h-32 rounded-2xl overflow-hidden mb-4 flex items-center justify-center bg-slate-50/60 dark:bg-slate-900/40 border border-slate-100/50 dark:border-slate-800/50">
-                        <div className={`w-14 h-14 rounded-2xl bg-linear-to-br bg-gradient-to-br ${getBrandGradient(brand.name)} text-white flex items-center justify-center text-2xl font-bold shadow-sm transform transition-transform duration-300 group-hover:scale-105`}>
+                      {/* Compact Header */}
+                      <div className="flex items-start gap-4 mb-4">
+                        {/* Elegant squircle avatar */}
+                        <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${getBrandGradient(brand.name)} text-white flex items-center justify-center text-xl font-bold shadow-xs shrink-0 transform transition-transform duration-300 group-hover:scale-105`}>
                           {brand.name.trim().charAt(0).toUpperCase() || "?"}
                         </div>
-                        <div className="absolute top-2.5 right-2.5 flex gap-1">
-                          {brand.is_featured ? (
-                            <span className="bg-amber-500/10 text-amber-600 dark:text-amber-400 px-2 py-0.5 rounded-lg text-[9px] font-bold border border-amber-200/30 dark:border-amber-900/30">
-                              Featured
-                            </span>
-                          ) : null}
-                          <span
-                            className={`px-2 py-0.5 rounded-lg text-[9px] font-bold border ${brand.is_active ? "bg-green-500/10 text-green-600 dark:text-green-400 border-green-200/30 dark:border-green-900/30" : "bg-slate-500/10 text-slate-500 dark:text-slate-400 border-slate-200/30 dark:border-slate-700/30"}`}
-                          >
-                            {brand.is_active ? "Active" : "Inactive"}
-                          </span>
+                        
+                        {/* Title & Badges */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              {brand.is_featured ? (
+                                <span className="bg-amber-500/10 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded-md text-[9px] font-bold border border-amber-200/20 dark:border-amber-900/20 animate-pulse">
+                                  Featured
+                                </span>
+                              ) : null}
+                              <span
+                                className={`px-1.5 py-0.5 rounded-md text-[9px] font-bold border ${brand.is_active ? "bg-green-500/10 text-green-600 dark:text-green-400 border-green-200/20 dark:border-green-900/20" : "bg-slate-500/10 text-slate-500 dark:text-slate-400 border-slate-200/20 dark:border-slate-700/20"}`}
+                              >
+                                {brand.is_active ? "Active" : "Inactive"}
+                              </span>
+                            </div>
+                            <h3 className="text-base font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors break-words leading-tight">
+                              {brand.name}
+                            </h3>
+                          </div>
+                          
+                          {brand.website ? (
+                            <div className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400 mt-1 min-w-0">
+                              <Globe className="w-3 h-3 text-slate-450 shrink-0" />
+                              <a href={brand.website} target="_blank" rel="noopener noreferrer" className="hover:underline hover:text-indigo-600 dark:hover:text-indigo-400 truncate text-[10px] font-medium font-sans">
+                                {brand.website.replace(/^https?:\/\/(www\.)?/, '')}
+                              </a>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-1 text-[10px] text-slate-350 dark:text-slate-600 mt-1 min-w-0 italic select-none">
+                              <Globe className="w-3 h-3 text-slate-300 dark:text-slate-750 shrink-0" />
+                              <span>No website</span>
+                            </div>
+                          )}
                         </div>
                       </div>
 
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-base font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors truncate mb-1">
-                          {brand.name}
-                        </h3>
-                        {brand.website ? (
-                          <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 mb-3 min-h-[1.25rem]">
-                            <Globe className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                            <a href={brand.website} target="_blank" rel="noopener noreferrer" className="hover:underline hover:text-indigo-600 dark:hover:text-indigo-400 truncate">
-                              {brand.website.replace(/^https?:\/\/(www\.)?/, '')}
-                            </a>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-1.5 text-xs text-slate-350 dark:text-slate-600 mb-3 min-h-[1.25rem] select-none">
-                            <Globe className="w-3.5 h-3.5 text-slate-300 dark:text-slate-750 shrink-0" />
-                            <span className="italic">No website</span>
-                          </div>
-                        )}
-                        <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mb-4 h-8 leading-relaxed">
-                          {brand.description || <span className="text-slate-350 dark:text-slate-600 italic select-none">No description provided</span>}
+                      {/* Description Block */}
+                      <div className="flex-1">
+                        <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mb-4 leading-relaxed min-h-[2.5rem]">
+                          {brand.description || <span className="text-slate-355 dark:text-slate-600 italic select-none">No description provided</span>}
                         </p>
                       </div>
 
-                      <div className="flex items-center justify-between pt-4 border-t border-slate-100/80 dark:border-slate-700/50">
+                      {/* Footer Actions */}
+                      <div className="flex items-center justify-between pt-4 border-t border-slate-100/80 dark:border-slate-700/50 mt-auto">
                         <span className="text-[10px] font-extrabold tracking-wider text-slate-400 dark:text-slate-500 uppercase bg-slate-50 dark:bg-slate-900/60 px-2.5 py-1 rounded-lg">
                           {brand.products_count || 0} Products
                         </span>
