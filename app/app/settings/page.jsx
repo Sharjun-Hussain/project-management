@@ -89,6 +89,10 @@ export default function SettingsPage() {
   const [sectionSaving, setSectionSaving] = useState({});
   const [isBackingUp, setIsBackingUp] = useState(false);
 
+  // Password states for Profile section
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+
   // Logo & Favicon file refs for upload
   const logoFileRef = useRef(null);
   const [logoPreview, setLogoPreview] = useState(null);
@@ -287,8 +291,66 @@ export default function SettingsPage() {
 
     setSectionSaving((prev) => ({ ...prev, [sectionKey]: true }));
     try {
+      if (sectionKey === "profile") {
+        // 1. Save general site fallback settings (admin fallback details)
+        const formData = buildFormData();
+        await saveSettings(session.accessToken, formData);
+
+        // 2. Update real logged-in user profile account in the database (PUT /api/v1/admin/profile)
+        const profileRes = await fetch(`${API_BASE_URL}/admin/profile`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${session.accessToken}`,
+            "Accept": "application/json"
+          },
+          body: JSON.stringify({
+            name: adminName,
+            email: adminEmail
+          })
+        });
+
+        if (!profileRes.ok) {
+          const errData = await profileRes.json();
+          throw new Error(errData.message || "Failed to update admin account profile");
+        }
+
+        // 3. If password fields are filled, update the password securely (PUT /api/v1/admin/update-password)
+        if (currentPassword || newPassword) {
+          if (!currentPassword || !newPassword) {
+            throw new Error("Both current and new password are required to change password");
+          }
+
+          const pwRes = await fetch(`${API_BASE_URL}/admin/update-password`, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${session.accessToken}`,
+              "Accept": "application/json"
+            },
+            body: JSON.stringify({
+              currentPassword,
+              newPassword
+            })
+          });
+
+          if (!pwRes.ok) {
+            const errData = await pwRes.json();
+            throw new Error(errData.message || "Failed to update account password");
+          }
+
+          setCurrentPassword("");
+          setNewPassword("");
+        }
+
+        toast.success("Profile and security credentials updated successfully!");
+        setHasChanges(false);
+        refreshSettings();
+        return;
+      }
+
+      // Default save settings flow for all other EAV sections
       const formData = buildFormData();
-      
       const response = await saveSettings(session.accessToken, formData);
       
       toast.success(`${sectionKey.charAt(0).toUpperCase() + sectionKey.slice(1)} settings saved!`);
@@ -630,6 +692,11 @@ export default function SettingsPage() {
                       <input
                         type="password"
                         placeholder="••••••••"
+                        value={currentPassword}
+                        onChange={(e) => {
+                          setCurrentPassword(e.target.value);
+                          setHasChanges(true);
+                        }}
                         className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm dark:text-white focus:bg-white dark:focus:bg-slate-800 focus:border-rose-500 outline-none transition-all font-medium"
                       />
                     </div>
@@ -640,6 +707,11 @@ export default function SettingsPage() {
                       <input
                         type="password"
                         placeholder="••••••••"
+                        value={newPassword}
+                        onChange={(e) => {
+                          setNewPassword(e.target.value);
+                          setHasChanges(true);
+                        }}
                         className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm dark:text-white focus:bg-white dark:focus:bg-slate-800 focus:border-rose-500 outline-none transition-all font-medium"
                       />
                     </div>
