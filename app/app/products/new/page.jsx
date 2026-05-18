@@ -292,6 +292,24 @@ function CreateProductContent() {
 
 
   const setActiveTab = (tabId) => {
+    // Auto-save pending key features
+    if (activeTab === "specs") {
+      if (featureInput.trim()) {
+        const featText = featureInput.trim();
+        if (!selectedFeatures.find(f => f.name.toLowerCase() === featText.toLowerCase())) {
+          setSelectedFeatures(prev => [...prev, { id: `new-${Date.now()}`, name: featText }]);
+        }
+        setFeatureInput("");
+      }
+      if (tagInput.trim()) {
+        const tagText = tagInput.trim();
+        if (!selectedTags.find(t => t.name.toLowerCase() === tagText.toLowerCase())) {
+          setSelectedTags(prev => [...prev, { id: `new-${Date.now()}`, name: tagText }]);
+        }
+        setTagInput("");
+      }
+    }
+
     setActiveTabState(tabId);
     const params = new URLSearchParams(searchParams.toString());
     params.set("step", tabId);
@@ -323,6 +341,8 @@ function CreateProductContent() {
   const [heroImagePreview, setHeroImagePreview] = useState(null);
   const [galleryImageFiles, setGalleryImageFiles] = useState([]);
   const [galleryImagePreviews, setGalleryImagePreviews] = useState([]);
+  const [isHeroDragging, setIsHeroDragging] = useState(false);
+  const [isGalleryDragging, setIsGalleryDragging] = useState(false);
 
   // VARIANTS STATE
   const [variants, setVariants] = useState([]);
@@ -346,6 +366,100 @@ function CreateProductContent() {
     is_featured: false,
     is_new_arrival: false,
   });
+
+  // PRODUCT SETUP TYPE (Direct vs Variant)
+  const [productSetupType, setProductSetupType] = useState(null); // 'direct' | 'variant' | null
+  const [isSkuManuallyEdited, setIsSkuManuallyEdited] = useState(false);
+  const [validationErrors, setValidationErrors] = useState([]);
+  const [showValidationModal, setShowValidationModal] = useState(false);
+
+  const updateDirectVariant = (field, value) => {
+    setVariants(prev => {
+      const updated = [...prev];
+      if (updated.length === 0) {
+        updated.push({
+          variant_name: "Default",
+          sku: "",
+          barcode: "",
+          imei: "",
+          warranty_period: "",
+          storage_size: "",
+          ram_size: "",
+          color: "",
+          price: "",
+          sales_price: "",
+          stock_quantity: "",
+          low_stock_threshold: "5",
+          is_offer: false,
+          offer_price: "",
+          is_trending: false,
+          is_active: true,
+          is_featured: false,
+          is_new_arrival: false,
+        });
+      }
+      updated[0] = {
+        ...updated[0],
+        variant_name: "Default",
+        [field]: value
+      };
+      return updated;
+    });
+  };
+
+  const handleSwitchSetupType = () => {
+    if (window.confirm("Are you sure you want to switch setup types? Switching will reset your current variant configurations.")) {
+      if (productSetupType === "direct") {
+        setProductSetupType("variant");
+        setVariants([]);
+      } else {
+        setProductSetupType("direct");
+        setVariants([
+          {
+            variant_name: "Default",
+            sku: "",
+            barcode: "",
+            imei: "",
+            warranty_period: "",
+            storage_size: "",
+            ram_size: "",
+            color: "",
+            price: "",
+            sales_price: "",
+            stock_quantity: "",
+            low_stock_threshold: "5",
+            is_offer: false,
+            offer_price: "",
+            is_trending: false,
+            is_active: true,
+            is_featured: false,
+            is_new_arrival: false,
+          }
+        ]);
+      }
+    }
+  };
+
+  const directVariant = variants[0] || {
+    variant_name: "Default",
+    sku: "",
+    barcode: "",
+    imei: "",
+    warranty_period: "",
+    storage_size: "",
+    ram_size: "",
+    color: "",
+    price: "",
+    sales_price: "",
+    stock_quantity: "",
+    low_stock_threshold: "5",
+    is_offer: false,
+    offer_price: "",
+    is_trending: false,
+    is_active: true,
+    is_featured: false,
+    is_new_arrival: false,
+  };
 
   // INPUT BUFFERS
   const [tagInput, setTagInput] = useState("");
@@ -423,6 +537,21 @@ function CreateProductContent() {
     const name = cat?.name?.toLowerCase() || "";
     return (name.includes("phone") || name.includes("mobile")) && !name.includes("accessor");
   }, [formData.category_id, categories]);
+
+  const completionPercentage = React.useMemo(() => {
+    let score = 0;
+    let total = 7;
+    
+    if (formData.name) score++;
+    if (formData.category_id) score++;
+    if (formData.brand_id) score++;
+    if (formData.type) score++;
+    if (heroImageFile || (isEditMode && formData.primary_image_path)) score++;
+    if (selectedFeatures.length > 0) score++;
+    if (variants.length > 0 && variants.every(v => v.sku && v.price && v.stock_quantity !== "" && v.color && (!isPhoneCategory || (v.storage_size && v.ram_size)))) score++;
+    
+    return Math.round((score / total) * 100);
+  }, [formData, heroImageFile, isEditMode, selectedFeatures, variants, isPhoneCategory]);
 
   const isFormValid =
     formData.name &&
@@ -620,6 +749,11 @@ function CreateProductContent() {
           setSpecifications(draft.specifications);
           setSelectedTags(draft.selectedTags);
           setSelectedFeatures(draft.selectedFeatures);
+          if (draft.variants && draft.variants.length <= 1) {
+            setProductSetupType("direct");
+          } else {
+            setProductSetupType("variant");
+          }
           toast.info("Draft loaded from local storage");
         }
       } catch (error) {
@@ -664,6 +798,12 @@ function CreateProductContent() {
               variant_name: v.variant_name || "",
             })));
             
+            if (product.variants.length <= 1) {
+              setProductSetupType("direct");
+            } else {
+              setProductSetupType("variant");
+            }
+            
             // Set global condition from the first variant
             if (product.variants[0]?.condition) {
               setFormData(prev => ({
@@ -671,6 +811,8 @@ function CreateProductContent() {
                 condition: product.variants[0].condition
               }));
             }
+          } else {
+            setProductSetupType("direct");
           }
 
           // Load specifications
@@ -1166,22 +1308,72 @@ function CreateProductContent() {
     setIsLoading(true);
     setErrors({});
 
-    // Basic validation
-    if (
-      !formData.name ||
-      !formData.category_id ||
-      !formData.brand_id
-    ) {
-      toast.error("Please fill in all required fields");
+    // Sync any pending tag/feature input first
+    const updatedFeatures = [...selectedFeatures];
+    if (featureInput.trim()) {
+      const featText = featureInput.trim();
+      if (!updatedFeatures.find(f => f.name.toLowerCase() === featText.toLowerCase())) {
+        const newFeat = { id: `new-${Date.now()}`, name: featText };
+        updatedFeatures.push(newFeat);
+        setSelectedFeatures(updatedFeatures);
+      }
+      setFeatureInput("");
+    }
+
+    const updatedTags = [...selectedTags];
+    if (tagInput.trim()) {
+      const tagText = tagInput.trim();
+      if (!updatedTags.find(t => t.name.toLowerCase() === tagText.toLowerCase())) {
+        const newTag = { id: `new-${Date.now()}`, name: tagText };
+        updatedTags.push(newTag);
+        setSelectedTags(updatedTags);
+      }
+      setTagInput("");
+    }
+
+    // Comprehensive client-side validation check
+    const validationList = [];
+    if (!formData.name) validationList.push({ stepId: "general", stepLabel: "General Info", field: "name", message: "Product Name is required" });
+    if (!formData.category_id) validationList.push({ stepId: "general", stepLabel: "General Info", field: "category_id", message: "Product Category is required" });
+    if (!formData.brand_id) validationList.push({ stepId: "general", stepLabel: "General Info", field: "brand_id", message: "Product Brand is required" });
+    if (!formData.type) validationList.push({ stepId: "general", stepLabel: "General Info", field: "type", message: "Product Type is required" });
+    
+    if (!heroImageFile && !(isEditMode && formData.primary_image_path)) {
+      validationList.push({ stepId: "media", stepLabel: "Media Gallery", field: "primary_image", message: "Primary Image is required" });
+    }
+    
+    if (variants.length === 0) {
+      validationList.push({ stepId: "variants", stepLabel: "Pricing & Variants", field: "variants", message: "Please add at least one variant" });
+    } else {
+      variants.forEach((v, idx) => {
+        const prefix = productSetupType === "direct" ? "Product" : `Variant "${v.variant_name || 'Default'}"`;
+        if (!v.sku) validationList.push({ stepId: "variants", stepLabel: "Pricing & Variants", field: `variants.${idx}.sku`, message: `${prefix} SKU is required` });
+        if (!v.price) validationList.push({ stepId: "variants", stepLabel: "Pricing & Variants", field: `variants.${idx}.price`, message: `${prefix} Price is required` });
+        if (v.stock_quantity === undefined || v.stock_quantity === "") {
+          validationList.push({ stepId: "variants", stepLabel: "Pricing & Variants", field: `variants.${idx}.stock_quantity`, message: `${prefix} Stock Quantity is required` });
+        }
+        if (!v.color) validationList.push({ stepId: "variants", stepLabel: "Pricing & Variants", field: `variants.${idx}.color`, message: `${prefix} Color is required` });
+        if (isPhoneCategory) {
+          if (!v.storage_size) validationList.push({ stepId: "variants", stepLabel: "Pricing & Variants", field: `variants.${idx}.storage_size`, message: `${prefix} Storage is required for Phones` });
+          if (!v.ram_size) validationList.push({ stepId: "variants", stepLabel: "Pricing & Variants", field: `variants.${idx}.ram_size`, message: `${prefix} RAM is required for Phones` });
+        }
+      });
+    }
+    
+    if (updatedFeatures.length === 0) {
+      validationList.push({ stepId: "specs", stepLabel: "Specs & Features", field: "features", message: "At least one Key Feature is required" });
+    }
+
+    if (validationList.length > 0) {
+      setValidationErrors(validationList);
+      setShowValidationModal(true);
+      toast.error("Please complete the required product fields.");
       setIsLoading(false);
       return;
     }
 
-    if (variants.length === 0) {
-      toast.error("Please add at least one variant");
-      setIsLoading(false);
-      return;
-    }
+    setValidationErrors([]);
+    setShowValidationModal(false);
 
     const loadingToast = toast.loading(
       isEditMode ? "Updating product..." : "Creating product..."
@@ -1273,6 +1465,99 @@ function CreateProductContent() {
     }
   };
 
+  if (!productSetupType && !isEditMode) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-slate-900/90 backdrop-blur-md rounded-2xl border border-slate-800 p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+          <div className="text-center space-y-1 mb-6">
+            <h1 className="text-base font-extrabold text-white tracking-tight">
+              Select Product Setup Type
+            </h1>
+            <p className="text-xs text-slate-400">
+              Choose the catalog configuration for your product.
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            {/* Option 1: Direct Product */}
+            <button
+              type="button"
+              onClick={() => {
+                setProductSetupType("direct");
+                setVariants([
+                  {
+                    variant_name: "Default",
+                    sku: "",
+                    barcode: "",
+                    imei: "",
+                    warranty_period: "",
+                    storage_size: "",
+                    ram_size: "",
+                    color: "",
+                    price: "",
+                    sales_price: "",
+                    stock_quantity: "",
+                    low_stock_threshold: "5",
+                    is_offer: false,
+                    offer_price: "",
+                    is_trending: false,
+                    is_active: true,
+                    is_featured: false,
+                    is_new_arrival: false,
+                  }
+                ]);
+              }}
+              className="group w-full flex items-center gap-4 p-3.5 bg-slate-950/60 hover:bg-indigo-950/20 border border-slate-850 hover:border-indigo-500 rounded-xl transition-all duration-300 hover:shadow-md cursor-pointer animate-in fade-in slide-in-from-top-1"
+            >
+              <div className="w-10 h-10 rounded-xl bg-indigo-950 flex items-center justify-center text-indigo-400 shrink-0 group-hover:scale-105 transition-transform">
+                <Box className="w-5 h-5" />
+              </div>
+              <div className="text-left">
+                <h3 className="text-xs font-bold text-white group-hover:text-indigo-400 transition-colors">
+                  Direct Product
+                </h3>
+                <p className="text-[10px] text-slate-400 mt-0.5 leading-normal">
+                  Standard single item. Direct SKU, pricing, and properties without variants.
+                </p>
+              </div>
+            </button>
+
+            {/* Option 2: Variant Product */}
+            <button
+              type="button"
+              onClick={() => {
+                setProductSetupType("variant");
+              }}
+              className="group w-full flex items-center gap-4 p-3.5 bg-slate-950/60 hover:bg-indigo-950/20 border border-slate-850 hover:border-indigo-500 rounded-xl transition-all duration-300 hover:shadow-md cursor-pointer animate-in fade-in slide-in-from-top-2"
+            >
+              <div className="w-10 h-10 rounded-xl bg-indigo-950 flex items-center justify-center text-indigo-400 shrink-0 group-hover:scale-105 transition-transform">
+                <Layers className="w-5 h-5" />
+              </div>
+              <div className="text-left">
+                <h3 className="text-xs font-bold text-white group-hover:text-indigo-400 transition-colors">
+                  Variant Product
+                </h3>
+                <p className="text-[10px] text-slate-400 mt-0.5 leading-normal">
+                  Configurable items. Multiple variations of color, size, storage, each with pricing.
+                </p>
+              </div>
+            </button>
+          </div>
+
+          <div className="mt-6 pt-4 border-t border-slate-800/50 flex justify-center">
+            <button
+              type="button"
+              onClick={() => router.push("/app/products")}
+              className="text-xs font-semibold text-slate-400 hover:text-indigo-400 transition-colors cursor-pointer"
+            >
+              Back to Products List
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       ref={containerRef}
@@ -1317,8 +1602,8 @@ function CreateProductContent() {
               <div className="relative flex items-stretch group" ref={saveDropdownRef}>
                 <button
                   onClick={handleSave}
-                  disabled={isLoading || !isFormValid}
-                  className="flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:text-slate-400 text-white rounded-l-xl text-xs sm:text-sm font-semibold shadow-lg shadow-indigo-600/20 transition-all active:scale-[0.98] disabled:scale-100 uppercase tracking-tight sm:tracking-normal"
+                  disabled={isLoading}
+                  className="flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:text-slate-400 text-white rounded-l-xl text-xs sm:text-sm font-semibold shadow-lg shadow-indigo-600/20 transition-all active:scale-[0.98] disabled:scale-100 uppercase tracking-tight sm:tracking-normal cursor-pointer"
                 >
                   {isLoading ? (
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -1331,7 +1616,7 @@ function CreateProductContent() {
                 <button
                   onClick={() => setIsSaveDropdownOpen(!isSaveDropdownOpen)}
                   disabled={isLoading}
-                  className="px-2 sm:px-3 bg-indigo-700 hover:bg-indigo-800 disabled:bg-slate-300 dark:disabled:bg-slate-900 text-white rounded-r-xl border-l border-indigo-500/30 transition-all active:scale-[0.98] flex items-center justify-center"
+                  className="px-2 sm:px-3 bg-indigo-700 hover:bg-indigo-800 disabled:bg-slate-300 dark:disabled:bg-slate-900 text-white rounded-r-xl border-l border-indigo-500/30 transition-all active:scale-[0.98] flex items-center justify-center cursor-pointer"
                 >
                   <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isSaveDropdownOpen ? "rotate-180" : ""}`} />
                 </button>
@@ -1372,6 +1657,25 @@ function CreateProductContent() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-8 pt-2 sm:pt-4 pb-12 transition-all">
+        {/* SLEEK FORM PROGRESS ZONE */}
+        <div className="mb-6 bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4 animate-fade-up">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-sm shrink-0">
+              {completionPercentage}%
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-slate-800 dark:text-white">Product Setup Completion</h4>
+              <p className="text-[10px] text-slate-500 dark:text-slate-400">Fill in all required fields to publish your product.</p>
+            </div>
+          </div>
+          <div className="w-full sm:w-64 bg-slate-100 dark:bg-slate-900 h-2 rounded-full overflow-hidden">
+            <div 
+              className="bg-indigo-600 dark:bg-indigo-500 h-full rounded-full transition-all duration-500 ease-out"
+              style={{ width: `${completionPercentage}%` }}
+            />
+          </div>
+        </div>
+
         {/* ERROR BANNER */}
         {Object.keys(errors).length > 0 && (
           <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl flex items-center gap-3 text-red-700 dark:text-red-400 animate-fade-up">
@@ -1450,7 +1754,13 @@ function CreateProductContent() {
                       <FormInput
                         label="Product Code"
                         value={formData.code}
-                        onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setFormData({ ...formData, code: val });
+                          if (productSetupType === "direct" && !isSkuManuallyEdited) {
+                            updateDirectVariant("sku", val);
+                          }
+                        }}
                         placeholder="APL-IP15P-TIT"
                         error={errors.code}
                         suffix={
@@ -1458,7 +1768,7 @@ function CreateProductContent() {
                             type="button"
                             variant="outline"
                             onClick={generateCode}
-                            className="h-11 px-3 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-xl text-slate-600 dark:text-slate-300 text-xs font-semibold"
+                            className="h-11 px-3 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-xl text-slate-600 dark:text-slate-300 text-xs font-semibold cursor-pointer"
                           >
                             <Sparkles className="w-3.5 h-3.5 mr-1 text-indigo-500" />
                             Generate
@@ -1607,7 +1917,24 @@ function CreateProductContent() {
                     <Star className="w-4 h-4 text-amber-500" /> Primary Image
                   </h3>
                   <div className="flex flex-col sm:flex-row gap-6 items-center sm:items-start">
-                    <div className="w-full sm:w-40 h-56 sm:h-40 bg-slate-50 dark:bg-slate-900 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-2xl flex items-center justify-center relative overflow-hidden group shadow-inner">
+                    <div 
+                      onDragOver={(e) => { e.preventDefault(); setIsHeroDragging(true); }}
+                      onDragLeave={() => setIsHeroDragging(false)}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        setIsHeroDragging(false);
+                        const file = e.dataTransfer.files[0];
+                        if (file && file.type.startsWith("image/")) {
+                          setHeroImageFile(file);
+                          setHeroImagePreview(URL.createObjectURL(file));
+                        }
+                      }}
+                      className={`w-full sm:w-40 h-56 sm:h-40 bg-slate-50 dark:bg-slate-900 border-2 border-dashed rounded-2xl flex items-center justify-center relative overflow-hidden group shadow-inner transition-all duration-300 ${
+                        isHeroDragging 
+                          ? "border-indigo-500 bg-indigo-50/20 dark:bg-indigo-950/10 scale-105" 
+                          : "border-slate-300 dark:border-slate-600"
+                      }`}
+                    >
                       {heroImagePreview ? (
                         <>
                           <img
@@ -1622,7 +1949,7 @@ function CreateProductContent() {
                       ) : (
                         <label className="w-full h-full flex flex-col items-center justify-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors">
                           <div className="text-center p-4">
-                            <UploadCloud className="w-10 h-10 mx-auto text-slate-400 mb-2" />
+                            <UploadCloud className={`w-10 h-10 mx-auto mb-2 transition-transform duration-300 ${isHeroDragging ? "text-indigo-500 scale-110" : "text-slate-400"}`} />
                             <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
                               Upload Main Product Image
                             </span>
@@ -1685,14 +2012,46 @@ function CreateProductContent() {
                   </div>
 
                   {galleryImagePreviews.length === 0 ? (
-                    <div className="p-8 text-center bg-slate-50 dark:bg-slate-900 rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-700">
-                      <ImageIcon className="w-10 h-10 text-slate-300 mx-auto mb-2" />
+                    <div 
+                      onDragOver={(e) => { e.preventDefault(); setIsGalleryDragging(true); }}
+                      onDragLeave={() => setIsGalleryDragging(false)}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        setIsGalleryDragging(false);
+                        const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith("image/"));
+                        if (files.length > 0) {
+                          setGalleryImageFiles(prev => [...prev, ...files]);
+                          setGalleryImagePreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]);
+                        }
+                      }}
+                      className={`p-8 text-center bg-slate-50 dark:bg-slate-900 rounded-xl border-2 border-dashed transition-all duration-300 ${
+                        isGalleryDragging 
+                          ? "border-indigo-500 bg-indigo-50/20 dark:bg-indigo-950/10 scale-102" 
+                          : "border-slate-200 dark:border-slate-700"
+                      }`}
+                    >
+                      <ImageIcon className={`w-10 h-10 mx-auto mb-2 transition-transform duration-300 ${isGalleryDragging ? "text-indigo-500 scale-110" : "text-slate-300"}`} />
                       <p className="text-slate-400 text-sm">
-                        No extra images added yet.
+                        Drag and drop gallery images here.
                       </p>
                     </div>
                   ) : (
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div 
+                      onDragOver={(e) => { e.preventDefault(); setIsGalleryDragging(true); }}
+                      onDragLeave={() => setIsGalleryDragging(false)}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        setIsGalleryDragging(false);
+                        const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith("image/"));
+                        if (files.length > 0) {
+                          setGalleryImageFiles(prev => [...prev, ...files]);
+                          setGalleryImagePreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]);
+                        }
+                      }}
+                      className={`grid grid-cols-2 md:grid-cols-4 gap-4 p-2 rounded-xl transition-all duration-300 ${
+                        isGalleryDragging ? "bg-indigo-50/10 dark:bg-indigo-950/10 ring-2 ring-indigo-500/20" : ""
+                      }`}
+                    >
                       {galleryImagePreviews.map((img, idx) => (
                         <div
                           key={idx}
@@ -2053,8 +2412,8 @@ function CreateProductContent() {
                   </button>
                   <button
                     onClick={handleSave}
-                    disabled={isLoading || !isFormValid}
-                    className="flex items-center gap-2 px-8 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold shadow-lg shadow-indigo-600/20 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={isLoading}
+                    className="flex items-center gap-2 px-8 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold shadow-lg shadow-indigo-600/20 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                   >
                     {isLoading ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -2071,11 +2430,234 @@ function CreateProductContent() {
             {activeTab === "variants" && (
               <div className="space-y-6 animate-fade-up">
                 <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
-                  <h3 className="text-lg font-semibold text-slate-800 dark:text-white mb-6">
-                    Manage Variants <span className="text-red-500">*</span>
-                  </h3>
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 pb-4 border-b border-slate-100 dark:border-slate-700">
+                    <div>
+                      <h3 className="text-lg font-semibold text-slate-800 dark:text-white">
+                        {productSetupType === "direct" ? "Product Pricing & Inventory" : "Manage Variants"} <span className="text-red-500">*</span>
+                      </h3>
+                      <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+                        {productSetupType === "direct" 
+                          ? "Configure the pricing, inventory stock, and product properties." 
+                          : "Configure multiple variations (sizes, colors, RAM/storage size, etc.) for this product."}
+                      </p>
+                    </div>
+                    <div className="shrink-0 bg-slate-100 dark:bg-slate-900 p-1 rounded-xl flex items-center border border-slate-200/50 dark:border-slate-800">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (productSetupType !== "direct") {
+                            if (window.confirm("Are you sure you want to switch to Direct Product? This will reset custom variants.")) {
+                              setProductSetupType("direct");
+                              setVariants([
+                                {
+                                  variant_name: "Default",
+                                  sku: formData.code || "",
+                                  barcode: "",
+                                  imei: "",
+                                  warranty_period: "",
+                                  storage_size: "",
+                                  ram_size: "",
+                                  color: "",
+                                  price: "",
+                                  sales_price: "",
+                                  stock_quantity: "",
+                                  low_stock_threshold: "5",
+                                  is_offer: false,
+                                  offer_price: "",
+                                  is_trending: false,
+                                  is_active: true,
+                                  is_featured: false,
+                                  is_new_arrival: false,
+                                }
+                              ]);
+                            }
+                          }
+                        }}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer ${
+                          productSetupType === "direct"
+                            ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm border border-slate-200/10"
+                            : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                        }`}
+                      >
+                        <Box className="w-3.5 h-3.5" />
+                        <span>Direct Setup</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (productSetupType !== "variant") {
+                            if (window.confirm("Are you sure you want to switch to Variant Product? This will reset direct pricing properties.")) {
+                              setProductSetupType("variant");
+                              setVariants([]);
+                            }
+                          }
+                        }}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer ${
+                          productSetupType === "variant"
+                            ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm border border-slate-200/10"
+                            : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                        }`}
+                      >
+                        <Layers className="w-3.5 h-3.5" />
+                        <span>Variant Setup</span>
+                      </button>
+                    </div>
+                  </div>
 
-                  {/* Variant Adder */}
+                  {productSetupType === "direct" ? (
+                    /* SIMPLIFIED DIRECT PRODUCT FORM */
+                    <div className="space-y-6">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <FormInput
+                          label="SKU"
+                          placeholder="e.g. IP15P-256-NT"
+                          value={directVariant.sku || ""}
+                          onChange={(e) => updateDirectVariant("sku", e.target.value)}
+                          error={errors[`variants.0.sku`]}
+                          required
+                        />
+                        <FormInput
+                          label="Barcode"
+                          placeholder="e.g. 195949000123"
+                          value={directVariant.barcode || ""}
+                          onChange={(e) => updateDirectVariant("barcode", e.target.value.replace(/\D/g, ""))}
+                        />
+                        <FormInput
+                          label="Warranty Period"
+                          placeholder="e.g. 1 Year"
+                          value={directVariant.warranty_period || ""}
+                          onChange={(e) => updateDirectVariant("warranty_period", e.target.value)}
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <FormInput
+                          label="Price"
+                          type="number"
+                          placeholder="149900"
+                          value={directVariant.price || ""}
+                          onChange={(e) => updateDirectVariant("price", e.target.value)}
+                          suffix={<span className="text-xs font-medium text-slate-400 mt-3.5 block">Rs</span>}
+                          error={errors[`variants.0.price`]}
+                          required
+                        />
+                        <FormInput
+                          label="Sales Price"
+                          type="number"
+                          placeholder="144900"
+                          value={directVariant.sales_price || ""}
+                          onChange={(e) => updateDirectVariant("sales_price", e.target.value)}
+                          suffix={<span className="text-xs font-medium text-slate-400 mt-3.5 block">Rs</span>}
+                          error={errors[`variants.0.sales_price`]}
+                        />
+                        <FormInput
+                          label="Stock Quantity"
+                          type="number"
+                          placeholder="50"
+                          value={directVariant.stock_quantity !== undefined ? directVariant.stock_quantity : ""}
+                          onChange={(e) => updateDirectVariant("stock_quantity", e.target.value)}
+                          error={errors[`variants.0.stock_quantity`]}
+                          required
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <FormInput
+                          label="Color"
+                          placeholder="Natural Titanium"
+                          value={directVariant.color || ""}
+                          onChange={(e) => updateDirectVariant("color", e.target.value)}
+                          error={errors[`variants.0.color`]}
+                          required
+                        />
+                        
+                        <FormInput
+                          label="Low Stock Alert"
+                          type="number"
+                          placeholder="5"
+                          value={directVariant.low_stock_threshold !== undefined ? directVariant.low_stock_threshold : ""}
+                          onChange={(e) => updateDirectVariant("low_stock_threshold", e.target.value)}
+                        />
+
+                        {isPhoneCategory && (
+                          <FormInput
+                            label="IMEI"
+                            placeholder="IMEI Number"
+                            value={directVariant.imei || ""}
+                            onChange={(e) => updateDirectVariant("imei", e.target.value)}
+                          />
+                        )}
+                      </div>
+
+                      {isPhoneCategory && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <FormInput
+                            label="Storage"
+                            placeholder="256GB"
+                            value={directVariant.storage_size || ""}
+                            onChange={(e) => updateDirectVariant("storage_size", e.target.value)}
+                            error={errors[`variants.0.storage_size`]}
+                            required
+                          />
+                          <FormInput
+                            label="RAM"
+                            type="number"
+                            placeholder="8"
+                            value={directVariant.ram_size || ""}
+                            onChange={(e) => (e.target.value === "" || Number(e.target.value) >= 0) && updateDirectVariant("ram_size", e.target.value)}
+                            suffix={<span className="text-xs font-medium text-slate-400 mt-3.5 block">GB</span>}
+                            error={errors[`variants.0.ram_size`]}
+                            required
+                          />
+                        </div>
+                      )}
+
+                      <div className="flex flex-wrap items-center gap-x-6 gap-y-4 pt-4 border-t border-slate-100 dark:border-slate-700/50">
+                        <div className="flex items-center gap-4 w-full sm:w-auto">
+                          <FormCheckbox
+                            label="On Offer"
+                            checked={!!directVariant.is_offer}
+                            onCheckedChange={(checked) => updateDirectVariant("is_offer", !!checked)}
+                            className="border-none p-0 bg-transparent shadow-none"
+                          />
+                          {directVariant.is_offer && (
+                            <FormInput
+                              type="number"
+                              placeholder="799.00"
+                              value={directVariant.offer_price || ""}
+                              onChange={(e) => updateDirectVariant("offer_price", e.target.value)}
+                              suffix={<span className="text-xs font-medium text-slate-400 mt-3.5 block">Rs</span>}
+                              containerClassName="flex-1 sm:w-40"
+                              hideLabel
+                            />
+                          )}
+                        </div>
+
+                        <FormCheckbox
+                          label="Trending"
+                          checked={!!directVariant.is_trending}
+                          onCheckedChange={(checked) => updateDirectVariant("is_trending", !!checked)}
+                          className="border-none p-0 bg-transparent shadow-none"
+                        />
+                        
+                        <FormCheckbox
+                          label="Featured"
+                          checked={!!directVariant.is_featured}
+                          onCheckedChange={(checked) => updateDirectVariant("is_featured", !!checked)}
+                          className="border-none p-0 bg-transparent shadow-none"
+                        />
+                        
+                        <FormCheckbox
+                          label="New Arrival"
+                          checked={!!directVariant.is_new_arrival}
+                          onCheckedChange={(checked) => updateDirectVariant("is_new_arrival", !!checked)}
+                          className="border-none p-0 bg-transparent shadow-none"
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      {/* Variant Adder */}
                   <div
                     id="variant-form"
                     className={`p-4 rounded-xl border transition-all duration-300 ${
@@ -2491,6 +3073,8 @@ function CreateProductContent() {
                       ))}
                     </div>
                   )}
+                    </>
+                  )}
                 </div>
 
                 <div className="flex items-center justify-between mt-8 pt-6 border-t border-slate-200 dark:border-slate-700">
@@ -2598,6 +3182,71 @@ function CreateProductContent() {
           )}
         </div>
       </div>
+
+      {/* GORGEOUS FLOATING VALIDATION CHECKLIST MODAL */}
+      {showValidationModal && (
+        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-slate-900/60 dark:bg-slate-900/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="max-w-md w-full bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
+              <div className="flex items-center gap-2 text-amber-500">
+                <AlertCircle className="w-5 h-5" />
+                <h3 className="font-bold text-slate-900 dark:text-white">Required Information</h3>
+              </div>
+              <button 
+                onClick={() => setShowValidationModal(false)}
+                className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="p-6 max-h-[60vh] overflow-y-auto space-y-4">
+              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                To publish this product, please provide the following required details. Click any item below to jump directly to that field:
+              </p>
+              <div className="space-y-2">
+                {validationErrors.map((err, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => {
+                      setActiveTab(err.stepId);
+                      setShowValidationModal(false);
+                      setTimeout(() => {
+                        const el = document.getElementsByName(err.field)[0] || document.getElementById(err.field);
+                        if (el) {
+                          el.scrollIntoView({ behavior: "smooth", block: "center" });
+                          el.focus?.();
+                        } else if (err.field.startsWith("variants.")) {
+                          const formEl = document.getElementById("variant-form");
+                          if (formEl) formEl.scrollIntoView({ behavior: "smooth", block: "center" });
+                        }
+                      }, 100);
+                    }}
+                    className="w-full flex items-start gap-3 p-3 bg-slate-50 hover:bg-indigo-50/30 dark:bg-slate-900/30 dark:hover:bg-indigo-950/10 border border-slate-100 hover:border-indigo-200 dark:border-slate-800 dark:hover:border-indigo-950/20 rounded-xl text-left transition-all duration-200 group cursor-pointer"
+                  >
+                    <div className="w-1.5 h-1.5 rounded-full bg-red-500 mt-2 shrink-0 group-hover:scale-125 transition-transform" />
+                    <div>
+                      <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 group-hover:text-indigo-500 dark:group-hover:text-indigo-400 transition-colors">
+                        {err.stepLabel}
+                      </span>
+                      <p className="text-xs font-semibold text-slate-700 dark:text-slate-200 mt-0.5 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
+                        {err.message}
+                      </p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="p-4 bg-slate-50 dark:bg-slate-900/30 border-t border-slate-100 dark:border-slate-700 flex justify-end">
+              <button
+                onClick={() => setShowValidationModal(false)}
+                className="px-4 py-2 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl transition-all active:scale-95 cursor-pointer"
+              >
+                Got it, Let's fix it
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
