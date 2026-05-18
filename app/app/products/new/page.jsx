@@ -1650,7 +1650,7 @@ function CreateProductContent() {
               <button
                 onClick={handleSave}
                 disabled={isLoading}
-                className="flex items-center gap-2 px-5 py-2.5 bg-indigo-650 hover:bg-indigo-755 disabled:bg-slate-200 dark:disabled:bg-slate-855 disabled:text-slate-400 text-white rounded-l-lg text-xs font-bold tracking-wide uppercase transition-all active:scale-[0.98] disabled:scale-100 cursor-pointer shadow-sm shadow-indigo-600/10"
+                className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:text-slate-400 text-white rounded-l-lg text-xs font-bold tracking-wide uppercase transition-all active:scale-[0.98] disabled:scale-100 cursor-pointer shadow-sm shadow-indigo-600/10"
               >
                 {isLoading ? (
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -1663,7 +1663,7 @@ function CreateProductContent() {
               <button
                 onClick={() => setIsSaveDropdownOpen(!isSaveDropdownOpen)}
                 disabled={isLoading}
-                className="px-3 bg-indigo-700 hover:bg-indigo-855 disabled:bg-slate-250 dark:disabled:bg-slate-900 text-white rounded-r-lg border-l border-white/10 transition-all active:scale-[0.98] flex items-center justify-center cursor-pointer shadow-sm shadow-indigo-600/10"
+                className="px-3 bg-indigo-700 hover:bg-indigo-800 disabled:bg-slate-250 dark:disabled:bg-slate-900 text-white rounded-r-lg border-l border-white/10 transition-all active:scale-[0.98] flex items-center justify-center cursor-pointer shadow-sm shadow-indigo-600/10"
               >
                 <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isSaveDropdownOpen ? "rotate-180" : ""}`} />
               </button>
@@ -1699,24 +1699,7 @@ function CreateProductContent() {
           </div>
         </div>
 
-        {/* SLEEK FORM PROGRESS ZONE */}
-        <div className="mb-6 bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4 animate-fade-up">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-sm shrink-0">
-              {completionPercentage}%
-            </div>
-            <div>
-              <h4 className="text-xs font-bold text-slate-800 dark:text-white">Product Setup Completion</h4>
-              <p className="text-[10px] text-slate-500 dark:text-slate-400">Fill in all required fields to publish your product.</p>
-            </div>
-          </div>
-          <div className="w-full sm:w-64 bg-slate-100 dark:bg-slate-900 h-2 rounded-full overflow-hidden">
-            <div 
-              className="bg-indigo-600 dark:bg-indigo-500 h-full rounded-full transition-all duration-500 ease-out"
-              style={{ width: `${completionPercentage}%` }}
-            />
-          </div>
-        </div>
+
 
         {/* ERROR BANNER */}
         {Object.keys(errors).length > 0 && (
@@ -3144,7 +3127,7 @@ function CreateProductContent() {
             {formData.subcategory_id && subCategories.length > 0 && (
               <>
                 <span className="text-slate-300 dark:text-slate-600 mx-0.5">/</span>
-                <span className="text-indigo-650 dark:text-indigo-455 uppercase font-bold truncate max-w-[100px]">{subCategories.find(s => String(s.id) === String(formData.subcategory_id))?.name}</span>
+                <span className="text-indigo-600 dark:text-indigo-400 uppercase font-bold truncate max-w-[100px]">{subCategories.find(s => String(s.id) === String(formData.subcategory_id))?.name}</span>
               </>
             )}
             <span className="text-slate-300 dark:text-slate-600 mx-1">|</span>
