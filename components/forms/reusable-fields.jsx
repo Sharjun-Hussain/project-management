@@ -34,26 +34,26 @@ const FieldWrapper = ({ label, error, description, children, required, className
 /**
  * Reusable Input Field
  */
-export const FormInput = React.memo(({ 
-  label, 
-  error, 
-  description, 
-  required, 
+export const FormInput = React.memo(({
+  label,
+  error,
+  description,
+  required,
   className,
   containerClassName,
   suffix,
-  ...props 
+  ...props
 }) => {
   return (
     <FieldWrapper label={label} error={error} description={description} required={required} className={containerClassName}>
       <div className="flex gap-2">
-        <Input 
+        <Input
           className={cn(
             "p-3 h-11 bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all dark:text-white",
             error && "border-red-500 focus:border-red-500 focus:ring-red-500/20",
             className
           )}
-          {...props} 
+          {...props}
         />
         {suffix && <div className="flex-none">{suffix}</div>}
       </div>
@@ -66,24 +66,24 @@ FormInput.displayName = "FormInput";
 /**
  * Reusable Select Field
  */
-export const FormSelect = React.memo(({ 
-  label, 
-  error, 
-  description, 
-  required, 
-  options = [], 
+export const FormSelect = React.memo(({
+  label,
+  error,
+  description,
+  required,
+  options = [],
   placeholder,
   value,
   onChange,
   className,
   containerClassName,
-  ...props 
+  ...props
 }) => {
   return (
     <FieldWrapper label={label} error={error} description={description} required={required} className={containerClassName}>
       <Select onValueChange={onChange} value={String(value || "")} {...props}>
         <SelectTrigger className={cn(
-          "p-3 h-11 bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all dark:text-white",
+          "p-3 h-11 w-full bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all dark:text-white",
           error && "border-red-500",
           className
         )}>
@@ -106,24 +106,24 @@ FormSelect.displayName = "FormSelect";
 /**
  * Reusable Textarea Field
  */
-export const FormTextarea = React.memo(({ 
-  label, 
-  error, 
-  description, 
-  required, 
+export const FormTextarea = React.memo(({
+  label,
+  error,
+  description,
+  required,
   className,
   containerClassName,
-  ...props 
+  ...props
 }) => {
   return (
     <FieldWrapper label={label} error={error} description={description} required={required} className={containerClassName}>
-      <Textarea 
+      <Textarea
         className={cn(
           "p-3 bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all dark:text-white min-h-[100px]",
           error && "border-red-500 focus:border-red-500 focus:ring-red-500/20",
           className
         )}
-        {...props} 
+        {...props}
       />
     </FieldWrapper>
   );
@@ -134,13 +134,13 @@ FormTextarea.displayName = "FormTextarea";
 /**
  * Reusable Checkbox Field
  */
-export const FormCheckbox = React.memo(({ 
-  label, 
-  description, 
+export const FormCheckbox = React.memo(({
+  label,
+  description,
   checked,
   onCheckedChange,
   className,
-  ...props 
+  ...props
 }) => {
   return (
     <div className={cn("flex flex-row items-start space-x-3 space-y-0 rounded-xl border border-slate-200 dark:border-slate-700 p-4 bg-white dark:bg-slate-800/50 shadow-sm", className)}>
@@ -163,17 +163,17 @@ FormCheckbox.displayName = "FormCheckbox";
 /**
  * Reusable Switch Field
  */
-export const FormSwitch = React.memo(({ 
-  label, 
-  description, 
+export const FormSwitch = React.memo(({
+  label,
+  description,
   checked,
   onCheckedChange,
   className,
-  ...props 
+  ...props
 }) => {
   return (
     <div className={cn("flex flex-row items-center justify-between rounded-xl border border-slate-200 dark:border-slate-700 p-4 bg-white dark:bg-slate-800/50 shadow-sm", className)}>
-      <div 
+      <div
         className="space-y-0.5 cursor-pointer select-none flex-1 mr-4"
         onClick={() => onCheckedChange && onCheckedChange(!checked)}
       >

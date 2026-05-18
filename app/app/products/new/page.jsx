@@ -321,6 +321,7 @@ function CreateProductContent() {
     name: "",
     code: "",
     category_id: "",
+    subcategory_id: "",
     brand_id: "",
     type: "physical",
     status: "draft",
@@ -516,6 +517,16 @@ function CreateProductContent() {
     ([url]) => globalFetcher(url, session.accessToken),
   );
 
+  const { data: subCategoriesData } = useSWR(
+    session?.accessToken && formData.category_id
+      ? [
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/sub-categories/active/list?category_id=${formData.category_id}`,
+          session.accessToken,
+        ]
+      : null,
+    ([url]) => globalFetcher(url, session.accessToken),
+  );
+
   const { data: featuresData } = useSWR(
     session?.accessToken
       ? [
@@ -527,6 +538,7 @@ function CreateProductContent() {
   );
 
   const categories = categoriesData?.data || [];
+  const subCategories = subCategoriesData?.data || [];
   const brands = brandsData?.data || [];
   const availableTags = tagsData?.data || [];
   const availableFeatures = featuresData?.data || [];
@@ -778,6 +790,7 @@ function CreateProductContent() {
             name: product.name || "",
             code: product.code || "",
             category_id: product.category_id || "",
+            subcategory_id: product.subcategory_id || "",
             brand_id: product.brand_id || "",
             type: product.type || "physical",
             status: product.is_active ? "published" : "draft",
@@ -1164,6 +1177,9 @@ function CreateProductContent() {
     data.append("name", sanitizeHtml(formData.name));
     data.append("code", sanitizeHtml(formData.code));
     data.append("category_id", formData.category_id);
+    if (formData.subcategory_id) {
+      data.append("subcategory_id", formData.subcategory_id);
+    }
     data.append("brand_id", formData.brand_id);
     data.append("type", formData.type);
     data.append("status", formData.status);
@@ -1563,100 +1579,98 @@ function CreateProductContent() {
       ref={containerRef}
       className="min-h-screen w-full bg-slate-50/50 dark:bg-slate-900 pb-20 font-sans text-slate-900 dark:text-slate-100"
     >
-      {/* 1. HEADER & ACTIONS */}
-      <header className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 transition-all rounded-xl mb-2">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => router.back()}
-                className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors text-slate-500 dark:text-slate-400"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </button>
-              <div>
-                <h1 className="text-lg sm:text-xl font-semibold text-slate-900 dark:text-white flex items-center gap-1.5 sm:gap-2 min-w-0">
-                  <span className="shrink-0 whitespace-nowrap">{isEditMode ? "Edit" : "Create"}</span>
-                  {formData.name && (
-                    <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-                      <span className="text-slate-300 dark:text-slate-600 font-light shrink-0">|</span>
-                      <span className="truncate text-indigo-600 dark:text-indigo-400 font-semibold">
-                        {formData.name}
-                      </span>
-                    </div>
-                  )}
-                </h1>
-                <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-                  <span
-                    className={`w-2 h-2 rounded-full ${formData.status === "published" ? "bg-green-500" : "bg-amber-500"}`}
-                  ></span>
-                  {formData.status} Mode
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-
-
-              {/* SPLIT ACTION BUTTON */}
-              <div className="relative flex items-stretch group" ref={saveDropdownRef}>
-                <button
-                  onClick={handleSave}
-                  disabled={isLoading}
-                  className="flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:text-slate-400 text-white rounded-l-xl text-xs sm:text-sm font-semibold shadow-lg shadow-indigo-600/20 transition-all active:scale-[0.98] disabled:scale-100 uppercase tracking-tight sm:tracking-normal cursor-pointer"
-                >
-                  {isLoading ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  ) : (
-                    <Check className="w-4 h-4" />
-                  )}
-                  <span>{isEditMode ? "Update" : "Publish"}</span>
-                </button>
-                
-                <button
-                  onClick={() => setIsSaveDropdownOpen(!isSaveDropdownOpen)}
-                  disabled={isLoading}
-                  className="px-2 sm:px-3 bg-indigo-700 hover:bg-indigo-800 disabled:bg-slate-300 dark:disabled:bg-slate-900 text-white rounded-r-xl border-l border-indigo-500/30 transition-all active:scale-[0.98] flex items-center justify-center cursor-pointer"
-                >
-                  <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isSaveDropdownOpen ? "rotate-180" : ""}`} />
-                </button>
-
-                {/* Dropdown Menu */}
-                {isSaveDropdownOpen && (
-                  <div className="absolute top-full right-0 mt-2 w-48 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl z-[110] overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right">
-                    <button
-                      onClick={() => {
-                        handleSaveDraft();
-                        setIsSaveDropdownOpen(false);
-                      }}
-                      className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors border-b border-slate-100 dark:border-slate-700"
-                    >
-                      <Save className="w-4 h-4 text-indigo-500" />
-                      Save as Draft
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (confirm("Are you sure you want to discard your progress? This will clear your local draft.")) {
-                          localStorage.removeItem(DRAFT_KEY);
-                          router.push("/app/products");
-                        }
-                      }}
-                      className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                      Discard Draft
-                    </button>
-                  </div>
+      <main className="max-w-7xl mx-auto px-4 sm:px-8 pt-4 sm:pt-6 pb-12 transition-all">
+        {/* 1. HEADER & ACTIONS */}
+        <div className="flex items-center justify-between pb-4 mb-6 border-b border-slate-200 dark:border-slate-800/80">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => router.back()}
+              className="p-2 hover:bg-slate-100 dark:hover:bg-slate-850 rounded-xl text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white transition-colors cursor-pointer border border-transparent hover:border-slate-200 dark:hover:border-slate-800"
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </button>
+            <div>
+              <h1 className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white flex items-center gap-1.5 sm:gap-2 min-w-0 tracking-tight">
+                <span>{isEditMode ? "Edit Product" : "Create Product"}</span>
+                {formData.name && (
+                  <>
+                    <span className="text-slate-300 dark:text-slate-700 font-light">/</span>
+                    <span className="truncate text-indigo-600 dark:text-indigo-400 font-bold">
+                      {formData.name}
+                    </span>
+                  </>
                 )}
+              </h1>
+              <div className="flex items-center mt-1">
+                <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded text-[10px] font-extrabold tracking-wider uppercase border shadow-sm ${
+                  formData.status === "published"
+                    ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
+                    : "bg-amber-500/10 text-amber-550 border-amber-500/20"
+                }`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${
+                    formData.status === "published" ? "bg-emerald-500 animate-pulse" : "bg-amber-550 animate-pulse"
+                  }`} />
+                  {formData.status} Mode
+                </span>
               </div>
             </div>
           </div>
 
+          <div className="flex items-center gap-2">
+            {/* SPLIT ACTION BUTTON */}
+            <div className="relative flex items-stretch group" ref={saveDropdownRef}>
+              <button
+                onClick={handleSave}
+                disabled={isLoading}
+                className="flex items-center gap-2 px-5 py-2.5 bg-indigo-650 hover:bg-indigo-755 disabled:bg-slate-200 dark:disabled:bg-slate-855 disabled:text-slate-400 text-white rounded-l-lg text-xs font-bold tracking-wide uppercase transition-all active:scale-[0.98] disabled:scale-100 cursor-pointer shadow-sm shadow-indigo-600/10"
+              >
+                {isLoading ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Check className="w-4 h-4" />
+                )}
+                <span>{isEditMode ? "Update" : "Publish"}</span>
+              </button>
+              
+              <button
+                onClick={() => setIsSaveDropdownOpen(!isSaveDropdownOpen)}
+                disabled={isLoading}
+                className="px-3 bg-indigo-700 hover:bg-indigo-855 disabled:bg-slate-250 dark:disabled:bg-slate-900 text-white rounded-r-lg border-l border-white/10 transition-all active:scale-[0.98] flex items-center justify-center cursor-pointer shadow-sm shadow-indigo-600/10"
+              >
+                <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isSaveDropdownOpen ? "rotate-180" : ""}`} />
+              </button>
 
+              {/* Dropdown Menu */}
+              {isSaveDropdownOpen && (
+                <div className="absolute top-full right-0 mt-1.5 w-44 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl z-[110] overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right">
+                  <button
+                    onClick={() => {
+                      handleSaveDraft();
+                      setIsSaveDropdownOpen(false);
+                    }}
+                    className="w-full flex items-center gap-2.5 px-4 py-3 text-xs font-semibold text-slate-700 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-850 transition-colors border-b border-slate-100 dark:border-slate-800 cursor-pointer"
+                  >
+                    <Save className="w-4 h-4 text-indigo-500" />
+                    Save Draft
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (confirm("Are you sure you want to discard your progress? This will clear your local draft.")) {
+                        localStorage.removeItem(DRAFT_KEY);
+                        router.push("/app/products");
+                      }
+                    }}
+                    className="w-full flex items-center gap-2.5 px-4 py-3 text-xs font-semibold text-red-605 hover:bg-red-50 dark:hover:bg-red-955/10 transition-colors cursor-pointer"
+                  >
+                    <Trash2 className="w-4 h-4 text-red-500" />
+                    Discard
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
-      </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-8 pt-2 sm:pt-4 pb-12 transition-all">
         {/* SLEEK FORM PROGRESS ZONE */}
         <div className="mb-6 bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4 animate-fade-up">
           <div className="flex items-center gap-3">
@@ -1750,67 +1764,52 @@ function CreateProductContent() {
                       required
                     />
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <FormInput
-                        label="Product Code"
-                        value={formData.code}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          setFormData({ ...formData, code: val });
-                          if (productSetupType === "direct" && !isSkuManuallyEdited) {
-                            updateDirectVariant("sku", val);
-                          }
-                        }}
-                        placeholder="APL-IP15P-TIT"
-                        error={errors.code}
-                        suffix={
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={generateCode}
-                            className="h-11 px-3 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-xl text-slate-600 dark:text-slate-300 text-xs font-semibold cursor-pointer"
-                          >
-                            <Sparkles className="w-3.5 h-3.5 mr-1 text-indigo-500" />
-                            Generate
-                          </Button>
+                    <FormInput
+                      label="Product Code"
+                      value={formData.code}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setFormData({ ...formData, code: val });
+                        if (productSetupType === "direct" && !isSkuManuallyEdited) {
+                          updateDirectVariant("sku", val);
                         }
-                      />
-                      <FormSelect
-                        label="Product Type"
-                        value={formData.type}
-                        onChange={(val) => setFormData({ ...formData, type: val })}
-                        options={[
-                          { label: "Physical Product", value: "physical" },
-                          { label: "Digital Asset", value: "digital" },
-                          { label: "Service", value: "service" },
-                        ]}
-                        error={errors.type}
-                        required
-                      />
-                      <FormSelect
-                        label="Condition"
-                        value={formData.condition}
-                        onChange={(val) => setFormData({ ...formData, condition: val })}
-                        options={[
-                          { label: "New", value: "new" },
-                          { label: "Used", value: "used" },
-                          { label: "Refurbished", value: "refurbished" },
-                        ]}
-                        error={errors.condition}
-                        required
-                      />
-                    </div>
+                      }}
+                      placeholder="APL-IP15P-TIT"
+                      error={errors.code}
+                      suffix={
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={generateCode}
+                          className="h-11 px-3 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-xl text-slate-600 dark:text-slate-300 text-xs font-semibold cursor-pointer"
+                        >
+                          <Sparkles className="w-3.5 h-3.5 mr-1 text-indigo-500" />
+                          Generate
+                        </Button>
+                      }
+                    />
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <FormSelect
                         label="Category"
                         value={formData.category_id}
-                        onChange={(val) => setFormData({ ...formData, category_id: val })}
+                        onChange={(val) => setFormData({ ...formData, category_id: val, subcategory_id: "" })}
                         options={categories.map(cat => ({ label: cat.name, value: cat.id }))}
                         placeholder="Select Category"
                         error={errors.category_id}
                         required
                       />
+                      
+                      <FormSelect
+                        label="Subcategory"
+                        value={formData.subcategory_id}
+                        onChange={(val) => setFormData({ ...formData, subcategory_id: val })}
+                        options={subCategories.map(sub => ({ label: sub.name, value: sub.id }))}
+                        placeholder={formData.category_id ? (subCategories.length > 0 ? "Select Subcategory" : "No Subcategories Available") : "Select Category First"}
+                        error={errors.subcategory_id}
+                        disabled={!formData.category_id || subCategories.length === 0}
+                      />
+
                       <FormSelect
                         label="Brand"
                         value={formData.brand_id}
@@ -3131,6 +3130,12 @@ function CreateProductContent() {
           <span className="text-slate-300 dark:text-slate-600 mx-1">|</span>
           <span className="hidden lg:flex items-center gap-1 min-w-0">
             CATEGORY: <span className="text-slate-900 dark:text-white uppercase font-semibold truncate max-w-[100px]">{categories.find(c => String(c.id) === String(formData.category_id))?.name || "N/A"}</span>
+            {formData.subcategory_id && subCategories.length > 0 && (
+              <>
+                <span className="text-slate-300 dark:text-slate-600 mx-0.5">/</span>
+                <span className="text-indigo-650 dark:text-indigo-455 uppercase font-bold truncate max-w-[100px]">{subCategories.find(s => String(s.id) === String(formData.subcategory_id))?.name}</span>
+              </>
+            )}
             <span className="text-slate-300 dark:text-slate-600 mx-1">|</span>
           </span>
           <span className="shrink-0">SPECS: <span className="text-slate-900 dark:text-white font-semibold">{specifications.length}</span></span>
@@ -3149,6 +3154,7 @@ function CreateProductContent() {
                       name: "",
                       code: "",
                       category_id: "",
+                      subcategory_id: "",
                       brand_id: "",
                       type: "physical",
                       status: "draft",
