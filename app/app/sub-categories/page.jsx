@@ -511,31 +511,27 @@ function SubCategoryContent() {
                               {cat.name}
                             </h3>
                           </div>
-                          
-                          <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 mt-1 min-w-0">
-                            <span className="bg-slate-100/80 dark:bg-slate-900/80 px-1.5 py-0.5 rounded text-[10px] text-slate-500 dark:text-slate-400 font-mono">
-                              {cat.slug}
-                            </span>
-                            {cat.category && (
-                              <span className="text-indigo-500 dark:text-indigo-400 font-semibold text-[10px] flex items-center gap-1 shrink-0">
-                                <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 shrink-0" />
+                          {cat.category && (
+                            <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 mt-1.5 min-w-0 flex-wrap">
+                              <span className="bg-indigo-50/80 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 px-2 py-0.5 rounded-md text-[10px] font-bold border border-indigo-100/50 dark:border-indigo-900/20 flex items-center gap-1 shrink-0">
+                                <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 dark:bg-indigo-400 shrink-0" />
                                 {cat.category.name}
                               </span>
-                            )}
-                          </div>
+                            </div>
+                          )}
                         </div>
                       </div>
 
                       {/* Description Block */}
                       <div className="flex-1">
-                        <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mb-4 leading-relaxed min-h-[2.5rem]">
+                        <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mt-2 mb-4 leading-relaxed min-h-[2.5rem] font-medium">
                           {cat.description || <span className="text-slate-350 dark:text-slate-600 italic select-none">No description provided</span>}
                         </p>
                       </div>
 
                       {/* Footer Actions */}
                       <div className="flex items-center justify-between pt-4 border-t border-slate-100/80 dark:border-slate-700/50 mt-auto">
-                        <span className="text-[10px] font-extrabold tracking-wider text-slate-400 dark:text-slate-500 uppercase bg-slate-50 dark:bg-slate-900/60 px-2.5 py-1 rounded-lg">
+                        <span className="text-[10px] font-extrabold tracking-wider text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900/60 px-2.5 py-1 rounded-lg border border-slate-200/30 dark:border-slate-800/40">
                           {cat.products_count || 0} Products
                         </span>
                         <div className="flex gap-1">
