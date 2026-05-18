@@ -950,17 +950,7 @@ function CreateProductContent() {
       !selectedFeatures.find((f) => f.id === feature.id),
   );
 
-  // --- ANIMATIONS ---
-  useGSAP(
-    () => {
-      gsap.fromTo(
-        ".animate-fade-up",
-        { y: 20, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.4, stagger: 0.05, clearProps: "all" },
-      );
-    },
-    { scope: containerRef, dependencies: [activeTab] },
-  );
+  // --- ANIMATIONS HANDLED VIA NATIVE CSS FOR SMOOTH TRANSLATION ---
 
   // --- LOGIC HANDLERS ---
 
@@ -1601,6 +1591,22 @@ function CreateProductContent() {
       ref={containerRef}
       className="min-h-screen w-full bg-slate-50/50 dark:bg-slate-900 pb-20 font-sans text-slate-900 dark:text-slate-100"
     >
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes premiumFadeUp {
+          0% {
+            opacity: 0;
+            transform: translateY(12px);
+          }
+          100% {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-fade-up {
+          animation: premiumFadeUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+          will-change: transform, opacity;
+        }
+      `}} />
       <main className="max-w-7xl mx-auto px-4 sm:px-8 pt-4 sm:pt-6 pb-12 transition-all">
         {/* 1. HEADER & ACTIONS */}
         <div className="flex items-center justify-between pb-4 mb-6 border-b border-slate-200 dark:border-slate-800/80">
