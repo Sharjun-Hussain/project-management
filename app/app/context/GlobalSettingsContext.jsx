@@ -27,7 +27,17 @@ const ACCENT_COLORS = {
   indigo: { name: "Indigo", primary: "#6366f1", hover: "#4f46e5", light: "#eef2ff" },
   blue: { name: "Ocean Blue", primary: "#3b82f6", hover: "#2563eb", light: "#eff6ff" },
   rose: { name: "Rose Crimson", primary: "#f43f5e", hover: "#e11d48", light: "#fff1f2" },
-  emerald: { name: "Mint Emerald", primary: "#10b981", hover: "#059669", light: "#ecfdf5" },
+  emerald: { 
+    name: "Mint Emerald", 
+    primary: "#003C2D", 
+    hover: "#002a1f", 
+    light: "#e6f0eb",
+    dark: {
+      primary: "#22c55e",
+      hover: "#16a34a",
+      light: "#0f1710"
+    }
+  },
   amber: { name: "Gold Amber", primary: "#f59e0b", hover: "#d97706", light: "#fef3c7" },
   purple: { name: "Royal Purple", primary: "#a855f7", hover: "#9333ea", light: "#faf5ff" },
   orange: { name: "Sunset Orange", primary: "#f97316", hover: "#ea580c", light: "#fff7ed" },
@@ -57,7 +67,7 @@ export const GlobalSettingsProvider = ({ children }) => {
     adminName: "",
     dashboardTitle: "",
     faviconUrl: null,
-    accentColor: "gold",
+    accentColor: "emerald",
     darkAccentColor: "gold",
   });
 
