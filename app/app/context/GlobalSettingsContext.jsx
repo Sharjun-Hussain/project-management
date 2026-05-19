@@ -38,15 +38,22 @@ export const GlobalSettingsProvider = ({ children }) => {
   const { data: session, status } = useSession();
 
   // Default values mapped from API keys
-  const [settings, setSettings] = useState({
-    businessName: "",
-    logoUrl: null,
-    footerText: "",
-    adminEmail: "",
-    adminName: "",
-    dashboardTitle: "",
-    faviconUrl: null,
-    accentColor: "indigo",
+  const [settings, setSettings] = useState(() => {
+    let initialColor = "indigo";
+    if (typeof window !== "undefined") {
+      const cached = localStorage.getItem("accent_color");
+      if (cached) initialColor = cached;
+    }
+    return {
+      businessName: "",
+      logoUrl: null,
+      footerText: "",
+      adminEmail: "",
+      adminName: "",
+      dashboardTitle: "",
+      faviconUrl: null,
+      accentColor: initialColor,
+    };
   });
 
   const [isLoading, setIsLoading] = useState(false);
@@ -66,6 +73,11 @@ export const GlobalSettingsProvider = ({ children }) => {
       const defaultFooter = `© 2026 ${defaultShopName}. All rights reserved.`;
       const defaultEmail = `support@${defaultShopName.toLowerCase().replace(/\s+/g, '')}.com`;
 
+      const fetchedColor = data.site_accent_color || "indigo";
+      if (typeof window !== "undefined") {
+        localStorage.setItem("accent_color", fetchedColor);
+      }
+
       setSettings({
         businessName: data.site_name || defaultShopName,
         logoUrl: formatUrl(data.site_logo),
@@ -74,7 +86,7 @@ export const GlobalSettingsProvider = ({ children }) => {
         adminName: data.admin_name || "Admin User",
         dashboardTitle: data.admin_dashboard_title || defaultShopName,
         faviconUrl: formatUrl(data.site_favicon),
-        accentColor: data.site_accent_color || "indigo",
+        accentColor: fetchedColor,
         // persist the raw data so the settings page can access all keys
         raw: data,
       });
@@ -90,10 +102,24 @@ export const GlobalSettingsProvider = ({ children }) => {
   }, [session?.accessToken]);
 
   const updateSettings = (newSettings) => {
-    setSettings((prev) => ({ ...prev, ...newSettings }));
+    setSettings((prev) => {
+      const updated = { ...prev, ...newSettings };
+      if (typeof window !== "undefined" && newSettings.accentColor) {
+        localStorage.setItem("accent_color", newSettings.accentColor);
+      }
+      return updated;
+    });
   };
 
-  const selectedAccent = ACCENT_COLORS[settings.accentColor] || ACCENT_COLORS.indigo;
+  useEffect(() => {
+    const selectedAccent = ACCENT_COLORS[settings.accentColor] || ACCENT_COLORS.indigo;
+    document.documentElement.style.setProperty("--accent-color", selectedAccent.primary);
+    document.documentElement.style.setProperty("--accent-hover", selectedAccent.hover);
+    document.documentElement.style.setProperty("--accent-light", selectedAccent.light);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("accent_color", settings.accentColor);
+    }
+  }, [settings.accentColor]);
 
   return (
     <GlobalSettingsContext.Provider
@@ -105,13 +131,6 @@ export const GlobalSettingsProvider = ({ children }) => {
         accentColorsMap: ACCENT_COLORS,
       }}
     >
-      <style dangerouslySetInnerHTML={{ __html: `
-        :root {
-          --accent-color: ${selectedAccent.primary};
-          --accent-hover: ${selectedAccent.hover};
-          --accent-light: ${selectedAccent.light};
-        }
-      `}} />
       {children}
     </GlobalSettingsContext.Provider>
   );

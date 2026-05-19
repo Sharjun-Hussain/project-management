@@ -59,6 +59,33 @@ export default async function RootLayout({ children }) {
 
   return (
     <html lang="en">
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  const ACCENT_COLORS = {
+                    indigo: { primary: "#6366f1", hover: "#4f46e5", light: "#eef2ff" },
+                    blue: { primary: "#3b82f6", hover: "#2563eb", light: "#eff6ff" },
+                    rose: { primary: "#f43f5e", hover: "#e11d48", light: "#fff1f2" },
+                    emerald: { primary: "#10b981", hover: "#059669", light: "#ecfdf5" },
+                    amber: { primary: "#f59e0b", hover: "#d97706", light: "#fef3c7" },
+                    purple: { primary: "#a855f7", hover: "#9333ea", light: "#faf5ff" },
+                    orange: { primary: "#f97316", hover: "#ea580c", light: "#fff7ed" },
+                    teal: { primary: "#0d9488", hover: "#0f766e", light: "#f0fdfa" },
+                  };
+                  const colorKey = localStorage.getItem("accent_color") || "indigo";
+                  const colors = ACCENT_COLORS[colorKey] || ACCENT_COLORS.indigo;
+                  document.documentElement.style.setProperty("--accent-color", colors.primary);
+                  document.documentElement.style.setProperty("--accent-hover", colors.hover);
+                  document.documentElement.style.setProperty("--accent-light", colors.light);
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
