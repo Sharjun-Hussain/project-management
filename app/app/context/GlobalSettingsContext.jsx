@@ -32,6 +32,17 @@ const ACCENT_COLORS = {
   purple: { name: "Royal Purple", primary: "#a855f7", hover: "#9333ea", light: "#faf5ff" },
   orange: { name: "Sunset Orange", primary: "#f97316", hover: "#ea580c", light: "#fff7ed" },
   teal: { name: "Teal Breeze", primary: "#0d9488", hover: "#0f766e", light: "#f0fdfa" },
+  gold: { 
+    name: "Antique Gold", 
+    primary: "#a97d43", 
+    hover: "#936c3a", 
+    light: "#faf6f0",
+    dark: {
+      primary: "#d4af37",
+      hover: "#bba032",
+      light: "#121212"
+    }
+  },
 };
 
 export const GlobalSettingsProvider = ({ children }) => {
@@ -46,7 +57,8 @@ export const GlobalSettingsProvider = ({ children }) => {
     adminName: "",
     dashboardTitle: "",
     faviconUrl: null,
-    accentColor: "indigo",
+    accentColor: "gold",
+    darkAccentColor: "gold",
   });
 
   const [isLoading, setIsLoading] = useState(false);
@@ -74,7 +86,8 @@ export const GlobalSettingsProvider = ({ children }) => {
         adminName: data.admin_name || "Admin User",
         dashboardTitle: data.admin_dashboard_title || defaultShopName,
         faviconUrl: formatUrl(data.site_favicon),
-        accentColor: data.site_accent_color || "indigo",
+        accentColor: data.site_accent_color || "gold",
+        darkAccentColor: data.site_dark_accent_color || "gold",
         // persist the raw data so the settings page can access all keys
         raw: data,
       });
@@ -93,7 +106,8 @@ export const GlobalSettingsProvider = ({ children }) => {
     setSettings((prev) => ({ ...prev, ...newSettings }));
   };
 
-  const selectedAccent = ACCENT_COLORS[settings.accentColor] || ACCENT_COLORS.indigo;
+  const selectedAccent = ACCENT_COLORS[settings.accentColor] || ACCENT_COLORS.gold;
+  const selectedDarkAccent = ACCENT_COLORS[settings.darkAccentColor] || ACCENT_COLORS.gold;
 
   return (
     <GlobalSettingsContext.Provider
@@ -110,6 +124,11 @@ export const GlobalSettingsProvider = ({ children }) => {
           --accent-color: ${selectedAccent.primary};
           --accent-hover: ${selectedAccent.hover};
           --accent-light: ${selectedAccent.light};
+        }
+        .dark {
+          --accent-color: ${selectedDarkAccent.dark?.primary || selectedDarkAccent.primary};
+          --accent-hover: ${selectedDarkAccent.dark?.hover || selectedDarkAccent.hover};
+          --accent-light: ${selectedDarkAccent.dark?.light || selectedDarkAccent.light};
         }
       `}} />
       {children}

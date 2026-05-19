@@ -95,6 +95,7 @@ export default function SettingsPage() {
     refreshSettings,
     accentColorsMap,
     accentColor,
+    darkAccentColor,
   } = useGlobalSettings();
 
   // --- STATE ---
@@ -105,11 +106,13 @@ export default function SettingsPage() {
   const [isBackingUp, setIsBackingUp] = useState(false);
 
   const [isEditingProfile, setIsEditingProfile] = useState(false);
-  const [selectedAccentColor, setSelectedAccentColor] = useState("indigo");
+  const [selectedAccentColor, setSelectedAccentColor] = useState("gold");
+  const [selectedDarkAccentColor, setSelectedDarkAccentColor] = useState("gold");
 
   useEffect(() => {
     if (accentColor) setSelectedAccentColor(accentColor);
-  }, [accentColor]);
+    if (darkAccentColor) setSelectedDarkAccentColor(darkAccentColor);
+  }, [accentColor, darkAccentColor]);
 
   // Form A: Profile Details (Read-only by default, toggled with edit button)
   const {
@@ -600,16 +603,16 @@ export default function SettingsPage() {
                   </div>
                 </div>
 
-                {/* Brand Accent Color */}
+                {/* Brand Accent Color - Light Mode */}
                 <div className="p-5 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-slate-800">
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
                       <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                        <span className="w-2.5 h-2.5 rounded-full bg-indigo-600 animate-pulse" />
-                        Brand Accent Color
+                        <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse" />
+                        Light Mode Accent Color
                       </h3>
                       <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                        Select the primary accent color applied across your shop dashboard.
+                        Select the primary accent color applied in light mode.
                       </p>
                     </div>
                     
@@ -622,17 +625,64 @@ export default function SettingsPage() {
                             type="button"
                             onClick={() => {
                               setSelectedAccentColor(key);
-                              // Real-time preview by updating css variables instantly!
-                              document.documentElement.style.setProperty("--accent-color", value.primary);
-                              document.documentElement.style.setProperty("--accent-hover", value.hover);
-                              document.documentElement.style.setProperty("--accent-light", value.light);
+                              updateSettings({ accentColor: key });
+                              document.documentElement.style.removeProperty("--accent-color");
+                              document.documentElement.style.removeProperty("--accent-hover");
+                              document.documentElement.style.removeProperty("--accent-light");
                               setHasChanges(true);
                             }}
-                            title={value.name}
+                            title={`${value.name} (Light)`}
                             className={`w-8 h-8 rounded-full transition-all flex items-center justify-center relative hover:scale-110 active:scale-95 cursor-pointer ${
                               isSelected ? "ring-2 ring-slate-800 dark:ring-white ring-offset-2 dark:ring-offset-slate-900 scale-105" : "hover:shadow-sm"
                             }`}
                             style={{ backgroundColor: value.primary }}
+                          >
+                            {isSelected && (
+                              <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                              </svg>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Brand Accent Color - Dark Mode */}
+                <div className="p-5 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-slate-800 mt-4">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                      <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 animate-pulse" />
+                        Dark Mode Accent Color
+                      </h3>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                        Select the primary accent color applied in dark mode.
+                      </p>
+                    </div>
+                    
+                    <div className="flex flex-wrap gap-2.5">
+                      {accentColorsMap && Object.entries(accentColorsMap).map(([key, value]) => {
+                        const isSelected = selectedDarkAccentColor === key;
+                        const darkColor = value.dark?.primary || value.primary;
+                        return (
+                          <button
+                            key={key}
+                            type="button"
+                            onClick={() => {
+                              setSelectedDarkAccentColor(key);
+                              updateSettings({ darkAccentColor: key });
+                              document.documentElement.style.removeProperty("--accent-color");
+                              document.documentElement.style.removeProperty("--accent-hover");
+                              document.documentElement.style.removeProperty("--accent-light");
+                              setHasChanges(true);
+                            }}
+                            title={`${value.name} (Dark)`}
+                            className={`w-8 h-8 rounded-full transition-all flex items-center justify-center relative hover:scale-110 active:scale-95 cursor-pointer ${
+                              isSelected ? "ring-2 ring-slate-800 dark:ring-white ring-offset-2 dark:ring-offset-slate-900 scale-105" : "hover:shadow-sm"
+                            }`}
+                            style={{ backgroundColor: darkColor }}
                           >
                             {isSelected && (
                               <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
@@ -746,6 +796,7 @@ export default function SettingsPage() {
                       fd.append("admin_dashboard_title", store.dashboardTitle || "");
                       fd.append("footer_text", footerText || "");
                       fd.append("site_accent_color", selectedAccentColor);
+                      fd.append("site_dark_accent_color", selectedDarkAccentColor);
                       
                       const logoFile = logoFileRef.current?.files[0];
                       if (logoFile) fd.append("site_logo", logoFile);
