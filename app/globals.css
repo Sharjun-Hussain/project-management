@@ -46,21 +46,29 @@
   --radius-4xl: calc(var(--radius) + 16px);
   
   /* Centralized Accent Color variables overriding Tailwind Indigo and Purple themes */
-  --color-indigo-600: var(--accent-color, #6366f1);
+  --color-indigo-50: var(--accent-light, #eef2ff);
+  --color-indigo-100: var(--accent-light, #eef2ff);
+  --color-indigo-200: var(--accent-light, #eef2ff);
+  --color-indigo-300: var(--accent-light, #eef2ff);
+  --color-indigo-400: var(--accent-color, #6366f1);
   --color-indigo-500: var(--accent-hover, #4f46e5);
+  --color-indigo-600: var(--accent-color, #6366f1);
   --color-indigo-700: var(--accent-hover, #4f46e5);
   --color-indigo-800: var(--accent-hover, #4f46e5);
   --color-indigo-900: var(--accent-hover, #4f46e5);
   --color-indigo-950: var(--accent-hover, #4f46e5);
-  --color-indigo-50: var(--accent-light, #eef2ff);
   
-  --color-purple-600: var(--accent-color, #6366f1);
-  --color-purple-500: var(--accent-hover, #4f46e5);
-  --color-purple-700: var(--accent-hover, #4f46e5);
-  --color-purple-800: var(--accent-hover, #4f46e5);
-  --color-purple-900: var(--accent-hover, #4f46e5);
-  --color-purple-950: var(--accent-hover, #4f46e5);
-  --color-purple-50: var(--accent-light, #eef2ff);
+  --color-purple-50: var(--accent-light, #faf5ff);
+  --color-purple-100: var(--accent-light, #faf5ff);
+  --color-purple-200: var(--accent-light, #faf5ff);
+  --color-purple-300: var(--accent-light, #faf5ff);
+  --color-purple-400: var(--accent-color, #a855f7);
+  --color-purple-500: var(--accent-hover, #9333ea);
+  --color-purple-600: var(--accent-color, #a855f7);
+  --color-purple-700: var(--accent-hover, #9333ea);
+  --color-purple-800: var(--accent-hover, #9333ea);
+  --color-purple-900: var(--accent-hover, #9333ea);
+  --color-purple-950: var(--accent-hover, #9333ea);
 }
 
 :root {
@@ -271,6 +279,87 @@
   }
   .dark .custom-tiny-scrollbar {
     scrollbar-color: #334155 transparent;
+  }
+  /* Overrides for Sub Category Manager and other components using Tailwind Indigo/Purple */
+  .text-indigo-600,
+  .dark .text-indigo-400,
+  .text-purple-600,
+  .dark .text-purple-400,
+  .group-hover\:text-indigo-600:hover,
+  .group:hover .group-hover\:text-indigo-600,
+  .dark .group-hover\:text-indigo-400:hover,
+  .dark .group:hover .dark\:group-hover\:text-indigo-400,
+  .group:hover .dark\:group-hover\:text-indigo-400 {
+    color: var(--accent-color) !important;
+  }
+  
+  .bg-indigo-600,
+  .dark .bg-indigo-600,
+  .bg-purple-600,
+  .dark .bg-purple-600,
+  .hover\:bg-indigo-700:hover,
+  .dark .hover\:bg-indigo-700:hover,
+  .group:hover .group-hover\:bg-indigo-600 {
+    background-color: var(--accent-color) !important;
+  }
+  
+  .hover\:bg-indigo-700:hover,
+  .dark .hover\:bg-indigo-700:hover {
+    background-color: var(--accent-hover) !important;
+  }
+  
+  /* Semi-transparent backgrounds for category pills */
+  [class*="bg-indigo-50"],
+  [class*="bg-purple-50"] {
+    background-color: color-mix(in srgb, var(--accent-color) 8%, transparent) !important;
+  }
+  .dark [class*="bg-indigo-950"],
+  .dark [class*="bg-purple-950"] {
+    background-color: color-mix(in srgb, var(--accent-color) 15%, transparent) !important;
+  }
+  
+  /* Semi-transparent borders for category pills */
+  [class*="border-indigo-100"],
+  [class*="border-purple-100"] {
+    border-color: color-mix(in srgb, var(--accent-color) 20%, transparent) !important;
+  }
+  .dark [class*="border-indigo-900"],
+  .dark [class*="border-purple-900"] {
+    border-color: color-mix(in srgb, var(--accent-color) 20%, transparent) !important;
+  }
+  
+  /* Solid colors for badge status dots and loader icons */
+  .bg-indigo-500,
+  .dark .bg-indigo-400,
+  .bg-purple-500,
+  .dark .bg-purple-400 {
+    background-color: var(--accent-color) !important;
+  }
+  
+  .text-indigo-500,
+  .dark .text-indigo-500,
+  .text-purple-500,
+  .dark .text-purple-500 {
+    color: var(--accent-color) !important;
+  }
+  
+  /* Shadow rings */
+  .shadow-indigo-600\/20,
+  .shadow-indigo-500\/30,
+  .shadow-purple-600\/20,
+  .shadow-purple-500\/30 {
+    --tw-shadow-color: color-mix(in srgb, var(--accent-color) 20%, transparent) !important;
+  }
+
+  /* Table row and general hover highlights using brand accent color */
+  .hover\:bg-slate-50\/80:hover,
+  .hover\:bg-slate-50:hover {
+    background-color: color-mix(in srgb, var(--accent-color) 4%, transparent) !important;
+  }
+  .dark .dark\:hover\:bg-slate-700\/80:hover,
+  .dark .dark\:hover\:bg-slate-700:hover,
+  .dark .dark\:hover\:bg-slate-800\/80:hover {
+    background-color: color-mix(in srgb, var(--accent-color) 8%, transparent) !important;
   }
 
   @keyframes fadeIn {
