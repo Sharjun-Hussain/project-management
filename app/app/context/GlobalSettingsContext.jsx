@@ -27,32 +27,11 @@ const ACCENT_COLORS = {
   indigo: { name: "Indigo", primary: "#6366f1", hover: "#4f46e5", light: "#eef2ff" },
   blue: { name: "Ocean Blue", primary: "#3b82f6", hover: "#2563eb", light: "#eff6ff" },
   rose: { name: "Rose Crimson", primary: "#f43f5e", hover: "#e11d48", light: "#fff1f2" },
-  emerald: { 
-    name: "Mint Emerald", 
-    primary: "#003C2D", 
-    hover: "#002a1f", 
-    light: "#e6f0eb",
-    dark: {
-      primary: "#22c55e",
-      hover: "#16a34a",
-      light: "#0f1710"
-    }
-  },
+  emerald: { name: "Mint Emerald", primary: "#10b981", hover: "#059669", light: "#ecfdf5" },
   amber: { name: "Gold Amber", primary: "#f59e0b", hover: "#d97706", light: "#fef3c7" },
   purple: { name: "Royal Purple", primary: "#a855f7", hover: "#9333ea", light: "#faf5ff" },
   orange: { name: "Sunset Orange", primary: "#f97316", hover: "#ea580c", light: "#fff7ed" },
   teal: { name: "Teal Breeze", primary: "#0d9488", hover: "#0f766e", light: "#f0fdfa" },
-  gold: { 
-    name: "Antique Gold", 
-    primary: "#a97d43", 
-    hover: "#936c3a", 
-    light: "#faf6f0",
-    dark: {
-      primary: "#d4af37",
-      hover: "#bba032",
-      light: "#121212"
-    }
-  },
 };
 
 export const GlobalSettingsProvider = ({ children }) => {
@@ -67,8 +46,7 @@ export const GlobalSettingsProvider = ({ children }) => {
     adminName: "",
     dashboardTitle: "",
     faviconUrl: null,
-    accentColor: "emerald",
-    darkAccentColor: "gold",
+    accentColor: "indigo",
   });
 
   const [isLoading, setIsLoading] = useState(false);
@@ -96,8 +74,7 @@ export const GlobalSettingsProvider = ({ children }) => {
         adminName: data.admin_name || "Admin User",
         dashboardTitle: data.admin_dashboard_title || defaultShopName,
         faviconUrl: formatUrl(data.site_favicon),
-        accentColor: data.site_accent_color || "gold",
-        darkAccentColor: data.site_dark_accent_color || "gold",
+        accentColor: data.site_accent_color || "indigo",
         // persist the raw data so the settings page can access all keys
         raw: data,
       });
@@ -116,8 +93,7 @@ export const GlobalSettingsProvider = ({ children }) => {
     setSettings((prev) => ({ ...prev, ...newSettings }));
   };
 
-  const selectedAccent = ACCENT_COLORS[settings.accentColor] || ACCENT_COLORS.gold;
-  const selectedDarkAccent = ACCENT_COLORS[settings.darkAccentColor] || ACCENT_COLORS.gold;
+  const selectedAccent = ACCENT_COLORS[settings.accentColor] || ACCENT_COLORS.indigo;
 
   return (
     <GlobalSettingsContext.Provider
@@ -134,11 +110,6 @@ export const GlobalSettingsProvider = ({ children }) => {
           --accent-color: ${selectedAccent.primary};
           --accent-hover: ${selectedAccent.hover};
           --accent-light: ${selectedAccent.light};
-        }
-        .dark {
-          --accent-color: ${selectedDarkAccent.dark?.primary || selectedDarkAccent.primary};
-          --accent-hover: ${selectedDarkAccent.dark?.hover || selectedDarkAccent.hover};
-          --accent-light: ${selectedDarkAccent.dark?.light || selectedDarkAccent.light};
         }
       `}} />
       {children}

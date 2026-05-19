@@ -46,29 +46,15 @@
   --radius-4xl: calc(var(--radius) + 16px);
   
   /* Centralized Accent Color variables overriding Tailwind Indigo and Purple themes */
-  --color-indigo-50: var(--accent-light, #eef2ff);
-  --color-indigo-100: var(--accent-light, #eef2ff);
-  --color-indigo-200: var(--accent-light, #eef2ff);
-  --color-indigo-300: var(--accent-light, #eef2ff);
-  --color-indigo-400: var(--accent-color, #6366f1);
-  --color-indigo-500: var(--accent-hover, #4f46e5);
   --color-indigo-600: var(--accent-color, #6366f1);
-  --color-indigo-700: var(--accent-hover, #4f46e5);
-  --color-indigo-800: var(--accent-hover, #4f46e5);
-  --color-indigo-900: var(--accent-hover, #4f46e5);
+  --color-indigo-500: var(--accent-hover, #4f46e5);
+  --color-indigo-50: var(--accent-light, #eef2ff);
   --color-indigo-950: var(--accent-hover, #4f46e5);
+  --color-indigo-900: var(--accent-hover, #4f46e5);
   
-  --color-purple-50: var(--accent-light, #faf5ff);
-  --color-purple-100: var(--accent-light, #faf5ff);
-  --color-purple-200: var(--accent-light, #faf5ff);
-  --color-purple-300: var(--accent-light, #faf5ff);
-  --color-purple-400: var(--accent-color, #a855f7);
-  --color-purple-500: var(--accent-hover, #9333ea);
-  --color-purple-600: var(--accent-color, #a855f7);
-  --color-purple-700: var(--accent-hover, #9333ea);
-  --color-purple-800: var(--accent-hover, #9333ea);
-  --color-purple-900: var(--accent-hover, #9333ea);
-  --color-purple-950: var(--accent-hover, #9333ea);
+  --color-purple-600: var(--accent-color, #6366f1);
+  --color-purple-500: var(--accent-hover, #4f46e5);
+  --color-purple-50: var(--accent-light, #eef2ff);
 }
 
 :root {
@@ -107,37 +93,37 @@
 }
 
 .dark {
-  --background: #000000;
-  --foreground: #ede8e3;
-  --card: #000000;
-  --card-foreground: #faf9f6;
-  --popover: #000000;
-  --popover-foreground: #faf9f6;
-  --primary: #ede8e3;
-  --primary-foreground: #000000;
-  --secondary: #000000;
-  --secondary-foreground: #ede8e3;
-  --muted: #121212;
-  --muted-foreground: #a3988e;
-  --accent: #121212;
-  --accent-foreground: #faf9f6;
+  --background: oklch(0.141 0.005 285.823);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.21 0.006 285.885);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.21 0.006 285.885);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.92 0.004 286.32);
+  --primary-foreground: oklch(0.21 0.006 285.885);
+  --secondary: oklch(0.274 0.006 286.033);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.274 0.006 286.033);
+  --muted-foreground: oklch(0.705 0.015 286.067);
+  --accent: oklch(0.274 0.006 286.033);
+  --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.704 0.191 22.216);
-  --border: #1c1917;
-  --input: #121212;
-  --ring: #d4af37;
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.552 0.016 285.938);
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: #000000;
-  --sidebar-foreground: #ede8e3;
-  --sidebar-primary: #a97d43;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #121212;
-  --sidebar-accent-foreground: #ede8e3;
-  --sidebar-border: #1c1917;
-  --sidebar-ring: #a97d43;
+  --sidebar: oklch(0.21 0.006 285.885);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.274 0.006 286.033);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.552 0.016 285.938);
 }
 
 @layer base {
@@ -146,80 +132,6 @@
   }
   body {
     @apply bg-background text-foreground;
-  }
-
-  /* Force hardcoded slate utilities to respect our theme variables in dark mode */
-  .dark .dark\:bg-slate-900,
-  .dark .dark\:bg-slate-950,
-  .dark .dark\:bg-slate-900\/50,
-  .dark .dark\:bg-slate-900\/60,
-  .dark .dark\:bg-slate-950\/50,
-  .dark .dark\:bg-slate-950\/80 {
-    background-color: var(--background) !important;
-  }
-
-  .dark .dark\:bg-slate-800,
-  .dark .dark\:bg-slate-800\/80,
-  .dark .dark\:bg-slate-800\/50 {
-    background-color: var(--card) !important;
-  }
-
-  .dark .dark\:border-slate-800,
-  .dark .dark\:border-slate-700,
-  .dark .dark\:border-slate-700\/50 {
-    border-color: var(--border) !important;
-  }
-
-  /* Force text and icons on accent backgrounds to be black in dark mode for readability */
-  .dark .bg-indigo-600,
-  .dark .bg-purple-600,
-  .dark .bg-indigo-600 *,
-  .dark .bg-purple-600 *,
-  .dark .hover\:bg-indigo-700:hover,
-  .dark .hover\:bg-purple-700:hover,
-  .dark .hover\:bg-indigo-700:hover *,
-  .dark .hover\:bg-purple-700:hover * {
-    color: #000000 !important;
-  }
-
-  /* Make all secondary/slate buttons and links black with a fine border in dark mode */
-  .dark button.bg-slate-100,
-  .dark button.bg-slate-200,
-  .dark button.dark\:bg-slate-800,
-  .dark button.dark\:bg-slate-700,
-  .dark button.dark\:bg-slate-850,
-  .dark a.dark\:bg-slate-800,
-  .dark a.dark\:bg-slate-700,
-  .dark a.bg-slate-100,
-  .dark [role="button"].dark\:bg-slate-800 {
-    background-color: #000000 !important;
-    border: 1px solid var(--border) !important;
-  }
-
-  .dark button.bg-slate-100:hover,
-  .dark button.bg-slate-200:hover,
-  .dark button.dark\:bg-slate-800:hover,
-  .dark button.dark\:bg-slate-700:hover,
-  .dark button.dark\:bg-slate-850:hover,
-  .dark a.dark\:bg-slate-800:hover,
-  .dark a.dark\:bg-slate-700:hover,
-  .dark a.bg-slate-100:hover,
-  .dark [role="button"].dark\:bg-slate-800:hover {
-    background-color: #2563eb !important;
-    color: #ffffff !important;
-    border-color: #2563eb !important;
-  }
-
-  .dark button.bg-slate-100:hover *,
-  .dark button.bg-slate-200:hover *,
-  .dark button.dark\:bg-slate-800:hover *,
-  .dark button.dark\:bg-slate-700:hover *,
-  .dark button.dark\:bg-slate-850:hover *,
-  .dark a.dark\:bg-slate-800:hover *,
-  .dark a.dark\:bg-slate-700:hover *,
-  .dark a.bg-slate-100:hover *,
-  .dark [role="button"].dark\:bg-slate-800:hover * {
-    color: #ffffff !important;
   }
 }
 
@@ -279,87 +191,6 @@
   }
   .dark .custom-tiny-scrollbar {
     scrollbar-color: #334155 transparent;
-  }
-  /* Overrides for Sub Category Manager and other components using Tailwind Indigo/Purple */
-  .text-indigo-600,
-  .dark .text-indigo-400,
-  .text-purple-600,
-  .dark .text-purple-400,
-  .group-hover\:text-indigo-600:hover,
-  .group:hover .group-hover\:text-indigo-600,
-  .dark .group-hover\:text-indigo-400:hover,
-  .dark .group:hover .dark\:group-hover\:text-indigo-400,
-  .group:hover .dark\:group-hover\:text-indigo-400 {
-    color: var(--accent-color) !important;
-  }
-  
-  .bg-indigo-600,
-  .dark .bg-indigo-600,
-  .bg-purple-600,
-  .dark .bg-purple-600,
-  .hover\:bg-indigo-700:hover,
-  .dark .hover\:bg-indigo-700:hover,
-  .group:hover .group-hover\:bg-indigo-600 {
-    background-color: var(--accent-color) !important;
-  }
-  
-  .hover\:bg-indigo-700:hover,
-  .dark .hover\:bg-indigo-700:hover {
-    background-color: var(--accent-hover) !important;
-  }
-  
-  /* Semi-transparent backgrounds for category pills */
-  [class*="bg-indigo-50"],
-  [class*="bg-purple-50"] {
-    background-color: color-mix(in srgb, var(--accent-color) 8%, transparent) !important;
-  }
-  .dark [class*="bg-indigo-950"],
-  .dark [class*="bg-purple-950"] {
-    background-color: color-mix(in srgb, var(--accent-color) 15%, transparent) !important;
-  }
-  
-  /* Semi-transparent borders for category pills */
-  [class*="border-indigo-100"],
-  [class*="border-purple-100"] {
-    border-color: color-mix(in srgb, var(--accent-color) 20%, transparent) !important;
-  }
-  .dark [class*="border-indigo-900"],
-  .dark [class*="border-purple-900"] {
-    border-color: color-mix(in srgb, var(--accent-color) 20%, transparent) !important;
-  }
-  
-  /* Solid colors for badge status dots and loader icons */
-  .bg-indigo-500,
-  .dark .bg-indigo-400,
-  .bg-purple-500,
-  .dark .bg-purple-400 {
-    background-color: var(--accent-color) !important;
-  }
-  
-  .text-indigo-500,
-  .dark .text-indigo-500,
-  .text-purple-500,
-  .dark .text-purple-500 {
-    color: var(--accent-color) !important;
-  }
-  
-  /* Shadow rings */
-  .shadow-indigo-600\/20,
-  .shadow-indigo-500\/30,
-  .shadow-purple-600\/20,
-  .shadow-purple-500\/30 {
-    --tw-shadow-color: color-mix(in srgb, var(--accent-color) 20%, transparent) !important;
-  }
-
-  /* Table row and general hover highlights using brand accent color */
-  .hover\:bg-slate-50\/80:hover,
-  .hover\:bg-slate-50:hover {
-    background-color: color-mix(in srgb, var(--accent-color) 4%, transparent) !important;
-  }
-  .dark .dark\:hover\:bg-slate-700\/80:hover,
-  .dark .dark\:hover\:bg-slate-700:hover,
-  .dark .dark\:hover\:bg-slate-800\/80:hover {
-    background-color: color-mix(in srgb, var(--accent-color) 8%, transparent) !important;
   }
 
   @keyframes fadeIn {
