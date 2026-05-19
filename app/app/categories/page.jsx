@@ -96,6 +96,8 @@ function CategoriesContent() {
     is_active: 1,
     is_featured: 0,
   });
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
   const [validationErrors, setValidationErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
@@ -238,6 +240,8 @@ function CategoriesContent() {
       is_active: 1,
       is_featured: 0,
     });
+    setImageFile(null);
+    setImagePreview(null);
     setValidationErrors({});
     setIsFormOpen(true);
   };
@@ -251,6 +255,8 @@ function CategoriesContent() {
       is_active: category.is_active ? 1 : 0,
       is_featured: category.is_featured ? 1 : 0,
     });
+    setImageFile(null);
+    setImagePreview(category.image_path ? `${process.env.NEXT_PUBLIC_API_BASE_URL?.replace("/api/v1", "")}${category.image_path}` : null);
     setValidationErrors({});
     setIsFormOpen(true);
   };
@@ -258,6 +264,11 @@ function CategoriesContent() {
   const handleOpenDelete = (category) => {
     setSelectedCategory(category);
     setIsDeleteOpen(true);
+  };
+
+  const handleRemoveImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
   };
 
   // Handle Quick Action from Header
@@ -283,12 +294,21 @@ function CategoriesContent() {
 
       const method = formMode === "create" ? "POST" : "PUT";
 
+      const dataToSend = new FormData();
+      dataToSend.append("name", formData.name);
+      dataToSend.append("description", formData.description);
+      dataToSend.append("is_active", formData.is_active);
+      dataToSend.append("is_featured", formData.is_featured);
+      
+      if (imageFile) {
+        dataToSend.append("image_path", imageFile);
+      } else if (imagePreview === null) {
+        dataToSend.append("image_path", "null");
+      }
+
       const data = await globalFetcher(url, session?.accessToken, {
         method,
-        body: JSON.stringify(formData),
-        headers: {
-          "Content-Type": "application/json",
-        },
+        body: dataToSend,
       });
 
       if (!data) {
@@ -461,10 +481,20 @@ function CategoriesContent() {
                     >
                       {/* Compact Header */}
                       <div className="flex items-start gap-4 mb-4">
-                        {/* Elegant squircle avatar */}
-                        <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${getCategoryGradient(cat.name)} text-white flex items-center justify-center text-xl font-bold shadow-xs shrink-0 transform transition-transform duration-300 group-hover:scale-105`}>
-                          {cat.name.trim().charAt(0).toUpperCase() || "?"}
-                        </div>
+                        {/* Elegant squircle avatar / image */}
+                        {cat.image_path ? (
+                          <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 shadow-sm border border-slate-100 dark:border-slate-700/50 transform transition-transform duration-300 group-hover:scale-105">
+                            <img
+                              src={`${process.env.NEXT_PUBLIC_API_BASE_URL?.replace("/api/v1", "")}${cat.image_path}`}
+                              alt={cat.name}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        ) : (
+                          <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${getCategoryGradient(cat.name)} text-white flex items-center justify-center text-xl font-bold shadow-xs shrink-0 transform transition-transform duration-300 group-hover:scale-105`}>
+                            {cat.name.trim().charAt(0).toUpperCase() || "?"}
+                          </div>
+                        )}
                         
                         {/* Title & Badges */}
                         <div className="flex-1 min-w-0">
@@ -554,6 +584,19 @@ function CategoriesContent() {
                         >
                           <td className="p-4 pl-8">
                             <div className="flex items-center gap-4">
+                              {cat.image_path ? (
+                                <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 border border-slate-100 dark:border-slate-700/50">
+                                  <img
+                                    src={`${process.env.NEXT_PUBLIC_API_BASE_URL?.replace("/api/v1", "")}${cat.image_path}`}
+                                    alt={cat.name}
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                              ) : (
+                                <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${getCategoryGradient(cat.name)} text-white flex items-center justify-center font-bold text-sm shrink-0`}>
+                                  {cat.name.trim().charAt(0).toUpperCase() || "?"}
+                                </div>
+                              )}
                               <div>
                                 <div className="font-semibold text-slate-900 dark:text-white">
                                   {cat.name}
@@ -742,6 +785,53 @@ function CategoriesContent() {
                     rows={4}
                     icon={<Info className="w-4 h-4" />}
                   />
+
+                  {/* Category Image Upload */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-bold text-slate-700 dark:text-slate-300">
+                      Category Image
+                    </label>
+                    {imagePreview ? (
+                      <div className="relative rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 group/img aspect-video bg-slate-50 dark:bg-slate-900/50">
+                        <img
+                          src={imagePreview}
+                          alt="Category Preview"
+                          className="w-full h-full object-cover"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleRemoveImage}
+                          className="absolute top-2 right-2 p-2 bg-red-600/80 hover:bg-red-600 text-white rounded-full transition-all shadow-md backdrop-blur-xs opacity-0 group-hover/img:opacity-100 active:scale-90"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <label className="flex flex-col items-center justify-center w-full aspect-video border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-indigo-500 dark:hover:border-indigo-400 rounded-2xl cursor-pointer bg-slate-50/50 dark:bg-slate-900/30 hover:bg-slate-50 dark:hover:bg-slate-900/60 transition-all group">
+                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                          <Plus className="w-8 h-8 text-slate-400 dark:text-slate-500 group-hover:text-indigo-500 dark:group-hover:text-indigo-400 mb-2 transition-colors" />
+                          <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 group-hover:text-indigo-500 dark:group-hover:text-indigo-400 transition-colors">
+                            Click to upload image
+                          </p>
+                          <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">
+                            PNG, JPG, WEBP, SVG up to 5MB
+                          </p>
+                        </div>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files[0];
+                            if (file) {
+                              setImageFile(file);
+                              setImagePreview(URL.createObjectURL(file));
+                            }
+                          }}
+                        />
+                      </label>
+                    )}
+                  </div>
                 </div>
               </div>
 
