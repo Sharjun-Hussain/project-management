@@ -45,7 +45,7 @@ export default async function ResetPasswordPage() {
       
       settings = {
         dashboardTitle: data.admin_dashboard_title || defaultShopName,
-        logoUrl: data.site_logo ? (data.site_logo.startsWith('http') ? data.site_logo : `${BASE_URL}/${data.site_logo}`) : "/favicon.ico",
+        logoUrl: data.site_logo ? (data.site_logo.startsWith('http') ? data.site_logo : `${BASE_URL}${data.site_logo.startsWith('/') ? '' : '/'}${data.site_logo}`) : "/favicon.ico",
         footerText: data.footer_text || defaultFooter
       };
     }

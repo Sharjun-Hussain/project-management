@@ -15,23 +15,23 @@ const AuthInput = forwardRef(({ label, icon: Icon, type = "text", error, classNa
   return (
     <div className="space-y-2 w-full relative">
       {label && (
-        <label className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+        <label className="text-sm font-semibold text-foreground">
           {label}
         </label>
       )}
       <div className="relative group">
         {Icon && (
-          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors pointer-events-none">
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors pointer-events-none">
             <Icon className="w-5 h-5" />
           </div>
         )}
         <input
           ref={ref}
           type={inputType}
-          className={`flex h-12 w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:border-transparent transition-all duration-200 ${
+          className={`flex h-12 w-full rounded-2xl border border-input bg-background px-4 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-transparent transition-all duration-200 ${
             Icon ? "pl-12" : ""
           } ${isPassword ? "pr-12" : ""} ${
-            error ? "border-red-500 focus-visible:ring-red-500" : ""
+            error ? "border-destructive focus-visible:ring-destructive" : ""
           } ${className}`}
           {...props}
         />
@@ -39,7 +39,7 @@ const AuthInput = forwardRef(({ label, icon: Icon, type = "text", error, classNa
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus:outline-none"
           >
             {showPassword ? (
               <EyeOff className="w-5 h-5" />

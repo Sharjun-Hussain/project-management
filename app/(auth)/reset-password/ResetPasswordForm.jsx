@@ -31,14 +31,14 @@ const ResetPasswordForm = () => {
   if (isSubmitted) {
     return (
       <div className="animate-slide-up text-center space-y-6 w-full max-w-md">
-        <div className="w-20 h-20 bg-green-50 dark:bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-6 ring-8 ring-green-50/50 dark:ring-green-500/20">
-          <CheckCircle2 className="w-10 h-10 text-green-600" />
+        <div className="w-20 h-20 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-6 ring-8 ring-emerald-500/20">
+          <CheckCircle2 className="w-10 h-10 text-emerald-500" />
         </div>
         <div>
-          <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-3">
+          <h2 className="text-3xl font-bold text-foreground mb-3">
             Password updated
           </h2>
-          <p className="text-slate-500 dark:text-slate-400 max-w-xs mx-auto">
+          <p className="text-muted-foreground max-w-xs mx-auto">
             Your password has been successfully reset. Click below to log in securely.
           </p>
         </div>
@@ -46,7 +46,7 @@ const ResetPasswordForm = () => {
         <div className="pt-6">
           <a
             href="/login"
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold h-12 rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-blue-600/20 dark:shadow-none transition-all active:scale-[0.98] group"
+            className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold h-12 rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20 transition-all active:scale-[0.98] group"
           >
             Continue to Login
             <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
@@ -60,10 +60,10 @@ const ResetPasswordForm = () => {
     <div className="w-full max-w-md relative animate-slide-up">
       <div className="space-y-8">
         <div className="mb-8">
-          <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
+          <h2 className="text-3xl font-bold text-foreground mb-2">
             Set new password
           </h2>
-          <p className="text-slate-500 dark:text-slate-400">
+          <p className="text-muted-foreground">
             Your new password must be different from previous used passwords.
           </p>
         </div>
@@ -91,7 +91,7 @@ const ResetPasswordForm = () => {
 
           <button
             type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold h-12 rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-blue-600/20 dark:shadow-none transition-all active:scale-[0.98] group mt-2"
+            className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold h-12 rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20 transition-all active:scale-[0.98] group mt-2"
           >
             Reset Password
             <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
@@ -101,7 +101,7 @@ const ResetPasswordForm = () => {
         <div className="text-center animate-slide-up delay-200">
           <a
             href="/login"
-            className="text-sm font-bold text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 flex items-center justify-center gap-2 transition-colors"
+            className="text-sm font-bold text-muted-foreground hover:text-foreground flex items-center justify-center gap-2 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" /> Back to Login
           </a>

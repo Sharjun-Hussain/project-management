@@ -70,10 +70,10 @@ const LoginForm = () => {
   return (
     <div className="max-w-md w-full">
       <div className="mb-10 text-center lg:text-left animate-slide-up">
-        <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
+        <h2 className="text-3xl font-bold text-foreground mb-2">
           Log in to your account
         </h2>
-        <p className="text-slate-500 dark:text-slate-400">
+        <p className="text-muted-foreground">
           Welcome back! Please enter your details.
         </p>
       </div>
@@ -106,20 +106,20 @@ const LoginForm = () => {
                 <input
                   type="checkbox"
                   id="remember"
-                  className="peer h-4 w-4 appearance-none rounded border border-slate-300 dark:border-slate-700 checked:bg-blue-600 checked:border-blue-600 transition-colors cursor-pointer"
+                  className="peer h-4 w-4 appearance-none rounded border border-input checked:bg-indigo-600 checked:border-indigo-600 transition-colors cursor-pointer"
                 />
-                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 text-white opacity-0 peer-checked:opacity-100 pointer-events-none" />
+                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 text-primary-foreground opacity-0 peer-checked:opacity-100 pointer-events-none" />
               </div>
               <label
                 htmlFor="remember"
-                className="text-sm font-medium text-slate-600 dark:text-slate-400 cursor-pointer select-none"
+                className="text-sm font-medium text-muted-foreground cursor-pointer select-none"
               >
                 Remember for 30 days
               </label>
             </div>
             <a
               href="/forgot-password"
-              className="text-sm font-bold text-blue-600 hover:text-blue-700"
+              className="text-sm font-bold text-indigo-600 hover:text-indigo-500"
             >
               Forgot password?
             </a>
@@ -128,7 +128,7 @@ const LoginForm = () => {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold h-12 rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-blue-600/20 dark:shadow-none transition-all active:scale-[0.98] group disabled:opacity-70 disabled:cursor-not-allowed"
+            className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold h-12 rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20 transition-all active:scale-[0.98] group disabled:opacity-70 disabled:cursor-not-allowed"
           >
             {isLoading ? (
               <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
