@@ -8,6 +8,7 @@ import {
   Filter,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   Eye,
   History,
   User as UserIcon,
@@ -34,7 +35,9 @@ const getAvatarUrl = (user) => {
 export default function ActivityLogsPage() {
   const { data: session } = useSession();
   const containerRef = useRef(null);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedModule, setSelectedModule] = useState("all");
+  const [selectedAction, setSelectedAction] = useState("all");
+  const [sortOrder, setSortOrder] = useState("DESC");
   const [selectedLog, setSelectedLog] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(15);
@@ -46,7 +49,7 @@ export default function ActivityLogsPage() {
   const { data: logsResponse, isLoading, mutate } = useSWR(
     session?.accessToken
       ? [
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/activity-logs?page=${currentPage}&per_page=${itemsPerPage}&search=${searchTerm}`,
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/activity-logs?page=${currentPage}&per_page=${itemsPerPage}&module=${selectedModule}&action_type=${selectedAction}&sort_order=${sortOrder}`,
           session?.accessToken,
         ]
       : null,
@@ -70,8 +73,8 @@ export default function ActivityLogsPage() {
   const totalPages = logsResponse?.data?.last_page || 1;
   const totalLogs = logsResponse?.data?.total || 0;
 
-  // Reset page when search changes
-  useEffect(() => setCurrentPage(1), [searchTerm]);
+  // Reset page when filters change
+  useEffect(() => setCurrentPage(1), [selectedModule, selectedAction, sortOrder]);
 
   // --- ANIMATIONS ---
   useGSAP(
@@ -153,20 +156,70 @@ export default function ActivityLogsPage() {
       </div>
 
       {/* 2. TOOLBAR */}
-      <div className="animate-toolbar flex flex-col md:flex-row gap-4 items-center justify-between bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm relative z-20">
-        <div className="relative w-full md:w-96 group">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
-          <input
-            type="text"
-            placeholder="Search by action or description..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-indigo-500 transition-all font-medium"
-          />
+      <div className="animate-toolbar flex flex-col sm:flex-row gap-4 items-center justify-between bg-white dark:bg-slate-800 p-3 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm relative z-20">
+        <div className="flex flex-wrap gap-4 items-center w-full sm:w-auto">
+          {/* Module Filter */}
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider whitespace-nowrap">Module:</span>
+            <div className="relative flex items-center">
+              <select
+                value={selectedModule}
+                onChange={(e) => setSelectedModule(e.target.value)}
+                className="appearance-none w-36 sm:w-40 pl-2.5 pr-7 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-semibold outline-none focus:border-indigo-500/80 transition-all text-slate-700 dark:text-slate-200 cursor-pointer"
+              >
+                <option value="all">All Modules</option>
+                <option value="Authentication">Authentication</option>
+                <option value="RBAC">RBAC</option>
+                <option value="User Management">User Management</option>
+                <option value="Products">Products</option>
+                <option value="Categories">Categories</option>
+                <option value="Settings">Settings</option>
+                <option value="Reviews">Reviews</option>
+                <option value="Support">Support</option>
+              </select>
+              <ChevronDown className="w-3.5 h-3.5 absolute right-2 text-slate-400 dark:text-slate-500 pointer-events-none" />
+            </div>
+          </div>
+
+          {/* Action Filter */}
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider whitespace-nowrap">Action:</span>
+            <div className="relative flex items-center">
+              <select
+                value={selectedAction}
+                onChange={(e) => setSelectedAction(e.target.value)}
+                className="appearance-none w-32 sm:w-36 pl-2.5 pr-7 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-semibold outline-none focus:border-indigo-500/80 transition-all text-slate-700 dark:text-slate-200 cursor-pointer"
+              >
+                <option value="all">All Actions</option>
+                <option value="LOGIN">Login</option>
+                <option value="LOGOUT">Logout</option>
+                <option value="CREATE">Create</option>
+                <option value="UPDATE">Update</option>
+                <option value="DELETE">Delete</option>
+              </select>
+              <ChevronDown className="w-3.5 h-3.5 absolute right-2 text-slate-400 dark:text-slate-500 pointer-events-none" />
+            </div>
+          </div>
+
+          {/* Sort Order */}
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider whitespace-nowrap">Sort:</span>
+            <div className="relative flex items-center">
+              <select
+                value={sortOrder}
+                onChange={(e) => setSortOrder(e.target.value)}
+                className="appearance-none w-32 sm:w-36 pl-2.5 pr-7 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-semibold outline-none focus:border-indigo-500/80 transition-all text-slate-700 dark:text-slate-200 cursor-pointer"
+              >
+                <option value="DESC">Newest First</option>
+                <option value="ASC">Oldest First</option>
+              </select>
+              <ChevronDown className="w-3.5 h-3.5 absolute right-2 text-slate-400 dark:text-slate-500 pointer-events-none" />
+            </div>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider px-2">Total Logs: {totalLogs}</span>
+        <div className="flex items-center gap-2 shrink-0">
+            <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Total Logs: {totalLogs}</span>
         </div>
       </div>
 
@@ -272,10 +325,14 @@ export default function ActivityLogsPage() {
                       <Activity className="w-8 h-8 mb-2 opacity-50" />
                       <p className="text-sm font-medium">No activity logs found matching your filters.</p>
                       <button
-                        onClick={() => setSearchTerm("")}
+                        onClick={() => {
+                          setSelectedModule("all");
+                          setSelectedAction("all");
+                          setSortOrder("DESC");
+                        }}
                         className="mt-2 text-indigo-600 text-sm font-bold hover:underline"
                       >
-                        Clear search
+                        Reset Filters
                       </button>
                     </div>
                   </td>
