@@ -37,7 +37,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Trash2 } from "lucide-react";
+import { Trash2, Pencil } from "lucide-react";
 import { exportToCSV } from "@/app/lib/exportUtils";
 
 // --- HELPER: Image URL ---
@@ -1554,17 +1554,6 @@ export default function ProductsPage() {
                           <ImageIcon className="w-10 h-10 text-slate-300 dark:text-slate-600" />
                         )}
                         <div className="absolute top-3 right-3 flex gap-2">
-                          {hasPermission("Product Delete") && (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setDeleteProduct(product);
-                              }}
-                              className="p-2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm text-slate-400 hover:text-red-600 rounded-full opacity-0 group-hover:opacity-100 transition-all shadow-sm"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          )}
                           <span
                             className={`backdrop-blur-md px-2 py-1 rounded-full text-xs font-bold border ${getStatusColor(
                               product.status
@@ -1606,17 +1595,49 @@ export default function ProductsPage() {
                           </span>
                           <span>{product.Brand?.name || product.brand?.name || "No Brand"}</span>
                         </div>
-                        <div className="flex items-center gap-2 pt-3 border-t border-slate-50 dark:border-slate-700">
-                          <div
-                            className={`w-2 h-2 rounded-full ${getStockColor(
-                              product.stock
-                            )}`}
-                          ></div>
-                          <span className="text-xs font-medium text-slate-600 dark:text-slate-400">
-                            {product.stock > 0
-                              ? `${product.stock} in stock`
-                              : "Out of stock"}
-                          </span>
+                        <div className="flex items-center justify-between pt-3 border-t border-slate-50 dark:border-slate-700">
+                          <div className="flex items-center gap-2">
+                            <div
+                              className={`w-2 h-2 rounded-full ${getStockColor(
+                                product.stock
+                              )}`}
+                            ></div>
+                            <span className="text-xs font-medium text-slate-600 dark:text-slate-400">
+                              {product.stock > 0
+                                ? `${product.stock} in stock`
+                                : "Out of stock"}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-all">
+                            {hasPermission("Product Update") && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (product.is_local_draft) {
+                                    router.push(`/app/products/new?draftId=${product.id}`);
+                                  } else {
+                                    router.push(`/app/products/new?productId=${product.id}`);
+                                  }
+                                }}
+                                className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                                title="Edit Product"
+                              >
+                                <Pencil className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                            {hasPermission("Product Delete") && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setDeleteProduct(product);
+                                }}
+                                className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                                title="Delete Product"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                          </div>
                         </div>
                       </div>
 
