@@ -123,8 +123,12 @@ const ProductSheet = ({ product: initialProduct, onClose, hasPermission }) => {
   // Calculate stock from variants if available in detailed data
   const stock = productData.variants?.reduce((sum, v) => sum + v.stock_quantity, 0) || productData.stock || 0;
 
-  // Ensure price is a number
-  const price = parseFloat(productData.price || productData.variants?.[0]?.price || 0);
+  // Ensure prices are parsed as numbers
+  const firstVariant = productData.variants?.[0] || {};
+  const price = parseFloat(productData.price || firstVariant.price || 0);
+  const sales_price = parseFloat(productData.sales_price || firstVariant.sales_price || price);
+  const is_offer = !!(productData.is_offer !== undefined ? productData.is_offer : firstVariant.is_offer);
+  const offer_price = parseFloat(productData.offer_price || firstVariant.offer_price || 0);
 
   useGSAP(() => {
     gsap.fromTo(
@@ -245,10 +249,20 @@ const ProductSheet = ({ product: initialProduct, onClose, hasPermission }) => {
                   <div className="flex-1 flex flex-col justify-center">
                     <div className="grid grid-cols-2 gap-4 mb-4">
                       <div>
-                        <p className="text-xs text-slate-500 mb-1">Price</p>
-                        <p className="text-2xl font-bold text-slate-900 dark:text-white">
-                          Rs {formatPrice(price)}
-                        </p>
+                        <p className="text-xs text-slate-500 mb-1">Pricing</p>
+                        <div className="space-y-0.5">
+                          <div className="text-[10px] text-slate-400 line-through">
+                            Reg: Rs {formatPrice(price)}
+                          </div>
+                          <div className="text-xl font-extrabold text-slate-900 dark:text-white">
+                            Sale: Rs {formatPrice(sales_price)}
+                          </div>
+                          {is_offer && offer_price > 0 && (
+                            <div className="text-xs font-bold text-amber-600 dark:text-amber-500 mt-0.5">
+                              <span className="bg-amber-50 dark:bg-amber-950/30 px-1.5 py-0.5 rounded">Offer: Rs {formatPrice(offer_price)}</span>
+                            </div>
+                          )}
+                        </div>
                       </div>
                       <div>
                         <p className="text-xs text-slate-500 mb-1">Total Stock</p>
@@ -1565,11 +1579,6 @@ export default function ProductsPage() {
                               product.status
                             )}
                           </span>
-                          {product.condition && (
-                            <span className="backdrop-blur-md px-2 py-1 rounded-full text-[10px] font-bold border bg-white/10 text-white border-white/20 capitalize">
-                              {product.condition}
-                            </span>
-                          )}
                         </div>
                       </div>
                       <div className="px-1 pb-2">
