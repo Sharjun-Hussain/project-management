@@ -546,11 +546,10 @@ function CreateProductContent() {
 
   const completionPercentage = React.useMemo(() => {
     let score = 0;
-    let total = 6;
+    let total = 5;
 
     if (formData.name) score++;
     if (formData.category_id) score++;
-    if (formData.brand_id) score++;
     if (formData.type) score++;
     if (productImages.some(img => img.isPrimary)) score++;
     if (variants.length > 0 && variants.every(v => v.sku && v.price && v.stock_quantity !== "" && (!isPhoneCategory || (v.storage_size && v.ram_size)))) score++;
@@ -561,7 +560,6 @@ function CreateProductContent() {
   const isFormValid =
     formData.name &&
     formData.category_id &&
-    formData.brand_id &&
     formData.type &&
     variants.length > 0 &&
     variants.every(
@@ -575,7 +573,7 @@ function CreateProductContent() {
   const isStepComplete = (stepId) => {
     switch (stepId) {
       case "general":
-        return !!(formData.name && formData.category_id && formData.brand_id && formData.type);
+        return !!(formData.name && formData.category_id && formData.type);
       case "media":
         return productImages.some(img => img.isPrimary);
       case "variants":
@@ -1169,10 +1167,8 @@ function CreateProductContent() {
     data.append("name", sanitizeHtml(formData.name));
     data.append("code", sanitizeHtml(formData.code));
     data.append("category_id", formData.category_id);
-    if (formData.subcategory_id) {
-      data.append("subcategory_id", formData.subcategory_id);
-    }
-    data.append("brand_id", formData.brand_id);
+    if (formData.subcategory_id) data.append("subcategory_id", formData.subcategory_id);
+    if (formData.brand_id) data.append("brand_id", formData.brand_id);
     data.append("type", formData.type);
     data.append("status", formData.status);
     data.append("short_description", sanitizeHtml(formData.short_description));
@@ -1355,7 +1351,6 @@ function CreateProductContent() {
     const validationList = [];
     if (!formData.name) validationList.push({ stepId: "general", stepLabel: "General Info", field: "name", message: "Product Name is required" });
     if (!formData.category_id) validationList.push({ stepId: "general", stepLabel: "General Info", field: "category_id", message: "Product Category is required" });
-    if (!formData.brand_id) validationList.push({ stepId: "general", stepLabel: "General Info", field: "brand_id", message: "Product Brand is required" });
     if (!formData.type) validationList.push({ stepId: "general", stepLabel: "General Info", field: "type", message: "Product Type is required" });
 
     if (!productImages.some(img => img.isPrimary)) {
@@ -1841,7 +1836,6 @@ function CreateProductContent() {
                         options={brands.map(brand => ({ label: brand.name, value: brand.id }))}
                         placeholder="Select Brand"
                         error={errors.brand_id}
-                        required
                       />
                     </div>
 

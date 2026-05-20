@@ -44,10 +44,9 @@ import { exportToCSV } from "@/app/lib/exportUtils";
 const getImageUrl = (path) => {
   if (!path) return null;
   if (path.startsWith("http")) return path;
-  // Assuming the API base URL is like https://api.com/api/v1
-  // We want https://api.com/
-  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.replace("/api/v1", "");
-  return `${baseUrl}/${path}`;
+  const baseUrl = (process.env.NEXT_PUBLIC_API_BASE_URL || "").replace("/api/v1", "");
+  const cleanPath = path.startsWith('/') ? path.substring(1) : path;
+  return `${baseUrl}/${cleanPath}`;
 };
 
 // --- HELPER: Price Formatter ---
@@ -317,19 +316,7 @@ const ProductSheet = ({ product: initialProduct, onClose, hasPermission }) => {
                         <div className="flex justify-between p-4 text-sm">
                           <span className="text-slate-500">Brand</span>
                           <span className="font-bold text-slate-700 dark:text-slate-300">
-                            {productData.brand?.name || "N/A"}
-                          </span>
-                        </div>
-                        <div className="flex justify-between p-4 text-sm">
-                          <span className="text-slate-500">Condition</span>
-                          <span className="font-bold text-slate-700 dark:text-slate-300 capitalize">
-                            {productData.condition || "N/A"}
-                          </span>
-                        </div>
-                        <div className="flex justify-between p-4 text-sm">
-                          <span className="text-slate-500">Type</span>
-                          <span className="font-bold text-slate-700 dark:text-slate-300 capitalize">
-                            {productData.type}
+                            {productData.Brand?.name || productData.brand?.name || "N/A"}
                           </span>
                         </div>
                       </div>
@@ -1232,7 +1219,7 @@ export default function ProductsPage() {
                                   {product.name}
                                 </div>
                                 <div className="text-xs text-slate-500 dark:text-slate-400">
-                                  {product.brand?.name || "No Brand"}
+                                  {product.Brand?.name || product.brand?.name || "No Brand"}
                                 </div>
                               </div>
                             </div>
@@ -1376,7 +1363,7 @@ export default function ProductsPage() {
                           <span className="font-mono bg-slate-50 dark:bg-slate-900 px-1.5 py-0.5 rounded">
                             {product.code}
                           </span>
-                          <span>{product.brand?.name || "No Brand"}</span>
+                          <span>{product.Brand?.name || product.brand?.name || "No Brand"}</span>
                         </div>
                         <div className="flex items-center gap-2 pt-3 border-t border-slate-50 dark:border-slate-700">
                           <div
