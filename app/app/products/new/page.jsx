@@ -129,11 +129,10 @@ const ProductRelationshipSelector = ({
                     </div>
                     <button
                       onClick={() => toggleProduct(product)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                        selectedIds.includes(product.id)
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${selectedIds.includes(product.id)
                           ? "bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100"
                           : "bg-indigo-600 text-white hover:bg-indigo-700 shadow-md shadow-indigo-600/20"
-                      }`}
+                        }`}
                     >
                       {selectedIds.includes(product.id) ? "Remove" : "Add"}
                     </button>
@@ -222,11 +221,11 @@ function CreateProductContent() {
   const productId = searchParams.get("productId");
   const isEditMode = !!productId;
   const { data: session } = useSession();
-  const DRAFT_KEY = React.useMemo(() => 
+  const DRAFT_KEY = React.useMemo(() =>
     session?.user?.id ? `igen_temp_product_create_draft_${session.user.id}` : "igen_temp_product_create_draft",
     [session?.user?.id]
   );
-  const DRAFTS_LIST_KEY = React.useMemo(() => 
+  const DRAFTS_LIST_KEY = React.useMemo(() =>
     session?.user?.id ? `igen_product_drafts_${session.user.id}` : "igen_product_drafts",
     [session?.user?.id]
   );
@@ -258,14 +257,14 @@ function CreateProductContent() {
     const handleResize = () => {
       // Logic for horizontal stepper removed as requested
     };
-    
+
     const checkSidebar = () => {
       setSidebarCollapsed(localStorage.getItem("sidebar_collapsed") === "true");
     };
 
     handleResize();
     checkSidebar();
-    
+
     window.addEventListener("resize", handleResize);
     window.addEventListener("storage", checkSidebar);
     return () => {
@@ -485,9 +484,9 @@ function CreateProductContent() {
   const { data: categoriesData } = useSWR(
     session?.accessToken
       ? [
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/categories/active/list`,
-          session.accessToken,
-        ]
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/categories/active/list`,
+        session.accessToken,
+      ]
       : null,
     ([url]) => globalFetcher(url, session.accessToken),
   );
@@ -495,9 +494,9 @@ function CreateProductContent() {
   const { data: brandsData } = useSWR(
     session?.accessToken
       ? [
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/brands/active/list`,
-          session.accessToken,
-        ]
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/brands/active/list`,
+        session.accessToken,
+      ]
       : null,
     ([url]) => fetcher(url),
   );
@@ -505,9 +504,9 @@ function CreateProductContent() {
   const { data: tagsData } = useSWR(
     session?.accessToken
       ? [
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/products/get/tags`,
-          session.accessToken,
-        ]
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/products/get/tags`,
+        session.accessToken,
+      ]
       : null,
     ([url]) => globalFetcher(url, session.accessToken),
   );
@@ -515,9 +514,9 @@ function CreateProductContent() {
   const { data: subCategoriesData } = useSWR(
     session?.accessToken && formData.category_id
       ? [
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/sub-categories/active/list?category_id=${formData.category_id}`,
-          session.accessToken,
-        ]
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/sub-categories/active/list?category_id=${formData.category_id}`,
+        session.accessToken,
+      ]
       : null,
     ([url]) => globalFetcher(url, session.accessToken),
   );
@@ -525,9 +524,9 @@ function CreateProductContent() {
   const { data: featuresData } = useSWR(
     session?.accessToken
       ? [
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/products/get/features`,
-          session.accessToken,
-        ]
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/products/get/features`,
+        session.accessToken,
+      ]
       : null,
     ([url]) => globalFetcher(url, session.accessToken),
   );
@@ -548,7 +547,7 @@ function CreateProductContent() {
   const completionPercentage = React.useMemo(() => {
     let score = 0;
     let total = 7;
-    
+
     if (formData.name) score++;
     if (formData.category_id) score++;
     if (formData.brand_id) score++;
@@ -556,7 +555,7 @@ function CreateProductContent() {
     if (productImages.some(img => img.isPrimary)) score++;
     if (selectedFeatures.length > 0) score++;
     if (variants.length > 0 && variants.every(v => v.sku && v.price && v.stock_quantity !== "" && (!isPhoneCategory || (v.storage_size && v.ram_size)))) score++;
-    
+
     return Math.round((score / total) * 100);
   }, [formData, productImages, isEditMode, selectedFeatures, variants, isPhoneCategory]);
 
@@ -718,9 +717,9 @@ function CreateProductContent() {
   const { data: searchResponse } = useSWR(
     session?.accessToken && debouncedProductSearch.length > 2
       ? [
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/products?search=${debouncedProductSearch}`,
-          session.accessToken,
-        ]
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/products?search=${debouncedProductSearch}`,
+        session.accessToken,
+      ]
       : null,
     ([url]) => globalFetcher(url, session?.accessToken)
   );
@@ -729,7 +728,7 @@ function CreateProductContent() {
     if (searchResponse?.data?.data) {
       const results = searchResponse.data.data;
       setProductSearchResults(results);
-      
+
       // Update details map with new results
       setProductDetailsMap(prev => {
         const next = { ...prev };
@@ -804,13 +803,13 @@ function CreateProductContent() {
               ...v,
               variant_name: v.variant_name || "",
             })));
-            
+
             if (product.variants.length <= 1) {
               setProductSetupType("direct");
             } else {
               setProductSetupType("variant");
             }
-            
+
             // Set global condition from the first variant
             if (product.variants[0]?.condition) {
               setFormData(prev => ({
@@ -1108,13 +1107,13 @@ function CreateProductContent() {
 
   const editVariant = (variant) => {
     setEditingVariantId(variant.id);
-    
+
     // Clean RAM size: strip 'GB' so numeric input can display it
     const variantToEdit = { ...variant };
     if (variantToEdit.ram_size && typeof variantToEdit.ram_size === "string") {
       variantToEdit.ram_size = variantToEdit.ram_size.replace(/GB$/i, "");
     }
-    
+
     setCurrentVariant(variantToEdit);
     // Scroll to variant form
     const element = document.getElementById("variant-form");
@@ -1360,11 +1359,11 @@ function CreateProductContent() {
     if (!formData.category_id) validationList.push({ stepId: "general", stepLabel: "General Info", field: "category_id", message: "Product Category is required" });
     if (!formData.brand_id) validationList.push({ stepId: "general", stepLabel: "General Info", field: "brand_id", message: "Product Brand is required" });
     if (!formData.type) validationList.push({ stepId: "general", stepLabel: "General Info", field: "type", message: "Product Type is required" });
-    
+
     if (!productImages.some(img => img.isPrimary)) {
       validationList.push({ stepId: "media", stepLabel: "Media Gallery", field: "primary_image", message: "Primary Image is required" });
     }
-    
+
     if (variants.length === 0) {
       validationList.push({ stepId: "variants", stepLabel: "Pricing & Variants", field: "variants", message: "Please add at least one variant" });
     } else {
@@ -1387,7 +1386,7 @@ function CreateProductContent() {
         }
       });
     }
-    
+
     if (updatedFeatures.length === 0) {
       validationList.push({ stepId: "specs", stepLabel: "Specs & Features", field: "features", message: "At least one Key Feature is required" });
     }
@@ -1466,11 +1465,11 @@ function CreateProductContent() {
       router.push("/app/products");
     } catch (error) {
       console.error("❌ SUBMISSION ERROR:", error);
-      
+
       if (error.info?.errors) {
         const backendErrors = {};
         const errors = error.info.errors;
-        
+
         // Handle both array and object formats for errors
         if (Array.isArray(errors)) {
           errors.forEach((err) => {
@@ -1591,7 +1590,8 @@ function CreateProductContent() {
       ref={containerRef}
       className="min-h-screen w-full bg-slate-50/50 dark:bg-slate-900 pb-20 font-sans text-slate-900 dark:text-slate-100"
     >
-      <style dangerouslySetInnerHTML={{ __html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         @keyframes premiumFadeUp {
           0% {
             opacity: 0;
@@ -1629,7 +1629,7 @@ function CreateProductContent() {
                   </>
                 )}
               </h1>
-              <div className="flex items-center mt-1">
+              {/* <div className="flex items-center mt-1">
                 <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded text-[10px] font-extrabold tracking-wider uppercase border shadow-sm ${
                   formData.status === "published"
                     ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
@@ -1640,7 +1640,7 @@ function CreateProductContent() {
                   }`} />
                   {formData.status} Mode
                 </span>
-              </div>
+              </div> */}
             </div>
           </div>
 
@@ -1659,7 +1659,7 @@ function CreateProductContent() {
                 )}
                 <span>{isEditMode ? "Update" : "Publish"}</span>
               </button>
-              
+
               <button
                 onClick={() => setIsSaveDropdownOpen(!isSaveDropdownOpen)}
                 disabled={isLoading}
@@ -1714,59 +1714,55 @@ function CreateProductContent() {
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6 lg:gap-8">
           {/* CREATION PROGRESS STEPPER */}
           <div className="md:col-span-4 lg:col-span-3 lg:sticky lg:top-24 self-start z-30 block">
-            <div className="bg-white dark:bg-[#111322] border border-slate-200 dark:border-slate-800/80 p-4 rounded-2xl shadow-lg dark:shadow-[0_4px_30px_rgba(0,0,0,0.3)] transition-all overflow-hidden relative">
-              {/* Glassmorphic Background Glows */}
-              <div className="absolute -top-12 -left-12 w-24 h-24 bg-indigo-500/5 dark:bg-indigo-500/10 rounded-full blur-2xl pointer-events-none" />
-              <div className="absolute -bottom-12 -right-12 w-24 h-24 bg-purple-500/5 dark:bg-purple-500/10 rounded-full blur-2xl pointer-events-none" />
-              
-              <h3 className="hidden md:block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-4 px-2">
+            <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-4 rounded-2xl shadow-sm transition-all overflow-hidden">
+              <h3 className="hidden md:block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-4 px-1">
                 Creation Progress
               </h3>
-              
+
               {/* Horizontal Scroll on Mobile, Vertical on Desktop */}
-              <div className="flex md:flex-col gap-2 overflow-x-auto md:overflow-x-visible pb-2 md:pb-0 no-scrollbar">
+              <div className="flex md:flex-col gap-1.5 overflow-x-auto md:overflow-x-visible pb-2 md:pb-0 no-scrollbar">
                 {STEPS.map((step, idx) => {
                   const isCompleted = STEPS.findIndex(s => s.id === activeTab) > idx;
                   const isActive = activeTab === step.id;
                   const isCurrentStepComplete = isStepComplete(step.id);
-                  
+
                   return (
                     <button
                       key={step.id}
                       onClick={() => setActiveTab(step.id)}
-                      className={`relative flex-none md:w-full flex items-center gap-3.5 p-3 rounded-xl transition-all duration-300 group whitespace-nowrap text-left cursor-pointer border
-                        ${isActive 
-                          ? "bg-indigo-50/50 dark:bg-gradient-to-r dark:from-indigo-500/[0.08] dark:via-purple-500/[0.04] dark:to-transparent border-indigo-200 dark:border-indigo-500/30 text-indigo-600 dark:text-indigo-400 shadow-sm dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]" 
-                          : "border-transparent text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/40 hover:text-slate-800 dark:hover:text-slate-200"}`}
+                      className={`relative flex-none md:w-full flex items-center gap-3 p-2.5 rounded-xl transition-all duration-200 group whitespace-nowrap text-left cursor-pointer
+                        ${isActive
+                          ? "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400"
+                          : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50 hover:text-slate-700 dark:hover:text-slate-200"}`}
                     >
                       {/* Active Indicator Bar */}
                       {isActive && (
-                        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-indigo-500 to-purple-600 rounded-r-full shadow-[0_0_8px_rgba(99,102,241,0.6)]" />
+                        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-6 bg-indigo-500 rounded-r-full" />
                       )}
 
-                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-300 shrink-0 border
-                        ${isActive 
-                          ? "bg-gradient-to-br from-indigo-500 to-purple-600 border-indigo-400 dark:border-indigo-500/30 text-white shadow-md dark:shadow-[0_0_15px_rgba(99,102,241,0.4)]" 
-                          : isCompleted 
-                            ? "bg-indigo-50 dark:bg-indigo-500/10 border-indigo-100 dark:border-indigo-500/20 text-indigo-600 dark:text-indigo-400" 
-                            : "bg-slate-100 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/50 text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300 group-hover:border-slate-300 dark:group-hover:border-slate-600"}`}
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200 shrink-0
+                        ${isActive
+                          ? "bg-indigo-600 text-white"
+                          : isCompleted
+                            ? "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400"
+                            : "bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500"}`}
                       >
-                        {isCompleted ? <Check className="w-4 h-4 stroke-[3px]" /> : <step.icon className="w-4 h-4" />}
+                        {isCompleted ? <Check className="w-3.5 h-3.5 stroke-[2.5px]" /> : <step.icon className="w-3.5 h-3.5" />}
                       </div>
 
                       <div className="flex flex-col items-start min-w-0">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <span className={`text-[13px] font-semibold truncate ${isActive ? "text-indigo-600 dark:text-indigo-400" : "text-slate-700 dark:text-slate-300 group-hover:text-slate-800 dark:group-hover:text-slate-100"}`}>
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <span className={`text-[13px] font-semibold truncate ${isActive ? "text-indigo-600 dark:text-indigo-400" : "text-slate-700 dark:text-slate-300"}`}>
                             {step.label}
                           </span>
                           {!isCurrentStepComplete && (
-                            <span className="relative flex h-2 w-2 shrink-0" title="Incomplete Fields">
+                            <span className="relative flex h-1.5 w-1.5 shrink-0" title="Incomplete Fields">
                               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                              <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-amber-500"></span>
                             </span>
                           )}
                         </div>
-                        <span className={`text-[9px] font-semibold uppercase mt-0.5 ${isActive ? "text-indigo-500 dark:text-indigo-500" : "text-slate-400 dark:text-slate-600"}`}>
+                        <span className={`text-[9px] font-semibold uppercase tracking-wider mt-0.5 ${isActive ? "text-indigo-500" : isCompleted ? "text-emerald-500" : "text-slate-400 dark:text-slate-600"}`}>
                           {isActive ? "Current Step" : isCompleted ? "Completed" : "Pending"}
                         </span>
                       </div>
@@ -1831,7 +1827,7 @@ function CreateProductContent() {
                         error={errors.category_id}
                         required
                       />
-                      
+
                       <FormSelect
                         label="Subcategory"
                         value={formData.subcategory_id}
@@ -1980,11 +1976,10 @@ function CreateProductContent() {
                       }
                     }}
                     onClick={() => mediaInputRef.current?.click()}
-                    className={`p-10 text-center rounded-2xl border-2 border-dashed cursor-pointer transition-all duration-300 flex flex-col items-center justify-center gap-2 relative ${
-                      isMediaDragging
+                    className={`p-10 text-center rounded-2xl border-2 border-dashed cursor-pointer transition-all duration-300 flex flex-col items-center justify-center gap-2 relative ${isMediaDragging
                         ? "border-indigo-500 bg-indigo-50/20 dark:bg-indigo-950/10 scale-[1.01]"
                         : "border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 hover:bg-slate-50 dark:hover:bg-slate-900"
-                    }`}
+                      }`}
                   >
                     <input
                       ref={mediaInputRef}
@@ -2021,11 +2016,10 @@ function CreateProductContent() {
                         {productImages.map((img, idx) => (
                           <div
                             key={img.id}
-                            className={`relative aspect-square group rounded-2xl overflow-hidden border transition-all duration-300 ${
-                              img.isPrimary
+                            className={`relative aspect-square group rounded-2xl overflow-hidden border transition-all duration-300 ${img.isPrimary
                                 ? "border-indigo-500 ring-2 ring-indigo-500/20 shadow-lg shadow-indigo-500/5"
                                 : "border-slate-200 dark:border-slate-700 hover:border-slate-350 dark:hover:border-slate-650"
-                            }`}
+                              }`}
                           >
                             <img
                               src={img.previewUrl}
@@ -2412,8 +2406,8 @@ function CreateProductContent() {
                         {productSetupType === "direct" ? "Product Pricing & Inventory" : "Manage Variants"} <span className="text-red-500">*</span>
                       </h3>
                       <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
-                        {productSetupType === "direct" 
-                          ? "Configure the pricing, inventory stock, and product properties." 
+                        {productSetupType === "direct"
+                          ? "Configure the pricing, inventory stock, and product properties."
                           : "Configure multiple variations (sizes, colors, RAM/storage size, etc.) for this product."}
                       </p>
                     </div>
@@ -2449,11 +2443,10 @@ function CreateProductContent() {
                             }
                           }
                         }}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer ${
-                          productSetupType === "direct"
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer ${productSetupType === "direct"
                             ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm border border-slate-200/10"
                             : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
-                        }`}
+                          }`}
                       >
                         <Box className="w-3.5 h-3.5" />
                         <span>Direct Setup</span>
@@ -2468,11 +2461,10 @@ function CreateProductContent() {
                             }
                           }
                         }}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer ${
-                          productSetupType === "variant"
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer ${productSetupType === "variant"
                             ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm border border-slate-200/10"
                             : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
-                        }`}
+                          }`}
                       >
                         <Layers className="w-3.5 h-3.5" />
                         <span>Variant Setup</span>
@@ -2563,7 +2555,7 @@ function CreateProductContent() {
                           onChange={(e) => updateDirectVariant("color", e.target.value)}
                           error={errors[`variants.0.color`]}
                         />
-                        
+
                         <FormInput
                           label="Low Stock Alert"
                           type="number"
@@ -2642,430 +2634,428 @@ function CreateProductContent() {
                   ) : (
                     <>
                       {/* Variant Adder */}
-                  <div
-                    id="variant-form"
-                    className={`p-4 rounded-xl border transition-all duration-300 ${
-                      editingVariantId
-                        ? "bg-indigo-50/50 dark:bg-indigo-900/10 border-indigo-200 dark:border-indigo-800 shadow-lg shadow-indigo-500/5"
-                        : "bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700"
-                    } mb-6`}
-                  >
-                    {editingVariantId && (
-                      <div className="flex items-center justify-between mb-4 pb-4 border-b border-indigo-100 dark:border-indigo-900/30">
-                        <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
-                          <Pencil className="w-4 h-4" />
-                          <span className="text-sm font-semibold">Editing Variant</span>
+                      <div
+                        id="variant-form"
+                        className={`p-4 rounded-xl border transition-all duration-300 ${editingVariantId
+                            ? "bg-indigo-50/50 dark:bg-indigo-900/10 border-indigo-200 dark:border-indigo-800 shadow-lg shadow-indigo-500/5"
+                            : "bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700"
+                          } mb-6`}
+                      >
+                        {editingVariantId && (
+                          <div className="flex items-center justify-between mb-4 pb-4 border-b border-indigo-100 dark:border-indigo-900/30">
+                            <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
+                              <Pencil className="w-4 h-4" />
+                              <span className="text-sm font-semibold">Editing Variant</span>
+                            </div>
+                            <button
+                              onClick={cancelEditVariant}
+                              className="text-xs font-medium text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 underline underline-offset-2"
+                            >
+                              Cancel Editing
+                            </button>
+                          </div>
+                        )}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                          <FormInput
+                            label="Variant Name"
+                            placeholder="e.g. Summer Edition"
+                            value={currentVariant.variant_name}
+                            onChange={(e) => setCurrentVariant({ ...currentVariant, variant_name: e.target.value })}
+                            description="(Optional)"
+                          />
+                          <FormInput
+                            label="SKU"
+                            placeholder="IP15P-256-NT"
+                            value={currentVariant.sku}
+                            onChange={(e) => setCurrentVariant({ ...currentVariant, sku: e.target.value })}
+                            error={editingVariantId ? errors[`variants.${variants.findIndex(v => v.id === editingVariantId)}.sku`] : null}
+                            required
+                          />
+                          <FormInput
+                            label="Barcode"
+                            placeholder="195949000123"
+                            value={currentVariant.barcode}
+                            onChange={(e) => setCurrentVariant({ ...currentVariant, barcode: e.target.value.replace(/\D/g, "") })}
+                          />
+                          {isPhoneCategory && (
+                            <FormInput
+                              label="IMEI"
+                              placeholder="IMEI Number"
+                              value={currentVariant.imei}
+                              onChange={(e) => setCurrentVariant({ ...currentVariant, imei: e.target.value })}
+                            />
+                          )}
+                          <FormInput
+                            label="Warranty Period"
+                            placeholder="e.g. 1 Year"
+                            value={currentVariant.warranty_period}
+                            onChange={(e) => setCurrentVariant({ ...currentVariant, warranty_period: e.target.value })}
+                          />
+                          {isPhoneCategory && (
+                            <>
+                              <FormInput
+                                label="Storage"
+                                placeholder="256GB"
+                                value={currentVariant.storage_size}
+                                onChange={(e) => setCurrentVariant({ ...currentVariant, storage_size: e.target.value })}
+                                error={editingVariantId ? errors[`variants.${variants.findIndex(v => v.id === editingVariantId)}.storage_size`] : null}
+                                required
+                              />
+                              <FormInput
+                                label="RAM"
+                                type="number"
+                                placeholder="8"
+                                value={currentVariant.ram_size}
+                                onChange={(e) => (e.target.value === "" || Number(e.target.value) >= 0) && setCurrentVariant({ ...currentVariant, ram_size: e.target.value })}
+                                suffix={<span className="text-xs font-medium text-slate-400 mt-3.5 block">GB</span>}
+                                error={editingVariantId ? errors[`variants.${variants.findIndex(v => v.id === editingVariantId)}.ram_size`] : null}
+                                required
+                              />
+                            </>
+                          )}
+                          <FormInput
+                            label="Color"
+                            placeholder="Natural Titanium"
+                            value={currentVariant.color}
+                            onChange={(e) => setCurrentVariant({ ...currentVariant, color: e.target.value })}
+                            error={editingVariantId ? errors[`variants.${variants.findIndex(v => v.id === editingVariantId)}.color`] : null}
+                          />
                         </div>
-                        <button
-                          onClick={cancelEditVariant}
-                          className="text-xs font-medium text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 underline underline-offset-2"
-                        >
-                          Cancel Editing
-                        </button>
-                      </div>
-                    )}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                      <FormInput
-                        label="Variant Name"
-                        placeholder="e.g. Summer Edition"
-                        value={currentVariant.variant_name}
-                        onChange={(e) => setCurrentVariant({ ...currentVariant, variant_name: e.target.value })}
-                        description="(Optional)"
-                      />
-                      <FormInput
-                        label="SKU"
-                        placeholder="IP15P-256-NT"
-                        value={currentVariant.sku}
-                        onChange={(e) => setCurrentVariant({ ...currentVariant, sku: e.target.value })}
-                        error={editingVariantId ? errors[`variants.${variants.findIndex(v => v.id === editingVariantId)}.sku`] : null}
-                        required
-                      />
-                      <FormInput
-                        label="Barcode"
-                        placeholder="195949000123"
-                        value={currentVariant.barcode}
-                        onChange={(e) => setCurrentVariant({ ...currentVariant, barcode: e.target.value.replace(/\D/g, "") })}
-                      />
-                      {isPhoneCategory && (
-                        <FormInput
-                          label="IMEI"
-                          placeholder="IMEI Number"
-                          value={currentVariant.imei}
-                          onChange={(e) => setCurrentVariant({ ...currentVariant, imei: e.target.value })}
-                        />
-                      )}
-                      <FormInput
-                        label="Warranty Period"
-                        placeholder="e.g. 1 Year"
-                        value={currentVariant.warranty_period}
-                        onChange={(e) => setCurrentVariant({ ...currentVariant, warranty_period: e.target.value })}
-                      />
-                      {isPhoneCategory && (
-                        <>
-                          <FormInput
-                            label="Storage"
-                            placeholder="256GB"
-                            value={currentVariant.storage_size}
-                            onChange={(e) => setCurrentVariant({ ...currentVariant, storage_size: e.target.value })}
-                            error={editingVariantId ? errors[`variants.${variants.findIndex(v => v.id === editingVariantId)}.storage_size`] : null}
-                            required
-                          />
-                          <FormInput
-                            label="RAM"
-                            type="number"
-                            placeholder="8"
-                            value={currentVariant.ram_size}
-                            onChange={(e) => (e.target.value === "" || Number(e.target.value) >= 0) && setCurrentVariant({ ...currentVariant, ram_size: e.target.value })}
-                            suffix={<span className="text-xs font-medium text-slate-400 mt-3.5 block">GB</span>}
-                            error={editingVariantId ? errors[`variants.${variants.findIndex(v => v.id === editingVariantId)}.ram_size`] : null}
-                            required
-                          />
-                        </>
-                      )}
-                      <FormInput
-                        label="Color"
-                        placeholder="Natural Titanium"
-                        value={currentVariant.color}
-                        onChange={(e) => setCurrentVariant({ ...currentVariant, color: e.target.value })}
-                        error={editingVariantId ? errors[`variants.${variants.findIndex(v => v.id === editingVariantId)}.color`] : null}
-                      />
-                    </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-                      <FormInput
-                        label="Price"
-                        type="number"
-                        min="0"
-                        placeholder="149900"
-                        value={currentVariant.price}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          if (val === "" || (!val.includes("-") && Number(val) >= 0)) {
-                            setCurrentVariant({ ...currentVariant, price: val });
-                          }
-                        }}
-                        prefix="Rs."
-                        error={editingVariantId ? errors[`variants.${variants.findIndex(v => v.id === editingVariantId)}.price`] : null}
-                        required
-                      />
-                      <FormInput
-                        label="Sales Price"
-                        type="number"
-                        min="0"
-                        placeholder="144900"
-                        value={currentVariant.sales_price}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          if (val === "" || (!val.includes("-") && Number(val) >= 0)) {
-                            setCurrentVariant({ ...currentVariant, sales_price: val });
-                          }
-                        }}
-                        prefix="Rs."
-                        error={editingVariantId ? errors[`variants.${variants.findIndex(v => v.id === editingVariantId)}.sales_price`] : null}
-                      />
-                      <FormInput
-                        label="Stock Quantity"
-                        type="number"
-                        min="0"
-                        placeholder="50"
-                        value={currentVariant.stock_quantity}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          if (val === "" || (!val.includes("-") && Number(val) >= 0)) {
-                            setCurrentVariant({ ...currentVariant, stock_quantity: val });
-                          }
-                        }}
-                        error={editingVariantId ? errors[`variants.${variants.findIndex(v => v.id === editingVariantId)}.stock_quantity`] : null}
-                        required
-                      />
-                      <FormInput
-                        label="Low Stock Alert"
-                        type="number"
-                        min="0"
-                        placeholder="5"
-                        value={currentVariant.low_stock_threshold}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          if (val === "" || (!val.includes("-") && Number(val) >= 0)) {
-                            setCurrentVariant({ ...currentVariant, low_stock_threshold: val });
-                          }
-                        }}
-                      />
-                    </div>
-
-                    <div className="flex flex-wrap items-center gap-x-6 gap-y-4 mb-6">
-                      <div className="flex items-center gap-4 w-full sm:w-auto">
-                        <FormCheckbox
-                          label="On Offer"
-                          checked={currentVariant.is_offer}
-                          onCheckedChange={(checked) => setCurrentVariant({ ...currentVariant, is_offer: !!checked })}
-                          className="border-none p-0 bg-transparent shadow-none"
-                        />
-                        {currentVariant.is_offer && (
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
                           <FormInput
+                            label="Price"
                             type="number"
                             min="0"
-                            placeholder="799.00"
-                            value={currentVariant.offer_price}
+                            placeholder="149900"
+                            value={currentVariant.price}
                             onChange={(e) => {
                               const val = e.target.value;
                               if (val === "" || (!val.includes("-") && Number(val) >= 0)) {
-                                setCurrentVariant({ ...currentVariant, offer_price: val });
+                                setCurrentVariant({ ...currentVariant, price: val });
                               }
                             }}
                             prefix="Rs."
-                            containerClassName="flex-1 sm:w-40"
-                            hideLabel
+                            error={editingVariantId ? errors[`variants.${variants.findIndex(v => v.id === editingVariantId)}.price`] : null}
+                            required
                           />
-                        )}
-                      </div>
+                          <FormInput
+                            label="Sales Price"
+                            type="number"
+                            min="0"
+                            placeholder="144900"
+                            value={currentVariant.sales_price}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              if (val === "" || (!val.includes("-") && Number(val) >= 0)) {
+                                setCurrentVariant({ ...currentVariant, sales_price: val });
+                              }
+                            }}
+                            prefix="Rs."
+                            error={editingVariantId ? errors[`variants.${variants.findIndex(v => v.id === editingVariantId)}.sales_price`] : null}
+                          />
+                          <FormInput
+                            label="Stock Quantity"
+                            type="number"
+                            min="0"
+                            placeholder="50"
+                            value={currentVariant.stock_quantity}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              if (val === "" || (!val.includes("-") && Number(val) >= 0)) {
+                                setCurrentVariant({ ...currentVariant, stock_quantity: val });
+                              }
+                            }}
+                            error={editingVariantId ? errors[`variants.${variants.findIndex(v => v.id === editingVariantId)}.stock_quantity`] : null}
+                            required
+                          />
+                          <FormInput
+                            label="Low Stock Alert"
+                            type="number"
+                            min="0"
+                            placeholder="5"
+                            value={currentVariant.low_stock_threshold}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              if (val === "" || (!val.includes("-") && Number(val) >= 0)) {
+                                setCurrentVariant({ ...currentVariant, low_stock_threshold: val });
+                              }
+                            }}
+                          />
+                        </div>
 
-                      </div>
-
-                    <div className="flex gap-3">
-                      {editingVariantId && (
-                        <button
-                          onClick={cancelEditVariant}
-                          className="flex-1 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 py-2.5 rounded-xl font-medium transition-all"
-                        >
-                          Cancel
-                        </button>
-                      )}
-                      <button
-                        onClick={addVariant}
-                        className="flex-[2] py-2.5 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 shadow-lg bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-600/20"
-                      >
-                        {editingVariantId ? (
-                          <>
-                            <Check className="w-4 h-4" />
-                            Update Variant
-                          </>
-                        ) : (
-                          <>
-                            <Plus className="w-4 h-4" />
-                            Add Variant
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Variants List */}
-                  {variants.length > 0 && (
-                    <div className="space-y-3">
-                      <h4 className="font-semibold text-sm text-slate-600 dark:text-slate-400">
-                        Added Variants ({variants.length})
-                      </h4>
-                      {variants.map((variant, idx) => (
-                        <div
-                          key={variant.id}
-                          className={`bg-white dark:bg-slate-800 rounded-xl border transition-all duration-300 overflow-hidden ${
-                            expandedVariantId === variant.id
-                              ? "border-indigo-500 shadow-lg shadow-indigo-500/10 ring-1 ring-indigo-500/20"
-                              : Object.keys(errors).some(key => key.startsWith(`variants.${idx}.`))
-                                ? "border-red-500 shadow-lg shadow-red-500/10 ring-1 ring-red-500/20"
-                                : "border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 shadow-sm"
-                          }`}
-                        >
-                          {/* Accordion Header */}
-                          <div
-                            onClick={() =>
-                              setExpandedVariantId(
-                                expandedVariantId === variant.id
-                                  ? null
-                                  : variant.id,
-                              )
-                            }
-                            className="flex items-center justify-between p-4 cursor-pointer select-none"
-                          >
-                            <div className="flex items-center gap-4">
-                              <div className="w-10 h-10 rounded-lg bg-slate-50 dark:bg-slate-900 flex items-center justify-center text-slate-400">
-                                <Layers className="w-5 h-5" />
-                              </div>
-                              <div>
-                                <h5 className="font-semibold text-slate-900 dark:text-white leading-tight">
-                                  {variant.variant_name || variant.condition}
-                                </h5>
-                                  <p className="text-[10px] text-slate-500 font-mono tracking-wider">
-                                    {variant.sku}
-                                  </p>
-                                  {Object.keys(errors).some(key => key.startsWith(`variants.${idx}.`)) && (
-                                    <div className="flex items-center gap-1 mt-1 text-red-500">
-                                      <AlertCircle className="w-3 h-3" />
-                                      <span className="text-[9px] font-semibold uppercase">Has Validation Errors</span>
-                                    </div>
-                                  )}
-                                </div>
-                            </div>
-
-                            <div className="flex items-center gap-2">
-                              <div className="flex items-center gap-1 mr-2">
-                                <span className="text-xs font-semibold text-slate-900 dark:text-white">
-                                  Rs {formatPrice(variant.price)}
-                                </span>
-                                <span className="text-[10px] text-slate-400">
-                                  • {variant.stock_quantity} in stock
-                                </span>
-                              </div>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  editVariant(variant);
+                        <div className="flex flex-wrap items-center gap-x-6 gap-y-4 mb-6">
+                          <div className="flex items-center gap-4 w-full sm:w-auto">
+                            <FormCheckbox
+                              label="On Offer"
+                              checked={currentVariant.is_offer}
+                              onCheckedChange={(checked) => setCurrentVariant({ ...currentVariant, is_offer: !!checked })}
+                              className="border-none p-0 bg-transparent shadow-none"
+                            />
+                            {currentVariant.is_offer && (
+                              <FormInput
+                                type="number"
+                                min="0"
+                                placeholder="799.00"
+                                value={currentVariant.offer_price}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  if (val === "" || (!val.includes("-") && Number(val) >= 0)) {
+                                    setCurrentVariant({ ...currentVariant, offer_price: val });
+                                  }
                                 }}
-                                className="p-2 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
-                                title="Edit Variant"
-                              >
-                                <Pencil className="w-4 h-4" />
-                              </button>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  copyVariant(variant);
-                                }}
-                                className="p-2 text-slate-400 hover:text-emerald-500 transition-colors"
-                                title="Copy Variant"
-                              >
-                                <Copy className="w-4 h-4" />
-                              </button>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setVariants(
-                                    variants.filter((_, i) => i !== idx),
-                                  );
-                                }}
-                                className="p-2 text-slate-400 hover:text-red-500 transition-colors"
-                                title="Delete Variant"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
-                              <div className="ml-2 text-slate-400">
-                                {expandedVariantId === variant.id ? (
-                                  <ChevronUp className="w-4 h-4" />
-                                ) : (
-                                  <ChevronDown className="w-4 h-4" />
-                                )}
-                              </div>
-                            </div>
+                                prefix="Rs."
+                                containerClassName="flex-1 sm:w-40"
+                                hideLabel
+                              />
+                            )}
                           </div>
 
-                          {/* Accordion Content */}
-                          {expandedVariantId === variant.id && (
-                            <div className="px-4 pb-4 pt-2 border-t border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/20">
-                              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                <div className="space-y-1">
-                                  <p className="text-[10px] font-medium text-slate-400 uppercase">
-                                    Barcode
-                                  </p>
-                                  <p className="text-xs text-slate-700 dark:text-slate-300 font-mono">
-                                    {variant.barcode || "N/A"}
-                                  </p>
-                                </div>
-                                  {isPhoneCategory && (
-                                    <div className="space-y-1">
-                                      <p className="text-[10px] font-medium text-slate-400 uppercase">
-                                        IMEI
-                                      </p>
-                                      <p className="text-xs text-slate-700 dark:text-slate-300 font-mono">
-                                        {variant.imei || "N/A"}
-                                      </p>
-                                    </div>
-                                  )}
-                                <div className="space-y-1">
-                                  <p className="text-[10px] font-medium text-slate-400 uppercase">
-                                    Warranty
-                                  </p>
-                                  <p className="text-xs text-slate-700 dark:text-slate-300">
-                                    {variant.warranty_period || "N/A"}
-                                  </p>
-                                </div>
-                                  {isPhoneCategory && (
-                                    <>
-                                      <div className="space-y-1">
-                                        <p className="text-[10px] font-medium text-slate-400 uppercase">
-                                          Storage
-                                        </p>
-                                        <p className="text-xs text-slate-700 dark:text-slate-300">
-                                          {variant.storage_size || "N/A"}
-                                        </p>
+                        </div>
+
+                        <div className="flex gap-3">
+                          {editingVariantId && (
+                            <button
+                              onClick={cancelEditVariant}
+                              className="flex-1 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 py-2.5 rounded-xl font-medium transition-all"
+                            >
+                              Cancel
+                            </button>
+                          )}
+                          <button
+                            onClick={addVariant}
+                            className="flex-[2] py-2.5 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 shadow-lg bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-600/20"
+                          >
+                            {editingVariantId ? (
+                              <>
+                                <Check className="w-4 h-4" />
+                                Update Variant
+                              </>
+                            ) : (
+                              <>
+                                <Plus className="w-4 h-4" />
+                                Add Variant
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Variants List */}
+                      {variants.length > 0 && (
+                        <div className="space-y-3">
+                          <h4 className="font-semibold text-sm text-slate-600 dark:text-slate-400">
+                            Added Variants ({variants.length})
+                          </h4>
+                          {variants.map((variant, idx) => (
+                            <div
+                              key={variant.id}
+                              className={`bg-white dark:bg-slate-800 rounded-xl border transition-all duration-300 overflow-hidden ${expandedVariantId === variant.id
+                                  ? "border-indigo-500 shadow-lg shadow-indigo-500/10 ring-1 ring-indigo-500/20"
+                                  : Object.keys(errors).some(key => key.startsWith(`variants.${idx}.`))
+                                    ? "border-red-500 shadow-lg shadow-red-500/10 ring-1 ring-red-500/20"
+                                    : "border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 shadow-sm"
+                                }`}
+                            >
+                              {/* Accordion Header */}
+                              <div
+                                onClick={() =>
+                                  setExpandedVariantId(
+                                    expandedVariantId === variant.id
+                                      ? null
+                                      : variant.id,
+                                  )
+                                }
+                                className="flex items-center justify-between p-4 cursor-pointer select-none"
+                              >
+                                <div className="flex items-center gap-4">
+                                  <div className="w-10 h-10 rounded-lg bg-slate-50 dark:bg-slate-900 flex items-center justify-center text-slate-400">
+                                    <Layers className="w-5 h-5" />
+                                  </div>
+                                  <div>
+                                    <h5 className="font-semibold text-slate-900 dark:text-white leading-tight">
+                                      {variant.variant_name || variant.condition}
+                                    </h5>
+                                    <p className="text-[10px] text-slate-500 font-mono tracking-wider">
+                                      {variant.sku}
+                                    </p>
+                                    {Object.keys(errors).some(key => key.startsWith(`variants.${idx}.`)) && (
+                                      <div className="flex items-center gap-1 mt-1 text-red-500">
+                                        <AlertCircle className="w-3 h-3" />
+                                        <span className="text-[9px] font-semibold uppercase">Has Validation Errors</span>
                                       </div>
-                                      <div className="space-y-1">
-                                        <p className="text-[10px] font-medium text-slate-400 uppercase">
-                                          RAM
-                                        </p>
-                                        <p className="text-xs text-slate-700 dark:text-slate-300">
-                                          {variant.ram_size || "N/A"}
-                                        </p>
-                                      </div>
-                                    </>
-                                  )}
-                                <div className="space-y-1">
-                                  <p className="text-[10px] font-medium text-slate-400 uppercase">
-                                    Color
-                                  </p>
-                                  <p className="text-xs text-slate-700 dark:text-slate-300">
-                                    {variant.color || "N/A"}
-                                  </p>
-                                </div>
-                                <div className="space-y-1">
-                                  <p className="text-[10px] font-medium text-slate-400 uppercase">
-                                    Sales Price
-                                  </p>
-                                  <p className="text-xs text-slate-700 dark:text-slate-300">
-                                    Rs {formatPrice(variant.sales_price || variant.price)}
-                                  </p>
-                                </div>
-                                <div className="space-y-1">
-                                  <p className="text-[10px] font-medium text-slate-400 uppercase">
-                                    Low Stock Alert
-                                  </p>
-                                  <p className="text-xs text-slate-700 dark:text-slate-300">
-                                    {variant.low_stock_threshold} units
-                                  </p>
-                                </div>
-                                <div className="space-y-1">
-                                  <p className="text-[10px] font-medium text-slate-400 uppercase">
-                                    Offer Price
-                                  </p>
-                                  <p className="text-xs text-amber-600 font-semibold">
-                                    {variant.is_offer
-                                      ? `Rs ${formatPrice(variant.offer_price)}`
-                                      : "No Offer"}
-                                  </p>
-                                </div>
-                                <div className="space-y-1">
-                                  <p className="text-[10px] font-medium text-slate-400 uppercase">
-                                    Badges
-                                  </p>
-                                  <div className="flex flex-wrap gap-1">
-                                    {variant.is_trending && (
-                                      <span className="px-1.5 py-0.5 bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 text-[8px] font-medium rounded uppercase">
-                                        Trending
-                                      </span>
                                     )}
-                                    {variant.is_featured && (
-                                      <span className="px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-[8px] font-medium rounded uppercase">
-                                        Featured
-                                      </span>
-                                    )}
-                                    {variant.is_active ? (
-                                      <span className="px-1.5 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 text-[8px] font-medium rounded uppercase">
-                                        Active
-                                      </span>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                  <div className="flex items-center gap-1 mr-2">
+                                    <span className="text-xs font-semibold text-slate-900 dark:text-white">
+                                      Rs {formatPrice(variant.price)}
+                                    </span>
+                                    <span className="text-[10px] text-slate-400">
+                                      • {variant.stock_quantity} in stock
+                                    </span>
+                                  </div>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      editVariant(variant);
+                                    }}
+                                    className="p-2 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                                    title="Edit Variant"
+                                  >
+                                    <Pencil className="w-4 h-4" />
+                                  </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      copyVariant(variant);
+                                    }}
+                                    className="p-2 text-slate-400 hover:text-emerald-500 transition-colors"
+                                    title="Copy Variant"
+                                  >
+                                    <Copy className="w-4 h-4" />
+                                  </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setVariants(
+                                        variants.filter((_, i) => i !== idx),
+                                      );
+                                    }}
+                                    className="p-2 text-slate-400 hover:text-red-500 transition-colors"
+                                    title="Delete Variant"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                  <div className="ml-2 text-slate-400">
+                                    {expandedVariantId === variant.id ? (
+                                      <ChevronUp className="w-4 h-4" />
                                     ) : (
-                                      <span className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-700 text-slate-500 text-[8px] font-medium rounded uppercase">
-                                        Inactive
-                                      </span>
+                                      <ChevronDown className="w-4 h-4" />
                                     )}
                                   </div>
                                 </div>
                               </div>
+
+                              {/* Accordion Content */}
+                              {expandedVariantId === variant.id && (
+                                <div className="px-4 pb-4 pt-2 border-t border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/20">
+                                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                    <div className="space-y-1">
+                                      <p className="text-[10px] font-medium text-slate-400 uppercase">
+                                        Barcode
+                                      </p>
+                                      <p className="text-xs text-slate-700 dark:text-slate-300 font-mono">
+                                        {variant.barcode || "N/A"}
+                                      </p>
+                                    </div>
+                                    {isPhoneCategory && (
+                                      <div className="space-y-1">
+                                        <p className="text-[10px] font-medium text-slate-400 uppercase">
+                                          IMEI
+                                        </p>
+                                        <p className="text-xs text-slate-700 dark:text-slate-300 font-mono">
+                                          {variant.imei || "N/A"}
+                                        </p>
+                                      </div>
+                                    )}
+                                    <div className="space-y-1">
+                                      <p className="text-[10px] font-medium text-slate-400 uppercase">
+                                        Warranty
+                                      </p>
+                                      <p className="text-xs text-slate-700 dark:text-slate-300">
+                                        {variant.warranty_period || "N/A"}
+                                      </p>
+                                    </div>
+                                    {isPhoneCategory && (
+                                      <>
+                                        <div className="space-y-1">
+                                          <p className="text-[10px] font-medium text-slate-400 uppercase">
+                                            Storage
+                                          </p>
+                                          <p className="text-xs text-slate-700 dark:text-slate-300">
+                                            {variant.storage_size || "N/A"}
+                                          </p>
+                                        </div>
+                                        <div className="space-y-1">
+                                          <p className="text-[10px] font-medium text-slate-400 uppercase">
+                                            RAM
+                                          </p>
+                                          <p className="text-xs text-slate-700 dark:text-slate-300">
+                                            {variant.ram_size || "N/A"}
+                                          </p>
+                                        </div>
+                                      </>
+                                    )}
+                                    <div className="space-y-1">
+                                      <p className="text-[10px] font-medium text-slate-400 uppercase">
+                                        Color
+                                      </p>
+                                      <p className="text-xs text-slate-700 dark:text-slate-300">
+                                        {variant.color || "N/A"}
+                                      </p>
+                                    </div>
+                                    <div className="space-y-1">
+                                      <p className="text-[10px] font-medium text-slate-400 uppercase">
+                                        Sales Price
+                                      </p>
+                                      <p className="text-xs text-slate-700 dark:text-slate-300">
+                                        Rs {formatPrice(variant.sales_price || variant.price)}
+                                      </p>
+                                    </div>
+                                    <div className="space-y-1">
+                                      <p className="text-[10px] font-medium text-slate-400 uppercase">
+                                        Low Stock Alert
+                                      </p>
+                                      <p className="text-xs text-slate-700 dark:text-slate-300">
+                                        {variant.low_stock_threshold} units
+                                      </p>
+                                    </div>
+                                    <div className="space-y-1">
+                                      <p className="text-[10px] font-medium text-slate-400 uppercase">
+                                        Offer Price
+                                      </p>
+                                      <p className="text-xs text-amber-600 font-semibold">
+                                        {variant.is_offer
+                                          ? `Rs ${formatPrice(variant.offer_price)}`
+                                          : "No Offer"}
+                                      </p>
+                                    </div>
+                                    <div className="space-y-1">
+                                      <p className="text-[10px] font-medium text-slate-400 uppercase">
+                                        Badges
+                                      </p>
+                                      <div className="flex flex-wrap gap-1">
+                                        {variant.is_trending && (
+                                          <span className="px-1.5 py-0.5 bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 text-[8px] font-medium rounded uppercase">
+                                            Trending
+                                          </span>
+                                        )}
+                                        {variant.is_featured && (
+                                          <span className="px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-[8px] font-medium rounded uppercase">
+                                            Featured
+                                          </span>
+                                        )}
+                                        {variant.is_active ? (
+                                          <span className="px-1.5 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 text-[8px] font-medium rounded uppercase">
+                                            Active
+                                          </span>
+                                        ) : (
+                                          <span className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-700 text-slate-500 text-[8px] font-medium rounded uppercase">
+                                            Inactive
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
                             </div>
-                          )}
+                          ))}
                         </div>
-                      ))}
-                    </div>
-                  )}
+                      )}
                     </>
                   )}
                 </div>
@@ -3099,13 +3089,13 @@ function CreateProductContent() {
               {Object.keys(errors).length}
             </div>
             <span className="text-xs font-semibold uppercase tracking-tight">Issues Detected</span>
-            <button 
+            <button
               onClick={() => {
                 const firstErrorField = Object.keys(errors)[0];
                 const element = document.getElementsByName(firstErrorField)[0] || document.getElementById(firstErrorField);
                 if (element) {
-                   element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                   element.focus?.();
+                  element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  element.focus?.();
                 }
               }}
               className="ml-1 p-1 hover:bg-white/10 rounded transition-colors"
@@ -3192,7 +3182,7 @@ function CreateProductContent() {
                 <AlertCircle className="w-5 h-5" />
                 <h3 className="font-bold text-slate-900 dark:text-white">Required Information</h3>
               </div>
-              <button 
+              <button
                 onClick={() => setShowValidationModal(false)}
                 className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer"
               >
