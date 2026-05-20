@@ -544,7 +544,7 @@ function CouponsContent() {
           {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className="h-64 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 animate-pulse"
+              className="h-36 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 animate-pulse"
             />
           ))}
         </div>
@@ -563,97 +563,114 @@ function CouponsContent() {
                   }
                 }}
                 onClick={() => setSelectedCouponId(coupon.id)}
-                className="coupon-card bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden group hover:shadow-md transition-all cursor-pointer text-left"
+                className="coupon-card relative flex items-stretch bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden group hover:shadow-md transition-all cursor-pointer text-left h-36"
               >
-                {/* Header */}
-                <div className="p-5 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 flex justify-between items-start">
-                  <div className="flex-1 min-w-0 pr-4">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="text-xl font-semibold text-slate-900 dark:text-white font-mono tracking-wide truncate">
+                {/* Left Ticket Stub (Discount value) */}
+                <div className="w-32 flex flex-col items-center justify-center bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 border-r border-dashed border-slate-200 dark:border-slate-700 p-4 shrink-0 select-none relative">
+                  {/* Semicircle Ticket Notches */}
+                  <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 w-4 h-4 bg-slate-50 dark:bg-slate-900 rounded-full border border-slate-200 dark:border-slate-700 z-10" />
+                  <div className="absolute bottom-0 right-0 translate-y-1/2 translate-x-1/2 w-4 h-4 bg-slate-50 dark:bg-slate-900 rounded-full border border-slate-200 dark:border-slate-700 z-10" />
+
+                  {coupon.type === "Percentage" && (
+                    <Percent className="w-4 h-4 mb-1 opacity-70" />
+                  )}
+                  {coupon.type === "Fixed" && (
+                    <DollarSign className="w-4 h-4 mb-1 opacity-70" />
+                  )}
+                  {coupon.type === "Tiered" && (
+                    <Layers className="w-4 h-4 mb-1 opacity-70" />
+                  )}
+
+                  <span className="text-lg font-extrabold tracking-tight">
+                    {coupon.type === "Percentage"
+                      ? `${coupon.value}%`
+                      : coupon.type === "Fixed"
+                        ? `Rs. ${coupon.value}`
+                        : "TIERED"}
+                  </span>
+                  <span className="text-[9px] font-bold uppercase tracking-widest opacity-80 mt-0.5">
+                    {coupon.type === "Tiered" ? "Discount" : "OFF"}
+                  </span>
+                </div>
+
+                {/* Right Ticket Body */}
+                <div className="flex-1 p-4 flex flex-col justify-between min-w-0">
+                  {/* Top: Code & Status */}
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <span className="text-base font-bold text-slate-900 dark:text-white font-mono tracking-wider truncate">
                         {coupon.code}
-                      </h3>
+                      </span>
                       <button
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
                           handleCopy(coupon.code, coupon.id);
                         }}
-                        className="text-slate-400 hover:text-indigo-600 transition-colors"
+                        className="text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors shrink-0"
                       >
                         {copiedId === coupon.id ? (
-                          <CheckCircle2 className="w-4 h-4 text-green-500" />
+                          <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
                         ) : (
-                          <Copy className="w-4 h-4" />
+                          <Copy className="w-3.5 h-3.5" />
                         )}
                       </button>
                     </div>
-                    {coupon.name && (
-                      <h4 className="text-xs font-bold text-indigo-600 dark:text-indigo-400 mb-1 truncate">
-                        {coupon.name}
-                      </h4>
-                    )}
-                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium line-clamp-1">
-                      {coupon.descriptionText}
-                    </p>
-                  </div>
-                  <div
-                    className={`px-2.5 py-1 rounded-full text-[10px] font-semibold border shrink-0 ${getStatusColor(coupon.status)}`}
-                  >
-                    {coupon.status}
-                  </div>
-                </div>
 
-                {/* Body */}
-                <div className="p-5 space-y-4">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase">
-                        Discount
-                      </p>
-                      <div className="text-lg font-semibold text-indigo-600">
-                        {coupon.type === "Percentage"
-                          ? `${coupon.value}% OFF`
-                          : coupon.type === "Fixed"
-                            ? `Rs. ${coupon.value} OFF`
-                            : `${(coupon.tiers || []).length} Tiers`}
-                      </div>
+                    <div
+                      className={`px-2 py-0.5 rounded-full text-[9px] font-bold border shrink-0 ${getStatusColor(coupon.status)}`}
+                    >
+                      {coupon.status}
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 pt-2 border-t border-slate-50 dark:border-slate-700">
-                    <Clock className="w-3.5 h-3.5" /> Expires:{" "}
-                    <span className="font-semibold text-slate-700 dark:text-slate-300">
-                      {coupon.expiry}
-                    </span>
+                  {/* Middle: Name & Description */}
+                  <div className="min-w-0 my-1">
+                    {coupon.name && (
+                      <h4 className="text-xs font-bold text-indigo-600 dark:text-indigo-400 truncate">
+                        {coupon.name}
+                      </h4>
+                    )}
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium line-clamp-1">
+                      {coupon.descriptionText}
+                    </p>
                   </div>
-                </div>
 
-                {/* Footer Actions */}
-                <div className="px-5 py-3 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-700 flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  {hasPermission("Coupon Edit") && (
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleEdit(coupon);
-                      }}
-                      className="p-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-lg shadow-sm transition-colors"
-                    >
-                      <Edit3 className="w-4 h-4" />
-                    </button>
-                  )}
-                  {hasPermission("Coupon Delete") && (
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDelete(coupon.id);
-                      }}
-                      className="p-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 rounded-lg shadow-sm transition-colors"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  )}
+                  {/* Bottom: Expiry Date & Actions */}
+                  <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                    <div className="flex items-center gap-1 text-[10px] text-slate-400 dark:text-slate-500 font-medium truncate">
+                      <Clock className="w-3 h-3" />
+                      <span>Exp: {coupon.expiry}</span>
+                    </div>
+
+                    {/* Actions on card hover */}
+                    <div className="flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                      {hasPermission("Coupon Edit") && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEdit(coupon);
+                          }}
+                          className="p-1 bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-lg shadow-sm transition-colors"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                      {hasPermission("Coupon Delete") && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(coupon.id);
+                          }}
+                          className="p-1 bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 rounded-lg shadow-sm transition-colors"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
             );
