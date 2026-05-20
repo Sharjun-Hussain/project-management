@@ -491,8 +491,21 @@ export default function SidebarClient({ menuGroups, initialCollapsed, session, t
                 >
                   Cancel
                 </button>
-                <button
-                  onClick={() => signOut({ callbackUrl: "/login" })}
+                 <button
+                  onClick={async () => {
+                    try {
+                      await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/logout`, {
+                        method: 'POST',
+                        headers: {
+                          'Authorization': `Bearer ${session?.accessToken}`,
+                          'Content-Type': 'application/json'
+                        }
+                      });
+                    } catch (err) {
+                      console.error("Failed to log logout action:", err);
+                    }
+                    signOut({ callbackUrl: "/login" });
+                  }}
                   className="flex-1 py-3 px-4 rounded-xl font-bold text-sm text-white bg-red-600 hover:bg-red-700 shadow-lg shadow-red-600/20 transition-all transform active:scale-95"
                 >
                   Sign Out
