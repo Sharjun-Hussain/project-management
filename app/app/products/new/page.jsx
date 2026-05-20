@@ -546,14 +546,13 @@ function CreateProductContent() {
 
   const completionPercentage = React.useMemo(() => {
     let score = 0;
-    let total = 7;
+    let total = 6;
 
     if (formData.name) score++;
     if (formData.category_id) score++;
     if (formData.brand_id) score++;
     if (formData.type) score++;
     if (productImages.some(img => img.isPrimary)) score++;
-    if (selectedFeatures.length > 0) score++;
     if (variants.length > 0 && variants.every(v => v.sku && v.price && v.stock_quantity !== "" && (!isPhoneCategory || (v.storage_size && v.ram_size)))) score++;
 
     return Math.round((score / total) * 100);
@@ -564,7 +563,6 @@ function CreateProductContent() {
     formData.category_id &&
     formData.brand_id &&
     formData.type &&
-    selectedFeatures.length > 0 &&
     variants.length > 0 &&
     variants.every(
       (v) =>
@@ -585,7 +583,7 @@ function CreateProductContent() {
           (v) => v.sku && v.price && v.stock_quantity !== "" && (!isPhoneCategory || (v.storage_size && v.ram_size))
         );
       case "specs":
-        return selectedFeatures.length > 0;
+        return true; // Specs & Features are optional
       default:
         return true;
     }
@@ -1387,9 +1385,7 @@ function CreateProductContent() {
       });
     }
 
-    if (updatedFeatures.length === 0) {
-      validationList.push({ stepId: "specs", stepLabel: "Specs & Features", field: "features", message: "At least one Key Feature is required" });
-    }
+    // Specs & Features are optional — no validation required
 
     if (validationList.length > 0) {
       setValidationErrors(validationList);
@@ -2124,7 +2120,7 @@ function CreateProductContent() {
                 {/* Features with Autocomplete */}
                 <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
                   <h3 className="text-lg font-semibold text-slate-800 dark:text-white mb-4">
-                    Key Features <span className="text-red-500">*</span>
+                    Key Features <span className="text-xs font-normal text-slate-400 ml-1">(Optional)</span>
                   </h3>
                   <div className="relative mb-4">
                     <div className="flex gap-2">
@@ -2475,7 +2471,7 @@ function CreateProductContent() {
                   {productSetupType === "direct" ? (
                     /* SIMPLIFIED DIRECT PRODUCT FORM */
                     <div className="space-y-6">
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <FormInput
                           label="SKU"
                           placeholder="e.g. IP15P-256-NT"
@@ -2499,7 +2495,7 @@ function CreateProductContent() {
                         /> */}
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <FormInput
                           label="Price"
                           type="number"
@@ -2546,18 +2542,6 @@ function CreateProductContent() {
                           error={errors[`variants.0.stock_quantity`]}
                           required
                         />
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {/* Color field hidden — optional, not required in UI */}
-                        {/* <FormInput
-                          label="Color"
-                          placeholder="Natural Titanium"
-                          value={directVariant.color || ""}
-                          onChange={(e) => updateDirectVariant("color", e.target.value)}
-                          error={errors[`variants.0.color`]}
-                        /> */}
-
                         <FormInput
                           label="Low Stock Alert"
                           type="number"
@@ -2571,7 +2555,14 @@ function CreateProductContent() {
                             }
                           }}
                         />
-
+                        {/* Color field hidden — optional, not required in UI */}
+                        {/* <FormInput
+                          label="Color"
+                          placeholder="Natural Titanium"
+                          value={directVariant.color || ""}
+                          onChange={(e) => updateDirectVariant("color", e.target.value)}
+                          error={errors[`variants.0.color`]}
+                        /> */}
                         {isPhoneCategory && (
                           <FormInput
                             label="IMEI"
@@ -2663,7 +2654,6 @@ function CreateProductContent() {
                             placeholder="e.g. Summer Edition"
                             value={currentVariant.variant_name}
                             onChange={(e) => setCurrentVariant({ ...currentVariant, variant_name: e.target.value })}
-                            description="(Optional)"
                           />
                           <FormInput
                             label="SKU"
