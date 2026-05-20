@@ -2490,12 +2490,13 @@ function CreateProductContent() {
                           value={directVariant.barcode || ""}
                           onChange={(e) => updateDirectVariant("barcode", e.target.value.replace(/\D/g, ""))}
                         />
-                        <FormInput
+                        {/* Warranty Period field hidden — optional, not required in UI */}
+                        {/* <FormInput
                           label="Warranty Period"
                           placeholder="e.g. 1 Year"
                           value={directVariant.warranty_period || ""}
                           onChange={(e) => updateDirectVariant("warranty_period", e.target.value)}
-                        />
+                        /> */}
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -2548,13 +2549,14 @@ function CreateProductContent() {
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <FormInput
+                        {/* Color field hidden — optional, not required in UI */}
+                        {/* <FormInput
                           label="Color"
                           placeholder="Natural Titanium"
                           value={directVariant.color || ""}
                           onChange={(e) => updateDirectVariant("color", e.target.value)}
                           error={errors[`variants.0.color`]}
-                        />
+                        /> */}
 
                         <FormInput
                           label="Low Stock Alert"
@@ -2685,12 +2687,13 @@ function CreateProductContent() {
                               onChange={(e) => setCurrentVariant({ ...currentVariant, imei: e.target.value })}
                             />
                           )}
-                          <FormInput
+                          {/* Warranty Period field hidden — optional, not required in UI */}
+                          {/* <FormInput
                             label="Warranty Period"
                             placeholder="e.g. 1 Year"
                             value={currentVariant.warranty_period}
                             onChange={(e) => setCurrentVariant({ ...currentVariant, warranty_period: e.target.value })}
-                          />
+                          /> */}
                           {isPhoneCategory && (
                             <>
                               <FormInput
@@ -2713,13 +2716,14 @@ function CreateProductContent() {
                               />
                             </>
                           )}
-                          <FormInput
+                          {/* Color field hidden — optional, not required in UI */}
+                          {/* <FormInput
                             label="Color"
                             placeholder="Natural Titanium"
                             value={currentVariant.color}
                             onChange={(e) => setCurrentVariant({ ...currentVariant, color: e.target.value })}
                             error={editingVariantId ? errors[`variants.${variants.findIndex(v => v.id === editingVariantId)}.color`] : null}
-                          />
+                          /> */}
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
