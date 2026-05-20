@@ -902,12 +902,19 @@ export default function ProductsPage() {
       const totalStock = p.variants?.reduce((sum, v) => sum + v.stock_quantity, 0) || 0;
 
       // Get price from first variant or default
-      const price = p.variants?.[0]?.price || 0;
+      const firstVariant = p.variants?.[0] || {};
+      const price = firstVariant.price || 0;
+      const sales_price = firstVariant.sales_price || 0;
+      const is_offer = firstVariant.is_offer || false;
+      const offer_price = firstVariant.offer_price || 0;
 
       return {
         ...p,
         stock: totalStock,
         price: parseFloat(price),
+        sales_price: parseFloat(sales_price),
+        is_offer: !!is_offer,
+        offer_price: parseFloat(offer_price),
         image: getImageUrl(p.primary_image_path),
         status: p.is_active ? "published" : "draft", // Map boolean to string for UI
       };
@@ -915,14 +922,20 @@ export default function ProductsPage() {
 
     // Merge local drafts if on first page and no search
     if (currentPage === 1 && !debouncedSearch) {
-      const formattedDrafts = localDrafts.map((d) => ({
-        ...d,
-        stock: d.variants?.reduce((sum, v) => sum + parseInt(v.stock_quantity || 0), 0) || 0,
-        price: parseFloat(d.variants?.[0]?.price || 0),
-        image: null, // Local drafts don't have persistent image URLs
-        status: "draft",
-        is_local_draft: true,
-      }));
+      const formattedDrafts = localDrafts.map((d) => {
+        const firstVariant = d.variants?.[0] || {};
+        return {
+          ...d,
+          stock: d.variants?.reduce((sum, v) => sum + parseInt(v.stock_quantity || 0), 0) || 0,
+          price: parseFloat(firstVariant.price || 0),
+          sales_price: parseFloat(firstVariant.sales_price || firstVariant.price || 0),
+          is_offer: !!firstVariant.is_offer,
+          offer_price: parseFloat(firstVariant.offer_price || 0),
+          image: null, // Local drafts don't have persistent image URLs
+          status: "draft",
+          is_local_draft: true,
+        };
+      });
       return [...formattedDrafts, ...apiProducts];
     }
 
@@ -1385,9 +1398,6 @@ export default function ProductsPage() {
                           Price
                         </th>
                         <th className="p-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                          Condition
-                        </th>
-                        <th className="p-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                           Status
                         </th>
                         <th className="p-4 pr-6 text-right"></th>
@@ -1451,13 +1461,20 @@ export default function ProductsPage() {
                               </div>
                             </div>
                           </td>
-                          <td className="p-4 text-sm font-medium text-slate-900 dark:text-white">
-                            Rs {formatPrice(product.price)}
-                          </td>
                           <td className="p-4">
-                            <span className={`px-2 py-1 rounded-lg text-[10px] font-semibold border capitalize ${getConditionColor(product.condition)}`}>
-                              {product.condition || "N/A"}
-                            </span>
+                            <div className="space-y-0.5">
+                              <div className="text-xs text-slate-400 dark:text-slate-500">
+                                Reg: <span className="line-through">Rs {formatPrice(product.price)}</span>
+                              </div>
+                              <div className="text-sm font-semibold text-slate-900 dark:text-white">
+                                Sale: Rs {formatPrice(product.sales_price)}
+                              </div>
+                              {product.is_offer && product.offer_price && (
+                                <div className="text-[10px] font-bold text-amber-600 dark:text-amber-500 flex items-center mt-0.5">
+                                  <span className="bg-amber-50 dark:bg-amber-950/30 px-1 py-0.5 rounded">Offer: Rs {formatPrice(product.offer_price)}</span>
+                                </div>
+                              )}
+                            </div>
                           </td>
                           <td className="p-4">
                             <span
@@ -1560,9 +1577,19 @@ export default function ProductsPage() {
                           <h3 className="font-bold text-slate-900 dark:text-white line-clamp-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                             {product.name}
                           </h3>
-                          <p className="font-bold text-sm text-indigo-600 dark:text-indigo-400">
-                            Rs {formatPrice(product.price)}
-                          </p>
+                          <div className="text-right shrink-0 ml-2">
+                            <div className="text-xs font-bold text-slate-900 dark:text-white">
+                              Sale: Rs {formatPrice(product.sales_price)}
+                            </div>
+                            <div className="text-[10px] text-slate-400 line-through">
+                              Reg: Rs {formatPrice(product.price)}
+                            </div>
+                            {product.is_offer && product.offer_price && (
+                              <div className="text-[10px] font-bold text-amber-600 dark:text-amber-500 mt-0.5">
+                                Offer: Rs {formatPrice(product.offer_price)}
+                              </div>
+                            )}
+                          </div>
                         </div>
                         <div className="flex justify-between items-center text-xs text-slate-500 dark:text-slate-400 mb-3">
                           <span className="font-mono bg-slate-50 dark:bg-slate-900 px-1.5 py-0.5 rounded">
