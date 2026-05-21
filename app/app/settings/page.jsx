@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { gsap } from "gsap";
 import { useGSAP } from "@gsap/react";
 import {
@@ -19,6 +19,15 @@ import {
   AlertCircle,
   Coins,
   Save,
+  Link2,
+  Copy,
+  CheckCheck,
+  Wifi,
+  WifiOff,
+  RefreshCw,
+  ArrowLeftRight,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { useCurrency } from "../context/CurrencyContext";
 import { useGlobalSettings } from "../context/GlobalSettingsContext";
@@ -106,6 +115,18 @@ export default function SettingsPage() {
 
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [selectedAccentColor, setSelectedAccentColor] = useState("indigo");
+
+  // --- POS INTEGRATION STATE ---
+  const [pos, setPos] = useState({
+    enabled: false,
+    backendUrl: "",
+    inboundToken: "",
+    webhookSecret: "",
+  });
+  const [posTestStatus, setPosTestStatus] = useState(null); // null | 'testing' | 'ok' | 'fail'
+  const [copiedKey, setCopiedKey] = useState(null); // which field was just copied
+  const [showPosToken, setShowPosToken] = useState(false);
+  const [showPosSecret, setShowPosSecret] = useState(false);
 
   useEffect(() => {
     if (accentColor) setSelectedAccentColor(accentColor);
@@ -223,6 +244,13 @@ export default function SettingsPage() {
           customerEnabled: data.customer_order_notification_enabled === "1",
           lowStockEnabled: data.low_stock_alert_enabled === "1",
         }));
+        // POS Integration
+        setPos({
+          enabled: data.pos_integration_enabled === "true" || data.pos_integration_enabled === "1",
+          backendUrl: data.pos_backend_url || "",
+          inboundToken: data.pos_inbound_token || "",
+          webhookSecret: data.pos_webhook_secret || "",
+        });
 
         // Sync global context fields too
         updateSettings({
@@ -297,13 +325,13 @@ export default function SettingsPage() {
   // --- SCROLL SPY LOGIC ---
   useEffect(() => {
     const handleScroll = () => {
-      // Added "data" to the sections list
       const sections = [
         "store",
         "payments",
         "integrations",
         "data",
         "smtp",
+        "pos",
       ];
 
       for (const section of sections) {
@@ -505,7 +533,8 @@ export default function SettingsPage() {
               // { id: "payments", label: "Payment Methods", icon: CreditCard },
               // { id: "notifications", label: "Notifications", icon: AlertCircle },
               // { id: "integrations", label: "WhatsApp & API", icon: Smartphone },
-              { id: "data", label: "Import / Export", icon: Database }, // New Item
+              { id: "data", label: "Import / Export", icon: Database },
+              { id: "pos", label: "POS Integration", icon: ArrowLeftRight },
               // { id: "smtp", label: "SMTP Email", icon: Mail },
             ].map((item) => (
               <button
@@ -1258,43 +1287,249 @@ export default function SettingsPage() {
             </div>
           </section>
 
-          {/* E. SMTP EMAIL */}
+          {/* E. SMTP EMAIL (commented out) */}
           {/*
           <section id="smtp" className="animate-section scroll-mt-32">
+            ...
+          </section>
+          */}
+
+          {/* F. POS INTEGRATION */}
+          <section id="pos" className="animate-section scroll-mt-32">
             <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-8">
               <SectionHeader
-                icon={Mail}
-                title="SMTP Configuration"
-                description="Connect your email server for order notifications."
-                colorClass="bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400"
+                icon={ArrowLeftRight}
+                title="POS Integration"
+                description="Connect this e-commerce store with your iGen POS system for real-time stock sync and automatic order creation."
+                colorClass="bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400"
               />
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="md:col-span-2 space-y-2">
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase">
-                    SMTP Host
-                  </label>
-                  <input
-                    type="text"
-                    value={smtp.host}
-                    onChange={(e) => {
-                      setSmtp((prev) => ({ ...prev, host: e.target.value }));
-                      setHasChanges(true);
+
+              {/* Enable Toggle */}
+              <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 mb-6">
+                <div>
+                  <p className="text-sm font-bold text-slate-900 dark:text-white">Enable POS Sync</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    Activates real-time stock updates and automatic sale creation in POS when orders are placed.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => { setPos(p => ({ ...p, enabled: !p.enabled })); setHasChanges(true); }}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-300 focus:outline-none ${
+                    pos.enabled ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"
+                  }`}
+                >
+                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-md transition-transform duration-300 ${
+                    pos.enabled ? "translate-x-6" : "translate-x-1"
+                  }`} />
+                </button>
+              </div>
+
+              <div className="space-y-8">
+
+                {/* ── OUTBOUND: What YOU fill in (from POS settings) ── */}
+                <div>
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="h-5 w-1 rounded-full bg-blue-500" />
+                    <h3 className="text-sm font-bold text-slate-800 dark:text-white">Outbound Connection</h3>
+                    <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-full">
+                      E-commerce → POS
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
+                    Copy these values from your POS Settings → E-commerce Integration page and paste them here.
+                  </p>
+
+                  <div className="grid grid-cols-1 gap-5">
+                    {/* POS Backend URL */}
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
+                        POS Backend URL
+                      </label>
+                      <input
+                        type="url"
+                        value={pos.backendUrl}
+                        onChange={e => { setPos(p => ({ ...p, backendUrl: e.target.value })); setHasChanges(true); }}
+                        placeholder="https://your-pos-api.com"
+                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm dark:text-white font-mono focus:border-emerald-500 outline-none transition-all"
+                      />
+                      <p className="text-[11px] text-slate-400">
+                        The base URL of your POS backend server.
+                      </p>
+                    </div>
+
+                    {/* POS Inbound Token */}
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
+                        POS Inbound Token
+                      </label>
+                      <div className="relative">
+                        <input
+                          type={showPosToken ? "text" : "password"}
+                          value={pos.inboundToken}
+                          onChange={e => { setPos(p => ({ ...p, inboundToken: e.target.value })); setHasChanges(true); }}
+                          placeholder="pos_inbound_xxxxxxxxxxxxxxxx"
+                          className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 pr-12 text-sm dark:text-white font-mono focus:border-emerald-500 outline-none transition-all"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPosToken(v => !v)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                        >
+                          {showPosToken ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                      <p className="text-[11px] text-slate-400">
+                        Copy the <strong className="text-slate-600 dark:text-slate-300">Authorization Bearer Client Token</strong> from the POS Inbound Checkout Webhook section.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* ── INBOUND: What YOUR WEBSITE provides (copy to POS) ── */}
+                <div className="pt-6 border-t border-slate-100 dark:border-slate-700">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="h-5 w-1 rounded-full bg-emerald-500" />
+                    <h3 className="text-sm font-bold text-slate-800 dark:text-white">Inbound Credentials</h3>
+                    <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full">
+                      POS → E-commerce
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
+                    Copy these values and paste them into your POS Settings → E-commerce Integration page.
+                  </p>
+
+                  <div className="grid grid-cols-1 gap-5">
+
+                    {/* E-commerce Webhook URL (read-only copyable) */}
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
+                        Client Store Webhook URL
+                        <span className="ml-2 text-[9px] font-bold text-blue-500 bg-blue-50 dark:bg-blue-900/30 px-1.5 py-0.5 rounded-full normal-case">Copy → Paste in POS</span>
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 bg-slate-100 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 font-mono text-xs text-slate-600 dark:text-slate-300 overflow-x-auto whitespace-nowrap select-all">
+                          {typeof window !== "undefined" ? `${process.env.NEXT_PUBLIC_API_BASE_URL?.replace("/api/v1", "") || window.location.origin.replace("3001", "5000")}/api/webhooks/pos-inventory-sync` : "/api/webhooks/pos-inventory-sync"}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const url = `${process.env.NEXT_PUBLIC_API_BASE_URL?.replace("/api/v1", "") || ""}/api/webhooks/pos-inventory-sync`;
+                            navigator.clipboard.writeText(url);
+                            setCopiedKey("webhookUrl");
+                            setTimeout(() => setCopiedKey(null), 2000);
+                          }}
+                          className="shrink-0 flex items-center gap-1.5 px-3 py-2.5 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition-all active:scale-95"
+                        >
+                          {copiedKey === "webhookUrl" ? <CheckCheck className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                          {copiedKey === "webhookUrl" ? "Copied!" : "Copy"}
+                        </button>
+                      </div>
+                      <p className="text-[11px] text-slate-400">
+                        Paste this into POS → <strong className="text-slate-600 dark:text-slate-300">Client Store Webhook URL</strong> field.
+                      </p>
+                    </div>
+
+                    {/* POS Webhook Secret (the token POS uses to authenticate stock updates) */}
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
+                        Client Store API Authorization Bearer Token
+                        <span className="ml-2 text-[9px] font-bold text-blue-500 bg-blue-50 dark:bg-blue-900/30 px-1.5 py-0.5 rounded-full normal-case">Copy → Paste in POS</span>
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <div className="relative flex-1">
+                          <input
+                            readOnly
+                            type={showPosSecret ? "text" : "password"}
+                            value={pos.webhookSecret}
+                            className="w-full bg-slate-100 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 pr-10 font-mono text-xs text-slate-600 dark:text-slate-300 outline-none select-all"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPosSecret(v => !v)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                          >
+                            {showPosSecret ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                          </button>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            navigator.clipboard.writeText(pos.webhookSecret);
+                            setCopiedKey("webhookSecret");
+                            setTimeout(() => setCopiedKey(null), 2000);
+                          }}
+                          disabled={!pos.webhookSecret}
+                          className="shrink-0 flex items-center gap-1.5 px-3 py-2.5 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 disabled:opacity-40 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition-all active:scale-95"
+                        >
+                          {copiedKey === "webhookSecret" ? <CheckCheck className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                          {copiedKey === "webhookSecret" ? "Copied!" : "Copy"}
+                        </button>
+                      </div>
+                      <p className="text-[11px] text-slate-400">
+                        Paste this into POS → <strong className="text-slate-600 dark:text-slate-300">Client Store API Authorization Bearer Token</strong> field.
+                        This is set via <code className="bg-slate-200 dark:bg-slate-700 px-1 rounded text-[10px]">POS_WEBHOOK_SECRET</code> in your backend <code className="bg-slate-200 dark:bg-slate-700 px-1 rounded text-[10px]">.env</code>.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Test Connection */}
+                <div className="pt-6 border-t border-slate-100 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center gap-4">
+                  <button
+                    type="button"
+                    disabled={!pos.backendUrl || !pos.inboundToken || posTestStatus === "testing"}
+                    onClick={async () => {
+                      setPosTestStatus("testing");
+                      try {
+                        const res = await fetch(`${API_BASE_URL}/admin/settings/pos-test`, {
+                          method: "POST",
+                          headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${session?.accessToken}`,
+                          },
+                          body: JSON.stringify({ pos_backend_url: pos.backendUrl, pos_inbound_token: pos.inboundToken }),
+                        });
+                        const data = await res.json();
+                        setPosTestStatus(data.success ? "ok" : "fail");
+                        if (data.success) toast.success("POS connection verified!");
+                        else toast.error(data.message || "POS connection failed.");
+                      } catch (e) {
+                        setPosTestStatus("fail");
+                        toast.error("Could not reach POS backend.");
+                      } finally {
+                        setTimeout(() => setPosTestStatus(null), 5000);
+                      }
                     }}
-                    placeholder="smtp.gmail.com"
-                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm dark:text-white font-mono"
-                  />
+                    className="flex items-center gap-2 px-5 py-2.5 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 disabled:opacity-40 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition-all active:scale-95"
+                  >
+                    {posTestStatus === "testing" ? (
+                      <><RefreshCw className="w-3.5 h-3.5 animate-spin" /> Testing...</>
+                    ) : posTestStatus === "ok" ? (
+                      <><Wifi className="w-3.5 h-3.5 text-emerald-500" /> Connected</>  
+                    ) : posTestStatus === "fail" ? (
+                      <><WifiOff className="w-3.5 h-3.5 text-red-500" /> Failed</>
+                    ) : (
+                      <><Wifi className="w-3.5 h-3.5" /> Test POS Connection</>
+                    )}
+                  </button>
+                  <p className="text-[11px] text-slate-400">
+                    Sends a ping to verify the POS backend URL and token are correct before saving.
+                  </p>
                 </div>
               </div>
+
+              {/* Save */}
               <div className="flex justify-end mt-6 pt-5 border-t border-slate-100 dark:border-slate-700">
                 <SaveBtn
-                  sectionKey="smtp"
-                  isSaving={sectionSaving["smtp"]}
+                  sectionKey="pos"
+                  isSaving={sectionSaving["pos"]}
                   onClick={() =>
-                    saveSection("smtp", () => {
+                    saveSection("pos", () => {
                       const fd = new FormData();
-                      fd.append("smtp_host", smtp.host || "");
-                      fd.append("smtp_port", smtp.port || "");
-                      fd.append("smtp_user", smtp.user || "");
+                      fd.append("pos_integration_enabled", pos.enabled ? "true" : "false");
+                      fd.append("pos_backend_url", pos.backendUrl || "");
+                      fd.append("pos_inbound_token", pos.inboundToken || "");
                       return fd;
                     })
                   }
@@ -1302,7 +1537,6 @@ export default function SettingsPage() {
               </div>
             </div>
           </section>
-          */}
 
         </div>
       </div>
