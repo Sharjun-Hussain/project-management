@@ -26,7 +26,7 @@ const securityHeaders = [
   },
   {
     key: 'Content-Security-Policy',
-    value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' http://localhost:5000 https://api.igen.lk; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data: http://localhost:5000 http://127.0.0.1:5000 https://api.igen.lk https://i.pravatar.cc https://ui-avatars.com; font-src 'self' data:; connect-src 'self' http://localhost:5000 http://127.0.0.1:5000 https://api.igen.lk;",
+    value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' http://localhost:5000 https://fe.inzeedo.lk; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data: http://localhost:5000 http://127.0.0.1:5000 https://fe.inzeedo.lk https://i.pravatar.cc https://ui-avatars.com; font-src 'self' data:; connect-src 'self' http://localhost:5000 http://127.0.0.1:5000 https://fe.inzeedo.lk;",
   },
 ];
 
