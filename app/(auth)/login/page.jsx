@@ -40,7 +40,10 @@ export default async function LoginPage(props) {
     const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
     const res = await fetch(`${API_BASE}/admin/settings`, {
       cache: 'no-store',
-      headers: { 'Accept': 'application/json' }
+      headers: {
+        'Accept': 'application/json',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
+      }
     });
 
     if (res.ok) {
