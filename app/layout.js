@@ -1,5 +1,9 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+
+// Required because the root layout fetches settings with cache: 'no-store'
+// This prevents DYNAMIC_SERVER_USAGE build errors across all child routes
+export const dynamic = 'force-dynamic';
 import { ThemeProvider } from "./components/theme-provider";
 import AllProvider from "./app/providers/allProvider";
 import { Toaster } from "sonner";
