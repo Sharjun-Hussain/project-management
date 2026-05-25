@@ -1200,14 +1200,16 @@ export default function InteractiveOrdersPage() {
                           <div key={item.id} className="p-4 flex gap-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
                             <div className="w-16 h-16 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 overflow-hidden shrink-0">
                                 <img
-                                  src={`${process.env.NEXT_PUBLIC_API_BASE_URL?.replace("/api/v1", "")}/${(item.product?.primary_image_path || item.Product?.primary_image_path)}`}
-                                className="w-full h-full object-cover"
-                                alt=""
-                              />
+                                  src={(item.product?.primary_image_path || item.Product?.primary_image_path) 
+                                    ? `${process.env.NEXT_PUBLIC_API_BASE_URL?.replace("/api/v1", "")}/${(item.product?.primary_image_path || item.Product?.primary_image_path)}` 
+                                    : "https://via.placeholder.com/150?text=No+Image"}
+                                  className="w-full h-full object-cover"
+                                  alt="Product Image"
+                                />
                             </div>
                             <div className="flex-1 min-w-0">
                               <h4 className="text-sm font-bold text-slate-900 dark:text-white truncate">
-                                {item.product_name || item.Product?.name}
+                                {item.product_name || item.Product?.name || "Deleted Product (No longer exists)"}
                               </h4>
                               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                                 Variant: {item.variant_name || item.ProductVariant?.variant_name || "N/A"} • SKU: {item.sku || item.ProductVariant?.sku || item.Product?.code || "N/A"}
