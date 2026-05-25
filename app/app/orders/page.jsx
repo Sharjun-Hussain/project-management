@@ -357,58 +357,57 @@ export default function InteractiveOrdersPage() {
     .page { padding: 10mm; max-width: 100%; }
 
     /* ── HEADER ── */
-    .header { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 10px; margin-bottom: 12px; border-bottom: 2.5px solid #1e293b; }
-    .brand-name { font-size: 20px; font-weight: 900; color: #4f46e5; letter-spacing: -0.5px; text-transform: uppercase; line-height: 1; }
-    .brand-tagline { font-size: 8px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 2.5px; margin-top: 3px; }
-    .order-block { text-align: right; border-left: 2px solid #e2e8f0; padding-left: 14px; }
-    .slip-label { font-size: 8px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 3px; }
-    .order-number { font-size: 16px; font-weight: 800; color: #1e293b; font-variant-numeric: tabular-nums; }
-    .order-date { font-size: 9px; color: #64748b; margin-top: 3px; }
+    .header { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 10px; margin-bottom: 12px; border-bottom: 3px solid #000; }
+    .brand-name { font-size: 24px; font-weight: 900; color: #000; letter-spacing: -0.5px; text-transform: uppercase; line-height: 1; }
+    .brand-tagline { font-size: 9px; font-weight: 700; color: #000; text-transform: uppercase; letter-spacing: 2px; margin-top: 4px; }
+    .order-block { text-align: right; border-left: 2px solid #000; padding-left: 14px; }
+    .slip-label { font-size: 9px; font-weight: 700; color: #000; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 3px; }
+    .order-number { font-size: 16px; font-weight: 800; color: #000; font-variant-numeric: tabular-nums; }
+    .order-date { font-size: 10px; font-weight: 600; color: #000; margin-top: 3px; }
 
     /* ── INFO GRID ── */
     .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
-    .info-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 12px; }
-    .info-card-label { font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #94a3b8; margin-bottom: 6px; }
-    .recipient-name { font-size: 13px; font-weight: 700; color: #0f172a; margin-bottom: 3px; }
-    .address-line { font-size: 10px; color: #475569; line-height: 1.7; }
-    .phone-line { font-size: 10px; color: #475569; margin-top: 5px; font-weight: 600; }
-    .meta-row { display: flex; justify-content: space-between; align-items: center; padding: 3px 0; border-bottom: 1px solid #f1f5f9; font-size: 10px; }
+    .info-card { background: #fff; border: 2px solid #000; border-radius: 4px; padding: 12px; }
+    .info-card-label { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; color: #000; margin-bottom: 8px; border-bottom: 1px solid #000; padding-bottom: 4px; }
+    .recipient-name { font-size: 14px; font-weight: 800; color: #000; margin-bottom: 4px; }
+    .address-line { font-size: 11px; font-weight: 600; color: #000; line-height: 1.7; }
+    .phone-line { font-size: 11px; color: #000; margin-top: 5px; font-weight: 700; }
+    .meta-row { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; border-bottom: 1px dashed #000; font-size: 11px; }
     .meta-row:last-child { border-bottom: none; }
-    .meta-key { color: #64748b; }
-    .meta-val { font-weight: 600; color: #1e293b; }
-    .status-pill { display: inline-block; padding: 1px 7px; border-radius: 20px; font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+    .meta-key { font-weight: 700; color: #000; }
+    .meta-val { font-weight: 700; color: #000; }
+    .status-pill { display: inline-block; padding: 2px 8px; border-radius: 2px; font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; background: #fff; color: #000; border: 1.5px solid #000; }
 
     /* ── ITEMS TABLE ── */
-    table { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
-    thead tr { background: #1e293b; }
-    thead th { padding: 7px 8px; font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #e2e8f0; }
-    thead th:first-child { text-align: left; border-radius: 4px 0 0 0; }
-    thead th:last-child { border-radius: 0 4px 0 0; }
-    .td-main { padding: 7px 8px; vertical-align: top; }
-    .td-center { padding: 7px 8px; text-align: center; vertical-align: top; }
-    .td-right { padding: 7px 8px; text-align: right; vertical-align: top; }
-    .td-bold { font-weight: 700; }
-    .row-even { background: #ffffff; }
-    .row-odd { background: #f8fafc; }
-    .item-name { font-weight: 600; font-size: 11px; color: #0f172a; }
-    .item-variant { font-size: 9px; color: #64748b; margin-top: 1px; }
-    .item-sku { font-size: 8px; color: #94a3b8; font-family: monospace; margin-top: 1px; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 16px; border: 2px solid #000; }
+    thead tr { background: #000; }
+    thead th { padding: 8px 10px; font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #fff; border: 1px solid #000; }
+    thead th:first-child { text-align: left; }
+    .td-main { padding: 10px 8px; vertical-align: top; border-bottom: 1px solid #000; border-right: 1px solid #000; }
+    .td-center { padding: 10px 8px; text-align: center; vertical-align: top; border-bottom: 1px solid #000; border-right: 1px solid #000; font-weight: 700; }
+    .td-right { padding: 10px 8px; text-align: right; vertical-align: top; border-bottom: 1px solid #000; border-right: 1px solid #000; font-weight: 700; }
+    .td-bold { font-weight: 800; }
+    .row-even { background: #fff; }
+    .row-odd { background: #fff; }
+    .item-name { font-weight: 800; font-size: 12px; color: #000; }
+    .item-variant { font-size: 10px; font-weight: 600; color: #000; margin-top: 2px; }
+    .item-sku { font-size: 9px; font-weight: 600; color: #000; font-family: monospace; margin-top: 2px; }
 
     /* ── SUMMARY ── */
-    .summary-block { display: flex; justify-content: flex-end; margin-bottom: 14px; }
-    .summary-table { width: 220px; border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden; }
-    .summary-row { display: flex; justify-content: space-between; padding: 5px 10px; font-size: 10px; border-bottom: 1px solid #f1f5f9; }
+    .summary-block { display: flex; justify-content: flex-end; margin-bottom: 16px; }
+    .summary-table { width: 250px; border: 2px solid #000; border-radius: 0px; background: #fff; }
+    .summary-row { display: flex; justify-content: space-between; padding: 6px 12px; font-size: 11px; border-bottom: 1px solid #000; }
     .summary-row:last-child { border-bottom: none; }
-    .summary-key { color: #64748b; }
-    .summary-val { font-weight: 600; }
-    .summary-total { background: #1e293b; color: #fff; display: flex; justify-content: space-between; padding: 7px 10px; font-size: 12px; font-weight: 700; }
+    .summary-key { font-weight: 700; color: #000; }
+    .summary-val { font-weight: 800; color: #000; }
+    .summary-total { background: #000; color: #fff; display: flex; justify-content: space-between; padding: 8px 12px; font-size: 13px; font-weight: 900; border-top: 2px solid #000; text-transform: uppercase; }
 
     /* ── FOOTER ── */
-    .footer { display: flex; justify-content: space-between; align-items: flex-end; border-top: 2px dashed #e2e8f0; padding-top: 10px; }
-    .footer-note { font-size: 8.5px; color: #94a3b8; max-width: 55%; line-height: 1.6; }
-    .footer-note strong { color: #64748b; display: block; margin-bottom: 2px; font-size: 9px; }
+    .footer { display: flex; justify-content: space-between; align-items: flex-end; border-top: 3px solid #000; padding-top: 12px; }
+    .footer-note { font-size: 10px; font-weight: 600; color: #000; max-width: 60%; line-height: 1.6; }
+    .footer-note strong { font-weight: 800; display: block; margin-bottom: 4px; font-size: 11px; text-transform: uppercase; }
     .qr-block { text-align: center; }
-    .qr-label { font-size: 7.5px; color: #94a3b8; margin-top: 4px; font-family: monospace; }
+    .qr-label { font-size: 8px; font-weight: 800; color: #000; margin-top: 4px; font-family: monospace; text-transform: uppercase; }
 
     ${thermalOverride}
   </style>
@@ -419,7 +418,7 @@ export default function InteractiveOrdersPage() {
   <!-- HEADER -->
   <div class="header">
     <div class="brand-block">
-      <div class="brand-name">\${defaultShopName}</div>
+      <div class="brand-name">${defaultShopName}</div>
       <div class="brand-tagline">Official Invoice & Packing Slip</div>
     </div>
     <div class="order-block">
@@ -464,7 +463,7 @@ export default function InteractiveOrdersPage() {
   <div class="summary-block">
     <div class="summary-table">
       ${subtotal > 0 ? `<div class="summary-row"><span class="summary-key">Subtotal</span><span class="summary-val">Rs. ${subtotal.toLocaleString()}</span></div>` : ""}
-      ${discount > 0 ? `<div class="summary-row"><span class="summary-key">Discount</span><span class="summary-val" style="color:#dc2626">− Rs. ${discount.toLocaleString()}</span></div>` : ""}
+      ${discount > 0 ? `<div class="summary-row"><span class="summary-key">Discount</span><span class="summary-val">− Rs. ${discount.toLocaleString()}</span></div>` : ""}
       ${shipping > 0 ? `<div class="summary-row"><span class="summary-key">Shipping</span><span class="summary-val">Rs. ${shipping.toLocaleString()}</span></div>` : ""}
       <div class="summary-total"><span>Grand Total</span><span>Rs. ${grandTotal.toLocaleString()}</span></div>
     </div>
@@ -473,8 +472,8 @@ export default function InteractiveOrdersPage() {
   <!-- FOOTER -->
   <div class="footer">
     <div class="footer-note">
-      <strong>Thank you for shopping with \${defaultShopName}!</strong>
-      Please inspect your items upon receipt. Returns &amp; exchanges must be initiated within 7 days of delivery in original, undamaged packaging. Contact us at support@\${defaultShopName.toLowerCase().replace(/\s+/g, '')}.com for any queries.
+      <strong>Thank you for shopping with ${defaultShopName}!</strong>
+      Please inspect your items upon receipt. Returns &amp; exchanges must be initiated within 7 days of delivery in original, undamaged packaging. Contact us at support@${defaultShopName.toLowerCase().replace(/\s+/g, '')}.com for any queries.
     </div>
     <div class="qr-block">
       <canvas id="qrCanvas"></canvas>
