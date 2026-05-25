@@ -145,7 +145,7 @@ export default function InteractiveOrdersPage() {
       // 1. Search filter (Order Number or Customer Name)
       const matchesSearch = searchTerm
         ? order.order_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.user?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+        (order.user?.name || order.User?.name)?.toLowerCase().includes(searchTerm.toLowerCase())
         : true;
 
       // 2. Active Tab (Fulfillment Status)
@@ -156,7 +156,7 @@ export default function InteractiveOrdersPage() {
       // 3. Date Range Filter
       let matchesDate = true;
       if (dateRange.days !== null) {
-        const orderDate = new Date(order.created_at);
+        const orderDate = new Date(order.created_at || order.createdAt);
         const now = new Date();
         const diffTime = Math.abs(now - orderDate);
         const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
@@ -294,8 +294,8 @@ export default function InteractiveOrdersPage() {
     const qrSize = isThermal ? 72 : 88;
 
     const address = order.delivery_address || {};
-    const recipientName = address.full_name || order.user?.name || "Customer";
-    const phone = address.phone || order.user?.phone || "";
+    const recipientName = address.full_name || order.user?.name || order.User?.name || "Customer";
+    const phone = address.phone || order.user?.phone || order.User?.phone || "";
     const addrLines = [
       address.address_line_1,
       address.address_line_2,
@@ -304,9 +304,9 @@ export default function InteractiveOrdersPage() {
       address.country,
     ].filter(Boolean);
 
-    const orderDate = order.created_at ? new Date(order.created_at).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : "N/A";
-    const paymentMethod = (order.payments?.[0]?.payment_method || order.latest_payment?.payment_method || "N/A").replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
-    const paymentStatus = (order.payments?.[0]?.payment_status || order.latest_payment?.payment_status || order.order_status || "Pending").replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+    const orderDate = (order.created_at || order.createdAt) ? new Date(order.created_at || order.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : "N/A";
+    const paymentMethod = (order.payment_method || order.payments?.[0]?.payment_method || order.latest_payment?.payment_method || "N/A").replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+    const paymentStatus = (order.payment_status || order.payments?.[0]?.payment_status || order.latest_payment?.payment_status || order.order_status || "Pending").replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
 
     const items = order.items || [];
     const totalQty = items.reduce((s, i) => s + (i.quantity || 0), 0);
@@ -883,7 +883,7 @@ export default function InteractiveOrdersPage() {
                       #{order.order_number}
                     </td>
                     <td className="p-4 text-sm text-slate-500 dark:text-slate-400">
-                      {new Date(order.created_at).toLocaleDateString("en-US", {
+                      {new Date(order.created_at || order.createdAt).toLocaleDateString("en-US", {
                         month: "short",
                         day: "numeric",
                         year: "numeric",
@@ -893,14 +893,14 @@ export default function InteractiveOrdersPage() {
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden shrink-0">
                           <img
-                            src={getAvatarUrl(order.user)}
+                            src={getAvatarUrl(order.user || order.User)}
                             className="w-full h-full object-cover"
                             alt=""
                           />
                         </div>
                         <div className="flex flex-col">
                           <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-                            {order.user?.name || "Unknown Customer"}
+                            {(order.user?.name || order.User?.name) || "Unknown Customer"}
                           </span>
                         </div>
                       </div>
@@ -911,21 +911,21 @@ export default function InteractiveOrdersPage() {
                     <td className="p-4">
                       <div className="flex items-center gap-2">
                         {(() => {
-                          const method = (order.latest_payment?.payment_method || order.payments?.[0]?.payment_method || "").toLowerCase();
+                          const method = (order.payment_method || order.latest_payment?.payment_method || order.payments?.[0]?.payment_method || "").toLowerCase();
                           if (method.includes("bank")) return <Landmark className="w-3.5 h-3.5 text-blue-500" />;
                           if (method.includes("cash") || method.includes("cod")) return <Banknote className="w-3.5 h-3.5 text-emerald-500" />;
                           return <CardIcon className="w-3.5 h-3.5 text-indigo-500" />;
                         })()}
                         <span className="text-xs font-medium text-slate-600 dark:text-slate-400 capitalize whitespace-nowrap">
-                          {(order.latest_payment?.payment_method || order.payments?.[0]?.payment_method || "N/A").replace(/_/g, " ")}
+                          {(order.payment_method || order.latest_payment?.payment_method || order.payments?.[0]?.payment_method || "N/A").replace(/_/g, " ")}
                         </span>
                       </div>
                     </td>
                     <td className="p-4">
                       <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${getPaymentColor(order.latest_payment?.payment_status)}`}
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${getPaymentColor(order.payment_status || order.latest_payment?.payment_status)}`}
                       >
-                        {order.latest_payment?.payment_status || "N/A"}
+                        {order.payment_status || order.latest_payment?.payment_status || "N/A"}
                       </span>
                     </td>
                     <td className="p-4">
@@ -1101,18 +1101,18 @@ export default function InteractiveOrdersPage() {
                   </div>
                   <div className="flex items-center gap-4 mb-6">
                     <img
-                      src={getAvatarUrl(selectedOrder.user)}
+                      src={getAvatarUrl(selectedOrder.user || selectedOrder.User)}
                       className="w-16 h-16 rounded-2xl object-cover border border-slate-100 dark:border-slate-700"
                     />
                     <div>
                       <h4 className="text-lg font-bold text-slate-900 dark:text-white">
-                        {selectedOrder.user?.name || "Unknown"}
+                        {(selectedOrder.user?.name || selectedOrder.User?.name) || "Unknown"}
                       </h4>
                       <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-1">
-                        <MapPin className="w-3.5 h-3.5" /> {selectedOrder.customer?.city || "Unknown City"}
+                        <MapPin className="w-3.5 h-3.5" /> {selectedOrder.customer?.city || selectedOrder.shipping_address || "Unknown City"}
                       </div>
                       <div className="text-xs font-bold text-slate-400 dark:text-slate-500">
-                        Ph: {selectedOrder.customer?.phone || "N/A"}
+                        Ph: {selectedOrder.customer?.phone || selectedOrder.shipping_phone || "N/A"}
                       </div>
                     </div>
                   </div>
@@ -1126,7 +1126,7 @@ export default function InteractiveOrdersPage() {
                     </h3>
                     <address className="not-italic text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
                       <span className="block text-slate-900 dark:text-white font-bold">
-                        {orderDetails?.delivery_address?.full_name || selectedOrder.user?.name}
+                        {orderDetails?.delivery_address?.full_name || selectedOrder.user?.name || selectedOrder.User?.name}
                       </span>
                       {orderDetails?.delivery_address?.address_line_1}
                       <br />
@@ -1164,17 +1164,17 @@ export default function InteractiveOrdersPage() {
                         </span>
                       </div>
 
-                      {orderDetails?.payments?.[0] && (
+                      {(selectedOrder?.payment_method || orderDetails?.payments?.[0]) && (
                         <div className="mt-4 pt-4 border-t border-dashed border-slate-100 dark:border-slate-700">
                           <p className="text-[10px] font-bold text-slate-400 uppercase mb-2">Payment Details</p>
                           <div className="flex justify-between text-xs">
                             <span className="text-slate-500">Method</span>
-                            <span className="capitalize">{orderDetails.payments[0].payment_method.replace(/_/g, " ")}</span>
+                            <span className="capitalize">{(selectedOrder?.payment_method || orderDetails?.payments?.[0]?.payment_method || "").replace(/_/g, " ")}</span>
                           </div>
-                          {orderDetails.payments[0].transaction_id && (
+                          {(selectedOrder?.transaction_id || orderDetails?.payments?.[0]?.transaction_id) && (
                             <div className="flex justify-between text-xs mt-1">
                               <span className="text-slate-500">Transaction ID</span>
-                              <span className="font-mono">{orderDetails.payments[0].transaction_id}</span>
+                              <span className="font-mono">{selectedOrder?.transaction_id || orderDetails?.payments?.[0]?.transaction_id}</span>
                             </div>
                           )}
                         </div>
