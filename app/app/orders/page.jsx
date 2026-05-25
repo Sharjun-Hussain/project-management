@@ -1198,14 +1198,18 @@ export default function InteractiveOrdersPage() {
                       <div className="divide-y divide-slate-100 dark:divide-slate-700">
                         {orderDetails.items.map((item) => (
                           <div key={item.id} className="p-4 flex gap-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                            <div className="w-16 h-16 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 overflow-hidden shrink-0">
+                            <div className="w-16 h-16 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 overflow-hidden shrink-0 flex items-center justify-center">
+                              {(item.product?.primary_image_path || item.Product?.primary_image_path) ? (
                                 <img
-                                  src={(item.product?.primary_image_path || item.Product?.primary_image_path) 
-                                    ? `${process.env.NEXT_PUBLIC_API_BASE_URL?.replace("/api/v1", "")}/${(item.product?.primary_image_path || item.Product?.primary_image_path)}` 
-                                    : "https://via.placeholder.com/150?text=No+Image"}
+                                  src={`${process.env.NEXT_PUBLIC_API_BASE_URL?.replace("/api/v1", "")}/${(item.product?.primary_image_path || item.Product?.primary_image_path)}`}
                                   className="w-full h-full object-cover"
                                   alt="Product Image"
                                 />
+                              ) : (
+                                <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50/50 dark:bg-slate-800/50 text-slate-300 dark:text-slate-600">
+                                  <Package className="w-6 h-6" strokeWidth={1.5} />
+                                </div>
+                              )}
                             </div>
                             <div className="flex-1 min-w-0">
                               <h4 className="text-sm font-bold text-slate-900 dark:text-white truncate">
