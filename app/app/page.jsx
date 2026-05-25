@@ -1,21 +1,32 @@
 "use client";
 
 import React from "react";
-import {DollarSign,
+import {
+  DollarSign,
   ShoppingBag,
   Users,
   TrendingUp,
+  Globe,
   ArrowUpRight,
   ArrowDownRight,
-  MoreHorizontal, LayoutDashboard} from "lucide-react";
+  MoreHorizontal, 
+  LayoutDashboard
+} from "lucide-react";
 import {
   AreaChart,
   Area,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  Legend,
+  ComposedChart
 } from "recharts";
 import useSWR from "swr";
 import { useSession } from "next-auth/react";
@@ -77,9 +88,13 @@ export default function Dashboard() {
     if (!trendsRes?.data) return [];
     return trendsRes.data.map(item => ({
       name: new Date(item.date).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-      sales: parseFloat(item.total || 0)
+      sales: parseFloat(item.total || 0),
+      orders: parseInt(item.total_orders || 0)
     }));
   }, [trendsRes]);
+
+  const orderDistribution = stats?.order_distribution || [];
+  const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
 
   const kpis = [
     {
@@ -114,6 +129,14 @@ export default function Dashboard() {
       icon: TrendingUp,
       color: "bg-orange-100 text-orange-600",
     },
+    {
+      title: "Store Visits",
+      value: stats?.visits?.total?.toLocaleString() || "0",
+      change: `${stats?.visits?.growth_rate >= 0 ? "+" : ""}${stats?.visits?.growth_rate || 0}%`,
+      trend: stats?.visits?.growth_rate >= 0 ? "up" : "down",
+      icon: Globe,
+      color: "bg-indigo-100 text-indigo-600",
+    },
   ];
 
   if (statsLoading || ordersLoading) {
@@ -142,7 +165,7 @@ export default function Dashboard() {
       </div>
 
       {/* 2. KPI GRID */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         {kpis.map((kpi, idx) => (
           <div
             key={idx}
@@ -176,7 +199,7 @@ export default function Dashboard() {
 
       {/* 3. CHART & RECENT ORDERS SPLIT */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* CHART (2/3 Width) */}
+        {/* REVENUE CHART (2/3 Width) */}
         <div className="lg:col-span-2 bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm">
           <div className="flex justify-between items-center mb-6">
             <h3 className="font-bold text-slate-900 dark:text-white">Revenue Analytics</h3>
@@ -205,51 +228,77 @@ export default function Dashboard() {
                     <stop offset="95%" stopColor="#3B82F6" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  vertical={false}
-                  stroke="#E2E8F0"
-                  className="dark:stroke-slate-700"
-                />
-                <XAxis
-                  dataKey="name"
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fill: "#94A3B8", fontSize: 10 }}
-                  dy={10}
-                />
-                <YAxis
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fill: "#94A3B8", fontSize: 10 }}
-                  tickFormatter={(val) => `Rs. ${val >= 1000 ? (val / 1000).toFixed(1) + 'k' : val}`}
-                />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" className="dark:stroke-slate-700" />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: "#94A3B8", fontSize: 10 }} dy={10} />
+                <YAxis yAxisId="left" axisLine={false} tickLine={false} tick={{ fill: "#94A3B8", fontSize: 10 }} tickFormatter={(val) => `Rs. ${val >= 1000 ? (val / 1000).toFixed(1) + 'k' : val}`} />
                 <Tooltip
-                  contentStyle={{
-                    backgroundColor: "var(--tooltip-bg, #fff)",
-                    borderRadius: "12px",
-                    border: "none",
-                    boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
-                    color: "var(--tooltip-text, #000)",
-                  }}
-                  itemStyle={{ color: "#3B82F6" }}
-                  formatter={(value) => [`Rs. ${value.toLocaleString()}`, "Revenue"]}
+                  contentStyle={{ backgroundColor: "var(--tooltip-bg, #fff)", borderRadius: "12px", border: "none", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)", color: "var(--tooltip-text, #000)" }}
+                  formatter={(value, name) => [name === "sales" ? `Rs. ${value.toLocaleString()}` : value, name === "sales" ? "Revenue" : "Orders"]}
                 />
-                <Area
-                  type="monotone"
-                  dataKey="sales"
-                  stroke="#3B82F6"
-                  strokeWidth={3}
-                  fillOpacity={1}
-                  fill="url(#colorSales)"
-                />
+                <Area yAxisId="left" type="monotone" dataKey="sales" stroke="#3B82F6" strokeWidth={3} fillOpacity={1} fill="url(#colorSales)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         </div>
 
-        {/* RECENT ACTIVITY (1/3 Width) */}
+        {/* ORDER VOLUME CHART (1/3 Width) */}
         <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm flex flex-col">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="font-bold text-slate-900 dark:text-white">Daily Orders</h3>
+          </div>
+          <div className="h-[300px] w-full relative">
+            {trendsLoading && (
+              <div className="absolute inset-0 z-10 bg-white/50 dark:bg-slate-800/50 flex items-center justify-center rounded-xl">
+                <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
+              </div>
+            )}
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={trendsData}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" className="dark:stroke-slate-700" />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: "#94A3B8", fontSize: 10 }} dy={10} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fill: "#94A3B8", fontSize: 10 }} />
+                <Tooltip cursor={{fill: 'transparent'}} contentStyle={{ borderRadius: "12px", border: "none", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }} formatter={(value) => [value, "Orders"]} />
+                <Bar dataKey="orders" fill="#10B981" radius={[4, 4, 0, 0]} barSize={20} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* ORDER STATUS DISTRIBUTION PIE CHART */}
+        <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm flex flex-col lg:col-span-1">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-bold text-slate-900 dark:text-white">Order Status</h3>
+          </div>
+          <div className="flex-1 min-h-[300px] relative">
+            {statsLoading && (
+              <div className="absolute inset-0 z-10 bg-white/50 dark:bg-slate-800/50 flex items-center justify-center rounded-xl">
+                <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
+              </div>
+            )}
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={orderDistribution}
+                  cx="50%"
+                  cy="45%"
+                  innerRadius={60}
+                  outerRadius={80}
+                  paddingAngle={5}
+                  dataKey="value"
+                >
+                  {orderDistribution.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(value) => [value, "Orders"]} contentStyle={{ borderRadius: "12px", border: "none", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }} />
+                <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* RECENT ACTIVITY */}
+        <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm flex flex-col lg:col-span-2">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-bold text-slate-900 dark:text-white">Recent Orders</h3>
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{recentOrders.length} Recent</span>
