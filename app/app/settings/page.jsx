@@ -26,7 +26,7 @@ import {Store,
   RefreshCw,
   ArrowLeftRight,
   Eye,
-  EyeOff, Settings} from "lucide-react";
+  EyeOff, Settings, Trash2, ShieldAlert} from "lucide-react";
 import { useCurrency } from "../context/CurrencyContext";
 import { useGlobalSettings } from "../context/GlobalSettingsContext";
 import { useSession } from "next-auth/react";
@@ -110,6 +110,17 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(false);
   const [sectionSaving, setSectionSaving] = useState({});
   const [isBackingUp, setIsBackingUp] = useState(false);
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [resetModules, setResetModules] = useState({
+    products: false,
+    categories: false,
+    orders: false,
+    customers: false,
+    reviews: false,
+    coupons: false,
+  });
+  const [resetConfirmWord, setResetConfirmWord] = useState("");
+  const [isResetting, setIsResetting] = useState(false);
 
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [selectedAccentColor, setSelectedAccentColor] = useState("indigo");
@@ -500,6 +511,36 @@ export default function SettingsPage() {
       toast.error(error.message || "Failed to download backup.", { id: downloadToastId });
     } finally {
       setIsBackingUp(false);
+    }
+  };
+
+  const handleResetData = async () => {
+    if (!session?.accessToken) return;
+    const selected = Object.entries(resetModules).filter(([_, v]) => v).map(([k]) => k);
+    if (selected.length === 0) return;
+    
+    setIsResetting(true);
+    const toastId = toast.loading("Erasing selected data...");
+    try {
+      const res = await fetch(`${API_BASE_URL}/admin/settings/reset-data`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${session.accessToken}`,
+        },
+        body: JSON.stringify({ modules: selected }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to reset data");
+      
+      toast.success(data.message || "Data erased successfully", { id: toastId });
+      setShowResetModal(false);
+      setResetConfirmWord("");
+      setResetModules({ products: false, categories: false, orders: false, customers: false, reviews: false, coupons: false });
+    } catch (error) {
+      toast.error(error.message, { id: toastId });
+    } finally {
+      setIsResetting(false);
     }
   };
 
@@ -1285,6 +1326,30 @@ export default function SettingsPage() {
                   </button>
                 </div>
               </div>
+
+              {/* 4. RESET DATA */}
+              <div className="mt-10 pt-10 border-t border-rose-100 dark:border-rose-900/30">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 p-6 rounded-2xl bg-rose-50/50 dark:bg-rose-900/10 border border-rose-100 dark:border-rose-900/30">
+                  <div className="flex items-start gap-4">
+                    <div className="p-3 rounded-xl bg-white dark:bg-slate-800 shadow-sm text-rose-600 dark:text-rose-400">
+                      <ShieldAlert className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-slate-900 dark:text-white">Factory Reset</h3>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-md">
+                        Permanently erase specific data modules (e.g. Products, Orders) from the system. This action cannot be undone.
+                      </p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => setShowResetModal(true)}
+                    className="flex items-center justify-center gap-2 px-6 py-3 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-rose-600/20 active:scale-95 whitespace-nowrap"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Reset Data...
+                  </button>
+                </div>
+              </div>
             </div>
           </section>
 
@@ -1542,6 +1607,83 @@ export default function SettingsPage() {
         </div>
       </div>
 
+      {/* RESET DATA MODAL */}
+      {showResetModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={() => !isResetting && setShowResetModal(false)} />
+          <div className="relative bg-white dark:bg-slate-800 w-full max-w-md rounded-2xl shadow-2xl p-6 border border-slate-200 dark:border-slate-700 animate-in zoom-in-95 duration-200">
+            <div className="flex items-center gap-3 text-rose-600 mb-4">
+              <div className="p-2 bg-rose-100 dark:bg-rose-900/30 rounded-lg">
+                <ShieldAlert className="w-6 h-6" />
+              </div>
+              <h2 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">Factory Reset</h2>
+            </div>
+            
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 font-medium">
+              Select the modules you want to permanently erase. <strong className="text-rose-500">This action cannot be undone.</strong>
+            </p>
+            
+            <div className="space-y-3 mb-6 bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
+              {Object.entries({
+                products: "Products, Inventory & Images",
+                categories: "Categories, Subcategories & Brands",
+                orders: "Orders & Order Items",
+                customers: "Customers (Non-Admin)",
+                reviews: "Product Reviews",
+                coupons: "Discount Coupons"
+              }).map(([key, label]) => (
+                <label key={key} className="flex items-center gap-3 cursor-pointer group">
+                  <div className="relative flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={resetModules[key]}
+                      onChange={(e) => setResetModules(prev => ({ ...prev, [key]: e.target.checked }))}
+                      className="peer sr-only"
+                    />
+                    <div className="w-5 h-5 rounded border-2 border-slate-300 dark:border-slate-600 peer-checked:bg-rose-500 peer-checked:border-rose-500 transition-all flex items-center justify-center group-hover:border-rose-400">
+                      <Check className="w-3.5 h-3.5 text-white opacity-0 peer-checked:opacity-100 scale-50 peer-checked:scale-100 transition-all" strokeWidth={3} />
+                    </div>
+                  </div>
+                  <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
+                    {label}
+                  </span>
+                </label>
+              ))}
+            </div>
+            
+            <div className="mb-6">
+              <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                Type <span className="text-rose-500 font-black px-1">RESET</span> to confirm
+              </label>
+              <input
+                type="text"
+                value={resetConfirmWord}
+                onChange={(e) => setResetConfirmWord(e.target.value)}
+                placeholder="RESET"
+                className="w-full bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-center dark:text-white focus:border-rose-500 focus:ring-4 focus:ring-rose-500/10 outline-none transition-all uppercase placeholder-slate-300 dark:placeholder-slate-700"
+              />
+            </div>
+            
+            <div className="flex items-center gap-3 pt-2">
+              <button
+                onClick={() => setShowResetModal(false)}
+                disabled={isResetting}
+                className="flex-1 px-4 py-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-white rounded-xl text-sm font-bold transition-all disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleResetData}
+                disabled={isResetting || resetConfirmWord !== "RESET" || !Object.values(resetModules).some(Boolean)}
+                className="flex-1 px-4 py-3 bg-rose-600 hover:bg-rose-500 disabled:opacity-40 disabled:hover:bg-rose-600 text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-rose-600/20 flex items-center justify-center gap-2"
+              >
+                {isResetting ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                {isResetting ? "Erasing..." : "Erase Data"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
