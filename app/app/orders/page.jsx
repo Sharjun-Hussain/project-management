@@ -3,8 +3,7 @@
 import React, { useState, useRef, useMemo, useEffect } from "react";
 import { gsap } from "gsap";
 import { useGSAP } from "@gsap/react";
-import {
-  Search,
+import {Search,
   Filter,
   Calendar,
   ChevronDown,
@@ -26,8 +25,7 @@ import {
   Send,
   CreditCard,
   RotateCcw,
-  Ban,
-} from "lucide-react";
+  Ban, ShoppingCart} from "lucide-react";
 import useSWR, { mutate as globalMutate } from "swr";
 import { useSession } from "next-auth/react";
 import { fetcher as globalFetcher } from "../../../lib/fetcher";
@@ -655,7 +653,8 @@ export default function InteractiveOrdersPage() {
       {/* 1. HEADER */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="animate-header">
-          <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+          <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
+              <ShoppingCart className="w-8 h-8 text-indigo-600" />
             Orders
           </h1>
           <p className="text-slate-500 dark:text-slate-400 font-medium mt-1">

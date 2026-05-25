@@ -147,7 +147,8 @@ export default function ActivityLogsPage() {
             <div className="p-2 bg-indigo-600 rounded-lg shadow-lg shadow-indigo-600/20">
               <History className="w-5 h-5 text-white" />
             </div>
-            <h1 className="text-3xl font-extrabold tracking-tight">Activity Logs</h1>
+            <h1 className="text-3xl font-extrabold tracking-tight flex items-center gap-3">
+              <History className="w-8 h-8 text-indigo-600" />Activity Logs</h1>
           </div>
           <p className="text-slate-500 dark:text-slate-400 font-medium">
             Monitor system activities and admin actions.

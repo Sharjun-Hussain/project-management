@@ -416,7 +416,8 @@ function CouponsContent() {
         {/* 1. HEADER */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 animate-header">
           <div>
-            <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-2">
+            <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-2 flex items-center gap-3">
+              <Tag className="w-8 h-8 text-indigo-600" />
               Coupons
             </h1>
             <p className="text-slate-500 dark:text-slate-400 font-medium">

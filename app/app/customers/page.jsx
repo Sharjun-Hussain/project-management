@@ -8,8 +8,7 @@ import useSWR from "swr";
 import { fetcher as globalFetcher } from "../../../lib/fetcher";
 import { toast } from "sonner";
 import { useCurrency } from "../context/CurrencyContext";
-import {
-  Search,
+import {Search,
   Filter,
   ChevronDown,
   ChevronLeft,
@@ -28,8 +27,7 @@ import {
   DollarSign,
   Check,
   Trash2,
-  X,
-} from "lucide-react";
+  X, Users} from "lucide-react";
 import { exportToCSV } from "@/app/lib/exportUtils";
 
 // --- THEMED CHECKBOX COMPONENT ---
@@ -331,7 +329,8 @@ export default function CustomersPage() {
       {/* 1. HEADER */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4  mb-8">
         <div className="animate-header">
-          <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+          <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
+              <Users className="w-8 h-8 text-indigo-600" />
             Customers
           </h1>
           <p className="text-slate-500 dark:text-slate-400 font-medium mt-1">

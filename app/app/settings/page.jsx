@@ -3,8 +3,7 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { gsap } from "gsap";
 import { useGSAP } from "@gsap/react";
-import {
-  Store,
+import {Store,
   CreditCard,
   Users,
   Smartphone,
@@ -27,8 +26,7 @@ import {
   RefreshCw,
   ArrowLeftRight,
   Eye,
-  EyeOff,
-} from "lucide-react";
+  EyeOff, Settings} from "lucide-react";
 import { useCurrency } from "../context/CurrencyContext";
 import { useGlobalSettings } from "../context/GlobalSettingsContext";
 import { useSession } from "next-auth/react";
@@ -514,7 +512,8 @@ export default function SettingsPage() {
       {/* 1. PAGE HEADER */}
       <div className="max-w-6xl mx-auto mb-10">
         <div className="animate-header">
-          <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+          <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
+              <Settings className="w-8 h-8 text-indigo-600" />
             Settings
           </h1>
           <p className="text-slate-500 dark:text-slate-400 font-medium mt-1">

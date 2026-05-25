@@ -8,8 +8,7 @@ import { sanitizeHtml } from "../../../lib/utils";
 import { toast } from "sonner";
 import { gsap } from "gsap";
 import { useGSAP } from "@gsap/react";
-import {
-  Search,
+import {Search,
   Plus,
   Edit3,
   Trash2,
@@ -25,8 +24,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ArrowUpDown,
-  Filter,
-} from "lucide-react";
+  Filter, ShieldCheck} from "lucide-react";
 
 export default function RolesPage() {
   const { data: session } = useSession();
@@ -397,7 +395,8 @@ export default function RolesPage() {
       <div className="max-w-7xl mx-auto mb-10">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
           <div className="animate-header">
-            <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-2">
+            <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-2 flex items-center gap-3">
+              <ShieldCheck className="w-8 h-8 text-indigo-600" />
               Roles Management
             </h1>
             <p className="text-slate-500 dark:text-slate-400 font-medium">

@@ -9,8 +9,7 @@ import { getImageUrl } from "../../../lib/utils";
 import { toast } from "sonner";
 import { gsap } from "gsap";
 import { useGSAP } from "@gsap/react";
-import {
-  Search,
+import {Search,
   Plus,
   Filter,
   Edit3,
@@ -30,8 +29,7 @@ import {
   Camera,
   Info,
   ToggleLeft,
-  ToggleRight,
-} from "lucide-react";
+  ToggleRight, Tag} from "lucide-react";
 import { Suspense } from "react";
 import { FormInput, FormTextarea, FormSwitch } from "@/components/forms/reusable-fields";
 
@@ -392,7 +390,8 @@ function BrandContent() {
       <div className="max-w-7xl mx-auto mb-10">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
           <div className="animate-header">
-            <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-2">
+            <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-2 flex items-center gap-3">
+              <Tag className="w-8 h-8 text-indigo-600" />
               Brand Manager
             </h1>
             <p className="text-slate-500 dark:text-slate-400 font-medium">

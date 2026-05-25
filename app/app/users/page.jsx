@@ -8,8 +8,7 @@ import { sanitizeHtml } from "../../../lib/utils";
 import { toast } from "sonner";
 import { gsap } from "gsap";
 import { useGSAP } from "@gsap/react";
-import {
-  Search,
+import {Search,
   Plus,
   Edit3,
   Trash2,
@@ -30,8 +29,7 @@ import {
   Camera,
   Lock,
   Check,
-  Download,
-} from "lucide-react";
+  Download, ShieldCheck} from "lucide-react";
 import { exportToCSV } from "@/app/lib/exportUtils";
 import { User } from "lucide-react";
 
@@ -471,7 +469,8 @@ export default function UsersPage() {
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
           <div className="animate-header">
 
-            <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">
+            <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
+              <ShieldCheck className="w-8 h-8 text-indigo-600" />
               Users
             </h1>
             <p className="text-slate-500 dark:text-slate-400 font-medium mt-2">

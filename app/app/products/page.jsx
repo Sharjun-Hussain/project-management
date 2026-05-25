@@ -1110,7 +1110,8 @@ export default function ProductsPage() {
       <div className="max-w-7xl mx-auto mb-10 p-6 md:p-8 pb-0">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
           <div className="animate-up">
-            <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-2">
+            <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-2 flex items-center gap-3">
+              <Package className="w-8 h-8 text-indigo-600" />
               Products
             </h1>
             <p className="text-slate-500 dark:text-slate-400 font-medium">

@@ -1,15 +1,13 @@
 "use client";
 
 import React from "react";
-import {
-  DollarSign,
+import {DollarSign,
   ShoppingBag,
   Users,
   TrendingUp,
   ArrowUpRight,
   ArrowDownRight,
-  MoreHorizontal,
-} from "lucide-react";
+  MoreHorizontal, LayoutDashboard} from "lucide-react";
 import {
   AreaChart,
   Area,
@@ -131,7 +129,8 @@ export default function Dashboard() {
       {/* 1. HEADER */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Dashboard</h1>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
+              <LayoutDashboard className="w-8 h-8 text-indigo-600" />Dashboard</h1>
           <p className="text-slate-500 dark:text-slate-400 text-sm">
             Welcome back, here's what's happening today.
           </p>
