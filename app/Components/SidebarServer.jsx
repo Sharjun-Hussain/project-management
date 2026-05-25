@@ -53,52 +53,52 @@ const ALL_MENU_GROUPS = [
       { title: "Staff", icon: "ShieldCheck", href: "/app/users", permission: "Admin User Index" },
     ],
   },
-  {
-    label: "Design & Content",
-    items: [
-      {
-        title: "Happy Customers",
-        icon: "Smile",
-        href: "/app/cms/happy-customers",
-        permission: "CMS Index",
-      },
-      {
-        title: "Home Page",
-        icon: "Monitor",
-        href: "#",
-        permission: "CMS Index",
-        submenu: [
-          { title: "Hero Banners", href: "/app/cms/hero" },
-
-          { title: "Promo Banners", href: "/app/cms/featured-sections" },
-          { title: "Promises", href: "/app/cms/promises" },
-          { title: "Product Showcase", href: "/app/cms/product-showcase" },
-          // { title: "Delivery Process", href: "/app/cms/delivery-process" },
-          { title: "FAQs", href: "/app/cms/faqs" },
-          { title: "Header", href: "/app/cms/header" },
-          { title: "Footer", href: "/app/cms/footer" },
-        ],
-      },
-      {
-        title: "Shop Page",
-        icon: "Monitor",
-        href: "#",
-        permission: "CMS Index",
-        submenu: [
-          { title: "Shop Hero", href: "/app/cms/shop" },
-        ],
-      },
-      {
-        title: "Contact Page",
-        icon: "Monitor",
-        href: "#",
-        permission: "CMS Index",
-        submenu: [
-          { title: "Contact Hero", href: "/app/cms/contact" },
-        ],
-      },
-    ],
-  },
+  // {
+  //   label: "Design & Content",
+  //   items: [
+  //     {
+  //       title: "Happy Customers",
+  //       icon: "Smile",
+  //       href: "/app/cms/happy-customers",
+  //       permission: "CMS Index",
+  //     },
+  //     {
+  //       title: "Home Page",
+  //       icon: "Monitor",
+  //       href: "#",
+  //       permission: "CMS Index",
+  //       submenu: [
+  //         { title: "Hero Banners", href: "/app/cms/hero" },
+  // 
+  //         { title: "Promo Banners", href: "/app/cms/featured-sections" },
+  //         { title: "Promises", href: "/app/cms/promises" },
+  //         { title: "Product Showcase", href: "/app/cms/product-showcase" },
+  //         // { title: "Delivery Process", href: "/app/cms/delivery-process" },
+  //         { title: "FAQs", href: "/app/cms/faqs" },
+  //         { title: "Header", href: "/app/cms/header" },
+  //         { title: "Footer", href: "/app/cms/footer" },
+  //       ],
+  //     },
+  //     {
+  //       title: "Shop Page",
+  //       icon: "Monitor",
+  //       href: "#",
+  //       permission: "CMS Index",
+  //       submenu: [
+  //         { title: "Shop Hero", href: "/app/cms/shop" },
+  //       ],
+  //     },
+  //     {
+  //       title: "Contact Page",
+  //       icon: "Monitor",
+  //       href: "#",
+  //       permission: "CMS Index",
+  //       submenu: [
+  //         { title: "Contact Hero", href: "/app/cms/contact" },
+  //       ],
+  //     },
+  //   ],
+  // },
   {
     label: "Administration",
     items: [
