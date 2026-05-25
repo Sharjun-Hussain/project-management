@@ -1108,15 +1108,17 @@ export default function ProductsPage() {
 
       {/* 1. HEADER SECTION */}
       <div className="max-w-7xl mx-auto mb-10 p-6 md:p-8 pb-0">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
           <div className="animate-up">
-            <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-2 flex items-center gap-3">
-              <Package className="w-8 h-8 text-indigo-600" />
-              Products
-            </h1>
-            <p className="text-slate-500 dark:text-slate-400 font-medium">
-              Manage inventory, pricing, and product details.
-            </p>
+            <div className="flex gap-4 items-stretch">
+            <div className="w-14 rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 flex flex-col items-center justify-center shrink-0 border border-indigo-100 dark:border-indigo-800/50 shadow-sm py-2">
+              <Package className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
+            </div>
+            <div className="flex flex-col justify-center py-1">
+              <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-1">Products</h1>
+              <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">Manage inventory, pricing, and product details.</p>
+            </div>
+          </div>
           </div>
           <div className="animate-up flex gap-2">
             <button

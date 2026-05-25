@@ -329,13 +329,15 @@ export default function CustomersPage() {
       {/* 1. HEADER */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4  mb-8">
         <div className="animate-header">
-          <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
-              <Users className="w-8 h-8 text-indigo-600" />
-            Customers
-          </h1>
-          <p className="text-slate-500 dark:text-slate-400 font-medium mt-1">
-            View and manage your customer base.
-          </p>
+          <div className="flex gap-4 items-stretch">
+            <div className="w-14 rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 flex flex-col items-center justify-center shrink-0 border border-indigo-100 dark:border-indigo-800/50 shadow-sm py-2">
+              <Users className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
+            </div>
+            <div className="flex flex-col justify-center py-1">
+              <h1 className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">Customers</h1>
+              <p className="text-sm text-slate-500 dark:text-slate-400 font-medium mt-1">View and manage your customer base.</p>
+            </div>
+          </div>
         </div>
         <div className="animate-header flex gap-2">
           <button

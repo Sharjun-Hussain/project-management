@@ -141,18 +141,17 @@ export default function ActivityLogsPage() {
   return (
     <div ref={containerRef} className="min-h-screen bg-slate-50/50 dark:bg-slate-900 font-sans text-slate-900 dark:text-white px-8 py-6 space-y-6">
       {/* 1. HEADER */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div className="animate-header">
-          <div className="flex items-center gap-3 mb-1">
-            <div className="p-2 bg-indigo-600 rounded-lg shadow-lg shadow-indigo-600/20">
-              <History className="w-5 h-5 text-white" />
+          <div className="flex gap-4 items-stretch">
+            <div className="w-14 rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 flex flex-col items-center justify-center shrink-0 border border-indigo-100 dark:border-indigo-800/50 shadow-sm py-2">
+              <History className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
             </div>
-            <h1 className="text-3xl font-extrabold tracking-tight flex items-center gap-3">
-              <History className="w-8 h-8 text-indigo-600" />Activity Logs</h1>
+            <div className="flex flex-col justify-center py-1">
+              <h1 className="text-2xl font-extrabold tracking-tight">Activity Logs</h1>
+              <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">Monitor system activities and admin actions.</p>
+            </div>
           </div>
-          <p className="text-slate-500 dark:text-slate-400 font-medium">
-            Monitor system activities and admin actions.
-          </p>
         </div>
       </div>
 

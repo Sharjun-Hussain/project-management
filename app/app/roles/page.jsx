@@ -393,15 +393,17 @@ export default function RolesPage() {
     >
       {/* 1. TOP BAR */}
       <div className="max-w-7xl mx-auto mb-10">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
           <div className="animate-header">
-            <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-2 flex items-center gap-3">
-              <ShieldCheck className="w-8 h-8 text-indigo-600" />
-              Roles Management
-            </h1>
-            <p className="text-slate-500 dark:text-slate-400 font-medium">
-              Manage user roles and access levels.
-            </p>
+            <div className="flex gap-4 items-stretch">
+            <div className="w-14 rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 flex flex-col items-center justify-center shrink-0 border border-indigo-100 dark:border-indigo-800/50 shadow-sm py-2">
+              <ShieldCheck className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
+            </div>
+            <div className="flex flex-col justify-center py-1">
+              <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-1">Roles Management</h1>
+              <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">Manage user roles and access levels.</p>
+            </div>
+          </div>
           </div>
 
           <div className="animate-header flex items-center gap-3">

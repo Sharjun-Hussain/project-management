@@ -129,11 +129,15 @@ export default function Dashboard() {
       {/* 1. HEADER */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
-              <LayoutDashboard className="w-8 h-8 text-indigo-600" />Dashboard</h1>
-          <p className="text-slate-500 dark:text-slate-400 text-sm">
-            Welcome back, here's what's happening today.
-          </p>
+          <div className="flex gap-4 items-stretch">
+            <div className="w-14 rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 flex flex-col items-center justify-center shrink-0 border border-indigo-100 dark:border-indigo-800/50 shadow-sm py-2">
+              <LayoutDashboard className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
+            </div>
+            <div className="flex flex-col justify-center py-1">
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Dashboard</h1>
+              <p className="text-slate-500 dark:text-slate-400 text-sm">Welcome back, here's what's happening today.</p>
+            </div>
+          </div>
         </div>
       </div>
 
