@@ -412,8 +412,8 @@ export default function SidebarClient({ menuGroups, initialCollapsed, session, t
           ))}
         </div>
 
-        {/* 3. USER FOOTER & THEME TOGGLE */}
-        <div className={`p-3 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shrink-0 ${isCollapsed ? '' : 'sticky bottom-0 z-10'}`}>
+        {/* 3. USER FOOTER */}
+        <div className={`p-3 bg-white dark:bg-slate-900 shrink-0 ${isCollapsed ? '' : 'sticky bottom-0 z-10'}`}>
           <div
             onMouseEnter={(e) => showTooltip(e, session?.user?.name || "Admin User")}
             onMouseLeave={hideTooltip}
