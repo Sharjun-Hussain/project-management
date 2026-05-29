@@ -1,4 +1,5 @@
 import React from "react";
+import Image from "next/image";
 import { ShieldCheck } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
 
@@ -32,9 +33,11 @@ const AuthLayout = ({
         <div className="relative z-10 flex flex-col justify-between h-full">
           {/* Header content ... */}
           <div className="animate-slide-up flex items-center gap-4 text-2xl font-bold tracking-tight">
-            <img 
-              src={logoUrl || "/favicon.ico"} 
+            <Image 
+              src="/logo.png" 
               alt={dashboardTitle || defaultShopName} 
+              width={64}
+              height={64}
               className="w-16 h-16 object-contain rounded-xl shadow-md border border-border bg-white dark:bg-transparent animate-in zoom-in duration-300" 
             />
             {dashboardTitle || defaultShopName}
