@@ -306,7 +306,11 @@ export default function SidebarClient({ menuGroups, initialCollapsed, session, t
                     item.submenu.some((sub) => sub.href === pathname);
 
                   return (
-                    <div key={index} className={isCollapsed ? "px-2" : ""}>
+                    <div 
+                      key={index} 
+                      className={`${isCollapsed ? "px-2" : ""} animate-in fade-in slide-in-from-left-2 duration-300`}
+                      style={{ animationFillMode: "backwards", animationDelay: `${(gIdx * 4 + index) * 50}ms` }}
+                    >
                       {/* Main Item */}
                       {hasSubmenu ? (
                         <button
