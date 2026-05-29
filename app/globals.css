@@ -208,4 +208,13 @@
       transform: translateY(0);
     }
   }
+
+  /* Disable all animations on mobile devices */
+  @media (max-width: 768px) {
+    *, ::before, ::after {
+      animation-duration: 0s !important;
+      animation-delay: 0s !important;
+      animation-name: none !important;
+    }
+  }
 }

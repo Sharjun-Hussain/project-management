@@ -3,7 +3,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { Menu, ChevronRight, Plus, Box, Layers, Tag, Ticket, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { useTheme } from "next-themes";
+import { Menu, ChevronRight, Plus, Box, Layers, Tag, Ticket, PanelLeftClose, PanelLeftOpen, Sun, Moon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import NextTopLoader from "nextjs-toploader";
 import GlobalSearch from "./GlobalSearch";
@@ -15,6 +16,12 @@ export default function AdminLayoutClient({ children, sidebar, initialCollapsed 
   const [isCollapsed, setIsCollapsed] = useState(initialCollapsed);
   const [quickCreateOpen, setQuickCreateOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Sync with Sidebar events for layout padding
   useEffect(() => {
@@ -153,7 +160,7 @@ export default function AdminLayoutClient({ children, sidebar, initialCollapsed 
                   <Link
                     href="/app/products/new"
                     onClick={() => setQuickCreateOpen(false)}
-                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors animate-in fade-in slide-in-from-bottom-2 duration-200"
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors lg:animate-in lg:fade-in lg:slide-in-from-bottom-2 lg:duration-200"
                     style={{ animationFillMode: "backwards", animationDelay: "50ms" }}
                   >
                     <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shadow-sm transition-transform group-hover:scale-105">
@@ -164,7 +171,7 @@ export default function AdminLayoutClient({ children, sidebar, initialCollapsed 
                   <Link
                     href="/app/categories?action=create"
                     onClick={() => setQuickCreateOpen(false)}
-                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors animate-in fade-in slide-in-from-bottom-2 duration-200"
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors lg:animate-in lg:fade-in lg:slide-in-from-bottom-2 lg:duration-200"
                     style={{ animationFillMode: "backwards", animationDelay: "100ms" }}
                   >
                     <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shadow-sm transition-transform group-hover:scale-105">
@@ -175,7 +182,7 @@ export default function AdminLayoutClient({ children, sidebar, initialCollapsed 
                   <Link
                     href="/app/brand?action=create"
                     onClick={() => setQuickCreateOpen(false)}
-                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors animate-in fade-in slide-in-from-bottom-2 duration-200"
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors lg:animate-in lg:fade-in lg:slide-in-from-bottom-2 lg:duration-200"
                     style={{ animationFillMode: "backwards", animationDelay: "150ms" }}
                   >
                     <div className="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center text-amber-600 dark:text-amber-400 shadow-sm transition-transform group-hover:scale-105">
@@ -186,7 +193,7 @@ export default function AdminLayoutClient({ children, sidebar, initialCollapsed 
                   <Link
                     href="/app/coupons?action=create"
                     onClick={() => setQuickCreateOpen(false)}
-                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors animate-in fade-in slide-in-from-bottom-2 duration-200"
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors lg:animate-in lg:fade-in lg:slide-in-from-bottom-2 lg:duration-200"
                     style={{ animationFillMode: "backwards", animationDelay: "200ms" }}
                   >
                     <div className="w-8 h-8 rounded-lg bg-rose-50 dark:bg-rose-900/30 flex items-center justify-center text-rose-600 dark:text-rose-400 shadow-sm transition-transform group-hover:scale-105">
@@ -197,6 +204,17 @@ export default function AdminLayoutClient({ children, sidebar, initialCollapsed 
                 </div>
               )}
             </div>
+
+            {/* Theme Toggle Button */}
+            {mounted && (
+              <button
+                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                className="p-2 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
+              >
+                {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              </button>
+            )}
 
 
           </div>

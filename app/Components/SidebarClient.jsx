@@ -417,7 +417,7 @@ export default function SidebarClient({ menuGroups, initialCollapsed, session, t
           <div
             onMouseEnter={(e) => showTooltip(e, session?.user?.name || "Admin User")}
             onMouseLeave={hideTooltip}
-            className={`group flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 hover:border-indigo-500/30 transition-all cursor-pointer mb-3 ${isCollapsed ? "p-2 justify-center" : "p-3"}`}
+            className={`group flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 hover:border-indigo-500/30 transition-all cursor-pointer ${isCollapsed ? "p-2 justify-center" : "p-3"}`}
           >
             <div className="relative shrink-0 w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center border border-indigo-100 dark:border-indigo-900/50 group-hover:bg-indigo-100 dark:group-hover:bg-indigo-900/50 transition-colors">
               <User className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
@@ -442,22 +442,6 @@ export default function SidebarClient({ menuGroups, initialCollapsed, session, t
               </>
             )}
           </div>
-
-          <button
-            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            onMouseEnter={(e) => showTooltip(e, theme === "dark" ? "Light Mode" : "Dark Mode")}
-            onMouseLeave={hideTooltip}
-            className={`w-full flex items-center justify-center gap-2 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors ${isCollapsed ? "h-10" : ""}`}
-          >
-            <div className="flex items-center gap-2">
-              {theme === "dark" ? (
-                <Moon className="w-4 h-4" />
-              ) : (
-                <Sun className="w-4 h-4" />
-              )}
-              {!isCollapsed && <span className="animate-in fade-in duration-300">{theme === "dark" ? "Dark Mode" : "Light Mode"}</span>}
-            </div>
-          </button>
         </div>
       </aside>
 
