@@ -133,8 +133,43 @@ export default function Dashboard() {
 
   if (statsLoading || ordersLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="w-10 h-10 text-indigo-500 animate-spin" />
+      <div className="space-y-6 px-8 py-6">
+        {/* HEADER SKELETON */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex gap-4 items-stretch">
+            <div className="w-14 h-14 rounded-2xl bg-slate-200 dark:bg-slate-800 animate-pulse shrink-0"></div>
+            <div className="flex flex-col justify-center py-1 space-y-2">
+              <div className="h-6 w-32 bg-slate-200 dark:bg-slate-800 rounded animate-pulse"></div>
+              <div className="h-4 w-48 bg-slate-200 dark:bg-slate-800 rounded animate-pulse"></div>
+            </div>
+          </div>
+        </div>
+
+        {/* KPI GRID SKELETON */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[...Array(4)].map((_, idx) => (
+            <div key={idx} className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm">
+              <div className="flex justify-between items-start mb-4">
+                <div className="w-11 h-11 rounded-xl bg-slate-200 dark:bg-slate-700 animate-pulse"></div>
+                <div className="w-16 h-5 rounded-full bg-slate-200 dark:bg-slate-700 animate-pulse"></div>
+              </div>
+              <div className="h-4 w-24 bg-slate-200 dark:bg-slate-700 rounded animate-pulse mb-3"></div>
+              <div className="h-7 w-32 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></div>
+            </div>
+          ))}
+        </div>
+
+        {/* CHARTS SKELETON */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm h-[400px] animate-pulse flex flex-col">
+            <div className="h-6 w-40 bg-slate-200 dark:bg-slate-700 rounded mb-6"></div>
+            <div className="flex-1 bg-slate-100 dark:bg-slate-700/50 rounded-xl"></div>
+          </div>
+          <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm h-[400px] animate-pulse flex flex-col">
+            <div className="h-6 w-32 bg-slate-200 dark:bg-slate-700 rounded mb-6"></div>
+            <div className="flex-1 bg-slate-100 dark:bg-slate-700/50 rounded-xl"></div>
+          </div>
+        </div>
       </div>
     );
   }
