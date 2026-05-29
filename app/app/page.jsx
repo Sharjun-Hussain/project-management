@@ -129,14 +129,6 @@ export default function Dashboard() {
       icon: TrendingUp,
       color: "bg-orange-100 text-orange-600",
     },
-    {
-      title: "Store Visits",
-      value: stats?.visits?.total?.toLocaleString() || "0",
-      change: `${stats?.visits?.growth_rate >= 0 ? "+" : ""}${stats?.visits?.growth_rate || 0}%`,
-      trend: stats?.visits?.growth_rate >= 0 ? "up" : "down",
-      icon: Globe,
-      color: "bg-indigo-100 text-indigo-600",
-    },
   ];
 
   if (statsLoading || ordersLoading) {
@@ -165,7 +157,7 @@ export default function Dashboard() {
       </div>
 
       {/* 2. KPI GRID */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {kpis.map((kpi, idx) => (
           <div
             key={idx}
