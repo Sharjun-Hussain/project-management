@@ -153,9 +153,10 @@ export default function AdminLayoutClient({ children, sidebar, initialCollapsed 
                   <Link
                     href="/app/products/new"
                     onClick={() => setQuickCreateOpen(false)}
-                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors animate-in fade-in slide-in-from-bottom-2 duration-200"
+                    style={{ animationFillMode: "backwards", animationDelay: "50ms" }}
                   >
-                    <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+                    <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shadow-sm transition-transform group-hover:scale-105">
                       <Box className="w-4 h-4" />
                     </div>
                     <span className="font-semibold">Product</span>
@@ -163,9 +164,10 @@ export default function AdminLayoutClient({ children, sidebar, initialCollapsed 
                   <Link
                     href="/app/categories?action=create"
                     onClick={() => setQuickCreateOpen(false)}
-                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors animate-in fade-in slide-in-from-bottom-2 duration-200"
+                    style={{ animationFillMode: "backwards", animationDelay: "100ms" }}
                   >
-                    <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shadow-sm transition-transform group-hover:scale-105">
                       <Layers className="w-4 h-4" />
                     </div>
                     <span className="font-semibold">Category</span>
@@ -173,9 +175,10 @@ export default function AdminLayoutClient({ children, sidebar, initialCollapsed 
                   <Link
                     href="/app/brand?action=create"
                     onClick={() => setQuickCreateOpen(false)}
-                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors animate-in fade-in slide-in-from-bottom-2 duration-200"
+                    style={{ animationFillMode: "backwards", animationDelay: "150ms" }}
                   >
-                    <div className="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center text-amber-600 dark:text-amber-400">
+                    <div className="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center text-amber-600 dark:text-amber-400 shadow-sm transition-transform group-hover:scale-105">
                       <Tag className="w-4 h-4" />
                     </div>
                     <span className="font-semibold">Brand</span>
@@ -183,9 +186,10 @@ export default function AdminLayoutClient({ children, sidebar, initialCollapsed 
                   <Link
                     href="/app/coupons?action=create"
                     onClick={() => setQuickCreateOpen(false)}
-                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors animate-in fade-in slide-in-from-bottom-2 duration-200"
+                    style={{ animationFillMode: "backwards", animationDelay: "200ms" }}
                   >
-                    <div className="w-8 h-8 rounded-lg bg-rose-50 dark:bg-rose-900/30 flex items-center justify-center text-rose-600 dark:text-rose-400">
+                    <div className="w-8 h-8 rounded-lg bg-rose-50 dark:bg-rose-900/30 flex items-center justify-center text-rose-600 dark:text-rose-400 shadow-sm transition-transform group-hover:scale-105">
                       <Ticket className="w-4 h-4" />
                     </div>
                     <span className="font-semibold">Offer / Coupon</span>
