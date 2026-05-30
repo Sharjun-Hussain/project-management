@@ -26,7 +26,7 @@ const securityHeaders = [
   },
   {
     key: 'Content-Security-Policy',
-    value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' http://localhost:5000 https://api.foreignemporium.lk; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data: http://localhost:5000 http://127.0.0.1:5000 https://api.foreignemporium.lk https://i.pravatar.cc https://ui-avatars.com; font-src 'self' data:; connect-src 'self' http://localhost:5000 http://127.0.0.1:5000 https://api.foreignemporium.lk;",
+    value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' http://localhost:5000 https://api.foreignemporium.lk; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data: http://localhost:5000 http://127.0.0.1:5000 https://api.foreignemporium.lk https://i.pravatar.cc https://ui-avatars.com https://lh3.googleusercontent.com; font-src 'self' data:; connect-src 'self' http://localhost:5000 http://127.0.0.1:5000 https://api.foreignemporium.lk;",
   },
 ];
 
@@ -39,6 +39,26 @@ const nextConfig = {
         headers: securityHeaders,
       },
     ];
+  },
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'api.foreignemporium.lk',
+      },
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'ui-avatars.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'i.pravatar.cc',
+      }
+    ],
   },
 };
 
