@@ -44,9 +44,16 @@ import { exportToCSV } from "@/app/lib/exportUtils";
 const getImageUrl = (path) => {
   if (!path) return null;
   if (path.startsWith("http")) return path;
-  const baseUrl = (process.env.NEXT_PUBLIC_API_BASE_URL || "").replace("/api/v1", "");
-  const cleanPath = path.startsWith('/') ? path.substring(1) : path;
-  return `${baseUrl}/${cleanPath}`;
+  
+  let baseUrl = (process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(/\/api\/v1\/?$/i, "");
+  if (baseUrl.endsWith("/")) {
+    baseUrl = baseUrl.slice(0, -1);
+  }
+  
+  const cleanPath = path.replace(/\\/g, "/").replace(/\/+/g, "/");
+  const finalPath = cleanPath.startsWith("/") ? cleanPath : `/${cleanPath}`;
+  
+  return `${baseUrl}${finalPath}`;
 };
 
 // --- HELPER: Price Formatter ---
