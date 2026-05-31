@@ -199,6 +199,8 @@ export default function SettingsPage() {
     koko: false,
   });
 
+  const [bankAccounts, setBankAccounts] = useState([]);
+
   const [integrations, setIntegrations] = useState({
     whatsappNumber: "",
     whatsappEnabled: true,
@@ -260,6 +262,14 @@ export default function SettingsPage() {
           inboundToken: data.pos_inbound_token || "",
           webhookSecret: data.pos_webhook_secret || "",
         });
+
+        if (data.bank_accounts) {
+          try {
+            setBankAccounts(JSON.parse(data.bank_accounts));
+          } catch(e) {
+            console.error(e);
+          }
+        }
 
         // Sync global context fields too
         updateSettings({
@@ -336,10 +346,9 @@ export default function SettingsPage() {
     const handleScroll = () => {
       const sections = [
         "store",
+        "profile",
         "payments",
-        "integrations",
         "data",
-        "smtp",
         "pos",
       ];
 
@@ -572,12 +581,9 @@ export default function SettingsPage() {
             {[
               { id: "store", label: "General Store", icon: Store },
               { id: "profile", label: "Profile Settings", icon: Users },
-              // { id: "payments", label: "Payment Methods", icon: CreditCard },
-              // { id: "notifications", label: "Notifications", icon: AlertCircle },
-              // { id: "integrations", label: "WhatsApp & API", icon: Smartphone },
+              { id: "payments", label: "Payment Methods", icon: CreditCard },
               { id: "data", label: "Import / Export", icon: Database },
               { id: "pos", label: "POS Integration", icon: ArrowLeftRight },
-              // { id: "smtp", label: "SMTP Email", icon: Mail },
             ].map((item) => (
               <button
                 key={item.id}
@@ -1052,16 +1058,15 @@ export default function SettingsPage() {
           */}
 
           {/* B. PAYMENT METHODS */}
-          {/* 
           <section id="payments" className="animate-section scroll-mt-32">
             <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-8">
               <SectionHeader
                 icon={CreditCard}
                 title="Payment Methods"
-                description="Manage COD, Koko, and Card payments."
+                description="Manage COD, and Bank Transfer accounts."
                 colorClass="bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400"
               />
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <div className="flex items-center justify-between p-5 rounded-xl border border-indigo-200 dark:border-indigo-900/50 bg-indigo-50/20 dark:bg-indigo-900/10">
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-white dark:bg-slate-900 rounded-lg border border-slate-100 dark:border-slate-700 flex items-center justify-center shadow-sm text-green-600 dark:text-green-400 font-bold">
@@ -1089,6 +1094,125 @@ export default function SettingsPage() {
                     <div className="w-11 h-6 bg-slate-200 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:bg-emerald-500 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
                   </label>
                 </div>
+
+                <div className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden">
+                  <div className="bg-slate-50 dark:bg-slate-900 p-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
+                    <div>
+                      <h3 className="font-bold text-slate-900 dark:text-white">Bank Accounts</h3>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">Customers can transfer funds directly to these accounts.</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setBankAccounts([...bankAccounts, { id: Date.now().toString(), bank: '', accountName: '', accountNo: '', branch: '', active: true }]);
+                        setHasChanges(true);
+                      }}
+                      className="px-4 py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-bold rounded-lg"
+                    >
+                      + Add Account
+                    </button>
+                  </div>
+                  <div className="p-4 space-y-4">
+                    {bankAccounts.length === 0 && (
+                      <div className="text-center text-slate-500 py-4 text-sm">No bank accounts added yet.</div>
+                    )}
+                    {bankAccounts.map((account, index) => (
+                      <div key={account.id} className="relative p-4 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800">
+                        <div className="absolute top-4 right-4 flex items-center gap-3">
+                          <label className="relative inline-flex items-center cursor-pointer">
+                            <input
+                              type="checkbox"
+                              className="sr-only peer"
+                              checked={account.active}
+                              onChange={(e) => {
+                                const newAccs = [...bankAccounts];
+                                newAccs[index].active = e.target.checked;
+                                setBankAccounts(newAccs);
+                                setHasChanges(true);
+                              }}
+                            />
+                            <div className="w-9 h-5 bg-slate-200 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:bg-emerald-500 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all"></div>
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newAccs = bankAccounts.filter(a => a.id !== account.id);
+                              setBankAccounts(newAccs);
+                              setHasChanges(true);
+                            }}
+                            className="text-red-500 hover:text-red-600"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4 mt-6">
+                          <div>
+                            <label className="text-[10px] font-bold text-slate-500 uppercase">Bank Name</label>
+                            <input
+                              type="text"
+                              value={account.bank}
+                              onChange={(e) => {
+                                const newAccs = [...bankAccounts];
+                                newAccs[index].bank = e.target.value;
+                                setBankAccounts(newAccs);
+                                setHasChanges(true);
+                              }}
+                              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm dark:text-white"
+                              placeholder="e.g. Commercial Bank"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-[10px] font-bold text-slate-500 uppercase">Account Name</label>
+                            <input
+                              type="text"
+                              value={account.accountName}
+                              onChange={(e) => {
+                                const newAccs = [...bankAccounts];
+                                newAccs[index].accountName = e.target.value;
+                                setBankAccounts(newAccs);
+                                setHasChanges(true);
+                              }}
+                              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm dark:text-white"
+                              placeholder="e.g. Foreign Emporium"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-[10px] font-bold text-slate-500 uppercase">Account No</label>
+                            <input
+                              type="text"
+                              value={account.accountNo}
+                              onChange={(e) => {
+                                const newAccs = [...bankAccounts];
+                                newAccs[index].accountNo = e.target.value;
+                                setBankAccounts(newAccs);
+                                setHasChanges(true);
+                              }}
+                              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm dark:text-white"
+                              placeholder="e.g. 1000 0000 0000"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-[10px] font-bold text-slate-500 uppercase">Branch</label>
+                            <input
+                              type="text"
+                              value={account.branch}
+                              onChange={(e) => {
+                                const newAccs = [...bankAccounts];
+                                newAccs[index].branch = e.target.value;
+                                setBankAccounts(newAccs);
+                                setHasChanges(true);
+                              }}
+                              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm dark:text-white"
+                              placeholder="e.g. Colombo 03"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
               </div>
               <div className="flex justify-end mt-6 pt-5 border-t border-slate-100 dark:border-slate-700">
                 <SaveBtn
@@ -1097,7 +1221,8 @@ export default function SettingsPage() {
                   onClick={() =>
                     saveSection("payments", () => {
                       const fd = new FormData();
-                      fd.append("cod_enabled", payments.cod ? "1" : "0");
+                      fd.append("enable_cod", payments.cod ? "1" : "0");
+                      fd.append("bank_accounts", JSON.stringify(bankAccounts));
                       return fd;
                     })
                   }
@@ -1105,7 +1230,6 @@ export default function SettingsPage() {
               </div>
             </div>
           </section>
-          */}
 
           {/* C. NOTIFICATIONS */}
           {/* 
