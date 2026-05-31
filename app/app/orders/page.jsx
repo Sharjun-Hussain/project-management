@@ -1200,7 +1200,7 @@ export default function InteractiveOrdersPage() {
                             <div className="w-16 h-16 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 overflow-hidden shrink-0 flex items-center justify-center">
                               {(item.product?.primary_image_path || item.Product?.primary_image_path) ? (
                                 <img
-                                  src={`${process.env.NEXT_PUBLIC_API_BASE_URL?.replace("/api/v1", "")}/${(item.product?.primary_image_path || item.Product?.primary_image_path)}`}
+                                  src={`${process.env.NEXT_PUBLIC_API_BASE_URL?.replace("/api/v1", "")}/${(item.product?.primary_image_path || item.Product?.primary_image_path).replace(/^\/+/, '')}`}
                                   className="w-full h-full object-cover"
                                   alt="Product Image"
                                 />
