@@ -32,6 +32,7 @@ import { fetcher as globalFetcher } from "../../../lib/fetcher";
 import { getImageUrl } from "../../../lib/utils";
 import { toast } from "sonner";
 import { useRouter, useSearchParams } from "next/navigation";
+import Image from "next/image";
 import PackingSlip from "../../components/PackingSlip";
 import { exportToCSV } from "@/app/lib/exportUtils";
 
@@ -891,10 +892,12 @@ export default function InteractiveOrdersPage() {
                     <td className="p-4">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden shrink-0">
-                          <img
+                          <Image
                             src={getAvatarUrl(order.user || order.User)}
+                            width={32}
+                            height={32}
                             className="w-full h-full object-cover"
-                            alt=""
+                            alt="Customer Avatar"
                           />
                         </div>
                         <div className="flex flex-col">
@@ -1099,9 +1102,12 @@ export default function InteractiveOrdersPage() {
                     </h3>
                   </div>
                   <div className="flex items-center gap-4 mb-6">
-                    <img
+                    <Image
                       src={getAvatarUrl(selectedOrder.user || selectedOrder.User)}
+                      width={64}
+                      height={64}
                       className="w-16 h-16 rounded-2xl object-cover border border-slate-100 dark:border-slate-700"
+                      alt="Customer Avatar"
                     />
                     <div>
                       <h4 className="text-lg font-bold text-slate-900 dark:text-white">
@@ -1199,8 +1205,10 @@ export default function InteractiveOrdersPage() {
                           <div key={item.id} className="p-4 flex gap-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
                             <div className="w-16 h-16 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 overflow-hidden shrink-0 flex items-center justify-center">
                               {(item.product?.primary_image_path || item.Product?.primary_image_path) ? (
-                                <img
-                                  src={`${process.env.NEXT_PUBLIC_API_BASE_URL?.replace("/api/v1", "")}/${(item.product?.primary_image_path || item.Product?.primary_image_path).replace(/^\/+/, '')}`}
+                                <Image
+                                  src={`${process.env.NEXT_PUBLIC_API_BASE_URL?.replace("/api/v1", "")}/${(item.product?.primary_image_path || item.Product?.primary_image_path).replace(/^\/+/, "")}`}
+                                  width={64}
+                                  height={64}
                                   className="w-full h-full object-cover"
                                   alt="Product Image"
                                 />
