@@ -169,10 +169,10 @@ export default function HeroManagerPage() {
   }
 
   return (
-    <div className="flex h-screen bg-slate-50 dark:bg-slate-950 overflow-hidden">
+    <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950 relative">
       {/* 1. MAIN PREVIEW AREA */}
-      <div className="flex-1 flex flex-col h-full overflow-y-auto custom-tiny-scrollbar">
-        <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 p-6 flex justify-between items-center sticky top-0 z-10 shrink-0">
+      <div className="flex-1 flex flex-col pb-20">
+        <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 p-6 flex justify-between items-center shrink-0 mb-6">
           <div>
             <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
               Hero Slider Manager
@@ -222,7 +222,7 @@ export default function HeroManagerPage() {
                 </button>
             </div>
 
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {slides.map((item, index) => {
               const displayImage = imagePreviews[item.id] || item.image || "/placeholder-image.png";
               return (
@@ -230,7 +230,7 @@ export default function HeroManagerPage() {
                   key={item.id}
                   onClick={() => setSelectedSlideId(item.id)}
                   className={`
-                    relative group cursor-pointer rounded-2xl overflow-hidden border-2 transition-all duration-200 flex items-center bg-white dark:bg-slate-900 p-4 gap-4
+                    relative group cursor-pointer rounded-2xl overflow-hidden border-2 transition-all duration-200 flex flex-col bg-white dark:bg-slate-900
                     ${
                       selectedSlideId === item.id
                         ? "border-indigo-500 ring-4 ring-indigo-500/20 scale-[0.99]"
@@ -238,8 +238,8 @@ export default function HeroManagerPage() {
                     }
                   `}
                 >
-                    <div className="font-bold text-slate-400 w-8 text-center">{index + 1}</div>
-                    <div className="w-40 h-20 rounded-lg overflow-hidden shrink-0 bg-slate-100 dark:bg-slate-800 relative">
+                    {/* Top Image Section */}
+                    <div className="w-full h-40 bg-slate-100 dark:bg-slate-800 relative border-b border-slate-200 dark:border-slate-800">
                         {displayImage ? (
                             <img
                                 src={displayImage}
@@ -248,24 +248,31 @@ export default function HeroManagerPage() {
                             />
                         ) : (
                             <div className="w-full h-full flex items-center justify-center text-slate-400">
-                                <ImageIcon className="w-6 h-6" />
+                                <ImageIcon className="w-8 h-8" />
                             </div>
                         )}
+                        {/* Slide Number Badge */}
+                        <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-md text-white text-xs font-bold px-2.5 py-1 rounded-md">
+                            Slide {index + 1}
+                        </div>
                     </div>
                   
-                    <div className="flex-1 min-w-0">
-                        <h3 className="font-bold text-slate-900 dark:text-white truncate">
-                            {item.alt || "Untitled Slide"}
-                        </h3>
-                    </div>
+                    {/* Bottom Info Section */}
+                    <div className="p-4 flex items-center justify-between">
+                        <div className="flex-1 min-w-0 pr-4">
+                            <h3 className="font-bold text-slate-900 dark:text-white truncate">
+                                {item.alt || "Untitled Slide"}
+                            </h3>
+                        </div>
 
-                    <button
-                        onClick={(e) => { e.stopPropagation(); handleRemoveSlide(item.id); }}
-                        className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors ml-auto"
-                        title="Remove Slide"
-                    >
-                        <Trash2 className="w-5 h-5" />
-                    </button>
+                        <button
+                            onClick={(e) => { e.stopPropagation(); handleRemoveSlide(item.id); }}
+                            className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors shrink-0"
+                            title="Remove Slide"
+                        >
+                            <Trash2 className="w-5 h-5" />
+                        </button>
+                    </div>
                 </div>
               );
             })}
@@ -284,8 +291,8 @@ export default function HeroManagerPage() {
       <div
         className={`
           w-96 bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 
-          flex flex-col h-full shadow-2xl transition-transform duration-300 ease-in-out z-20 absolute right-0 lg:relative
-          ${selectedSlideId ? "translate-x-0" : "translate-x-full lg:translate-x-0 lg:hidden"}
+          flex flex-col h-screen sticky top-0 shadow-2xl transition-transform duration-300 ease-in-out z-20 right-0 lg:relative
+          ${selectedSlideId ? "translate-x-0 fixed lg:sticky" : "translate-x-full lg:translate-x-0 lg:hidden"}
         `}
       >
         {selectedSlide ? (
