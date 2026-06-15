@@ -13,11 +13,52 @@ import {
   AlertCircle,
   Upload,
   Plus,
-  Trash2
+  Trash2,
+  Loader2
 } from "lucide-react";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
 const STORAGE_BASE = API_BASE?.replace("/api/v1", "");
+
+const SplashLoader = () => (
+  <div className="flex flex-col h-[calc(100vh-100px)] w-full items-center justify-center bg-slate-50 dark:bg-slate-950 relative overflow-hidden animate-in fade-in duration-500">
+    {/* Subtle background ambient glow */}
+    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-indigo-500/5 rounded-full blur-[100px] pointer-events-none"></div>
+
+    <div className="relative flex flex-col items-center justify-center z-10">
+      {/* Creative Geometric Loader */}
+      <div className="relative flex items-center justify-center w-24 h-24 mb-8">
+        {/* Outer slow rotating square */}
+        <div className="absolute inset-0 border-[1.5px] border-indigo-500/20 dark:border-indigo-500/30 rounded-2xl animate-[spin_8s_linear_infinite]"></div>
+        
+        {/* Middle rotating square (reverse) */}
+        <div className="absolute inset-2 border-[1.5px] border-purple-500/30 dark:border-purple-500/40 rounded-2xl animate-[spin_5s_linear_infinite_reverse]"></div>
+        
+        {/* Inner fast ring */}
+        <div className="absolute inset-4 border-[2px] border-transparent border-t-indigo-500 border-r-purple-500 rounded-full animate-spin duration-700"></div>
+
+        {/* Core glowing element */}
+        <div className="absolute h-5 w-5 bg-gradient-to-tr from-indigo-500 to-purple-400 rounded-md shadow-[0_0_20px_rgba(99,102,241,0.6)] animate-pulse rotate-45 flex items-center justify-center">
+          <div className="h-1.5 w-1.5 bg-white rounded-full animate-ping"></div>
+        </div>
+      </div>
+      
+      <div className="flex flex-col items-center">
+        <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white mb-3">Foreign Emporium</h2>
+        <div className="flex flex-col items-center gap-1.5">
+          <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">
+            Initializing Workspace
+          </span>
+          <div className="flex items-center gap-2 mt-1">
+            <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse shadow-[0_0_5px_rgba(99,102,241,0.5)]" style={{ animationDelay: '0ms' }}></div>
+            <div className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse shadow-[0_0_5px_rgba(168,85,247,0.5)]" style={{ animationDelay: '300ms' }}></div>
+            <div className="w-1.5 h-1.5 rounded-full bg-pink-500 animate-pulse shadow-[0_0_5px_rgba(236,72,153,0.5)]" style={{ animationDelay: '600ms' }}></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+);
 
 export default function HeroManagerPage() {
   const { data: session } = useSession();
@@ -158,14 +199,7 @@ export default function HeroManagerPage() {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
-        <div className="text-center">
-          <RefreshCw className="w-8 h-8 text-indigo-600 animate-spin mx-auto mb-3" />
-          <p className="text-slate-600 dark:text-slate-400 font-medium">Loading CMS data…</p>
-        </div>
-      </div>
-    );
+    return <SplashLoader />;
   }
 
   return (
