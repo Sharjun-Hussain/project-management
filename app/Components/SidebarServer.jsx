@@ -56,12 +56,12 @@ const ALL_MENU_GROUPS = [
   {
     label: "Design & Content",
     items: [
-      {
-        title: "Happy Customers",
-        icon: "Smile",
-        href: "/app/cms/happy-customers",
-        permission: "CMS Index",
-      },
+      // {
+      //   title: "Happy Customers",
+      //   icon: "Smile",
+      //   href: "/app/cms/happy-customers",
+      //   permission: "CMS Index",
+      // },
       {
         title: "Home Page",
         icon: "Monitor",
@@ -71,12 +71,12 @@ const ALL_MENU_GROUPS = [
           { title: "Hero Banners", href: "/app/cms/hero" },
 
           { title: "Promo Banners", href: "/app/cms/featured-sections" },
-          { title: "Promises", href: "/app/cms/promises" },
-          { title: "Product Showcase", href: "/app/cms/product-showcase" },
+          // { title: "Promises", href: "/app/cms/promises" },
+          // { title: "Product Showcase", href: "/app/cms/product-showcase" },
           // { title: "Delivery Process", href: "/app/cms/delivery-process" },
-          { title: "FAQs", href: "/app/cms/faqs" },
-          { title: "Header", href: "/app/cms/header" },
-          { title: "Footer", href: "/app/cms/footer" },
+          // { title: "FAQs", href: "/app/cms/faqs" },
+          // { title: "Header", href: "/app/cms/header" },
+          // { title: "Footer", href: "/app/cms/footer" },
         ],
       },
       {
