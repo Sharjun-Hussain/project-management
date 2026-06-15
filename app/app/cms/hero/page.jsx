@@ -171,7 +171,7 @@ export default function HeroManagerPage() {
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-slate-950 overflow-hidden">
       {/* 1. MAIN PREVIEW AREA */}
-      <div className="flex-1 flex flex-col h-full overflow-y-auto">
+      <div className="flex-1 flex flex-col h-full overflow-y-auto custom-tiny-scrollbar">
         <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 p-6 flex justify-between items-center sticky top-0 z-10 shrink-0">
           <div>
             <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
@@ -307,7 +307,7 @@ export default function HeroManagerPage() {
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+            <div className="flex-1 overflow-y-auto custom-tiny-scrollbar p-6 space-y-6">
                 {/* Image — with file upload */}
                 <div className="space-y-3">
                 <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-2">
