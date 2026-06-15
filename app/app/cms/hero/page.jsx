@@ -211,7 +211,7 @@ export default function HeroManagerPage() {
           </div>
         )}
 
-        <div className="p-8 max-w-[1000px] mx-auto w-full">
+        <div className="p-8 w-full">
             <div className="flex justify-between items-center mb-6">
                 <h2 className="text-lg font-bold text-slate-800 dark:text-white">Slides ({slides.length})</h2>
                 <button 
@@ -222,7 +222,7 @@ export default function HeroManagerPage() {
                 </button>
             </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-6">
             {slides.map((item, index) => {
               const displayImage = imagePreviews[item.id] || item.image || "/placeholder-image.png";
               return (
