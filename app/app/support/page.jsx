@@ -32,9 +32,9 @@ export default function SupportTicketsPage() {
   const containerRef = useRef(null);
 
   // --- STATE ---
-  const [support, setSupport Tickets] = useState([]);
+  const [support, setSupportTickets] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedSupport Ticket, setSelectedSupport Ticket] = useState(null);
+  const [selectedSupportTicket, setSelectedSupportTicket] = useState(null);
   const [loading, setLoading] = useState(true);
   const [replyMessage, setReplyMessage] = useState("");
   const [isSendingReply, setIsSendingReply] = useState(false);
@@ -81,7 +81,7 @@ export default function SupportTicketsPage() {
 
   useEffect(() => {
     if (swrData) {
-      setSupport Tickets(swrData.data || []);
+      setSupportTickets(swrData.data || []);
       setCurrentPage(swrData.current_page || 1);
       setLastPage(swrData.last_page || 1);
       setTotalPages(swrData.total || 0);
@@ -144,7 +144,7 @@ export default function SupportTicketsPage() {
   }, [support, loading]);
 
   useGSAP(() => {
-    if (selectedSupport Ticket && drawerRef.current) {
+    if (selectedSupportTicket && drawerRef.current) {
       gsap.fromTo(
         overlayRef.current,
         { opacity: 0 },
@@ -156,13 +156,13 @@ export default function SupportTicketsPage() {
         { x: "0%", duration: 0.5, ease: "power4.out" }
       );
     }
-  }, [selectedSupport Ticket]);
+  }, [selectedSupportTicket]);
 
   // --- HANDLERS ---
   const handleCloseDrawer = () => {
     const tl = gsap.timeline({
       onComplete: () => {
-        setSelectedSupport Ticket(null);
+        setSelectedSupportTicket(null);
         setReplyMessage("");
       }
     });
@@ -182,7 +182,7 @@ export default function SupportTicketsPage() {
     setIsSendingReply(true);
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/contacts/${selectedSupport Ticket.id}/reply`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/contacts/${selectedSupportTicket.id}/reply`,
         {
           method: "POST",
           headers: {
@@ -378,7 +378,7 @@ export default function SupportTicketsPage() {
                   support.map((support_ticket) => (
                     <tr
                       key={support_ticket.id}
-                      onClick={() => setSelectedSupport Ticket(support_ticket)}
+                      onClick={() => setSelectedSupportTicket(support_ticket)}
                       className="support_ticket-row hover:bg-slate-50/80 dark:hover:bg-slate-700/80 transition-colors cursor-pointer group"
                     >
                       <td className="p-4 pl-6">
@@ -490,7 +490,7 @@ export default function SupportTicketsPage() {
       </div>
 
       {/* --- DETAILS DRAWER --- */}
-      {selectedSupport Ticket && (
+      {selectedSupportTicket && (
         <div className="fixed inset-0 z-50 overflow-hidden">
           <div
             ref={overlayRef}
@@ -511,7 +511,7 @@ export default function SupportTicketsPage() {
                   </div>
                   <div>
                     <h2 className="text-lg font-bold text-slate-900 dark:text-white">Message Details</h2>
-                    <p className="text-xs text-slate-500 tracking-tight">Received {formatDate(selectedSupport Ticket.created_at)}</p>
+                    <p className="text-xs text-slate-500 tracking-tight">Received {formatDate(selectedSupportTicket.created_at)}</p>
                   </div>
                 </div>
                 <button
@@ -529,13 +529,13 @@ export default function SupportTicketsPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">From</p>
-                      <p className="text-sm font-bold text-slate-900 dark:text-white">{selectedSupport Ticket.name}</p>
-                      <p className="text-xs text-slate-500">{selectedSupport Ticket.email}</p>
+                      <p className="text-sm font-bold text-slate-900 dark:text-white">{selectedSupportTicket.name}</p>
+                      <p className="text-xs text-slate-500">{selectedSupportTicket.email}</p>
                     </div>
                     <div>
                       <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Status</p>
-                      <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold border capitalize ${getStatusColor(selectedSupport Ticket.status)}`}>
-                        {selectedSupport Ticket.status}
+                      <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold border capitalize ${getStatusColor(selectedSupportTicket.status)}`}>
+                        {selectedSupportTicket.status}
                       </span>
                     </div>
                   </div>
@@ -545,33 +545,33 @@ export default function SupportTicketsPage() {
                 <div>
                   <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3">Subject</h3>
                   <div className="text-lg font-bold text-slate-900 dark:text-white mb-6">
-                    {selectedSupport Ticket.subject}
+                    {selectedSupportTicket.subject}
                   </div>
 
                   <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3">Message</h3>
                   <div className="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl p-6 text-slate-700 dark:text-slate-300 leading-relaxed shadow-sm italic text-sm">
-                    {selectedSupport Ticket.message || "No message content."}
+                    {selectedSupportTicket.message || "No message content."}
                   </div>
                 </div>
 
                 {/* Reply Section */}
-                {selectedSupport Ticket.is_replied ? (
+                {selectedSupportTicket.is_replied ? (
                   <div className="space-y-4">
                     <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Your Reply</h3>
                     <div className="bg-indigo-50/50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-900/30 rounded-2xl p-6">
                       <div className="flex items-center gap-2 mb-3">
                         <div className="w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px] font-bold">
-                          {selectedSupport Ticket.replied_by?.name?.[0] || 'A'}
+                          {selectedSupportTicket.replied_by?.name?.[0] || 'A'}
                         </div>
                         <span className="text-xs font-bold text-indigo-700 dark:text-indigo-400">
-                          {selectedSupport Ticket.replied_by?.name || "Admin"}
+                          {selectedSupportTicket.replied_by?.name || "Admin"}
                         </span>
                         <span className="text-[10px] text-slate-400 ml-auto">
-                          {formatDate(selectedSupport Ticket.replied_at)}
+                          {formatDate(selectedSupportTicket.replied_at)}
                         </span>
                       </div>
                       <div className="text-sm text-slate-700 dark:text-slate-300">
-                        {selectedSupport Ticket.reply_message}
+                        {selectedSupportTicket.reply_message}
                       </div>
                     </div>
                   </div>

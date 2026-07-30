@@ -194,11 +194,11 @@ export default function AlertLogsPage() {
 
   // --- KPI STATS ---
   const stats = useMemo(() => {
-    const allAlert Logs = alertsResponse?.data?.data || [];
-    const avgRating = allAlert Logs.length
-      ? (allAlert Logs.reduce((sum, r) => sum + (r.rating || 0), 0) / allAlert Logs.length).toFixed(1)
+    const allAlertLogs = alertsResponse?.data?.data || [];
+    const avgRating = allAlertLogs.length
+      ? (allAlertLogs.reduce((sum, r) => sum + (r.rating || 0), 0) / allAlertLogs.length).toFixed(1)
       : "—";
-    const pending = (alertsResponse?.data?.total_pending) ?? allAlert Logs.filter((r) => !r.is_approved).length;
+    const pending = (alertsResponse?.data?.total_pending) ?? allAlertLogs.filter((r) => !r.is_approved).length;
     return { total: totalItems, avgRating, pending };
   }, [alertsResponse, totalItems]);
 
