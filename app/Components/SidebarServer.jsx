@@ -29,7 +29,7 @@ const ALL_MENU_GROUPS = [
       },
       { title: "VPS Hosting", icon: "Layers", href: "/app/vps", permission: "Category Index" },
       { title: "Domains", icon: "Globe", href: "/app/domains", permission: "SubCategory Index" },
-      { title: "Purchased Licenses", icon: "Tag", href: "/app/licenses", permission: "Brand Index" },
+      // { title: "Purchased Licenses", icon: "Tag", href: "/app/licenses", permission: "Brand Index" },
     ],
   },
   {
