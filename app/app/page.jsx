@@ -86,11 +86,16 @@ export default function Dashboard() {
     ([url]) => fetcher(url)
   );
 
-  const { data: vpsList, isLoading: vpsLoading } = useSWR(
+  const { data: vpsList, error: vpsError, isLoading: vpsLoading } = useSWR(
     session ? "dashboard-vps" : null,
     async () => {
-      const snap = await getDocs(query(collection(db, "vps"), orderBy("created_at", "desc"), limit(5)));
-      return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      try {
+        const snap = await getDocs(query(collection(db, "vps"), limit(5)));
+        return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      } catch (err) {
+        console.error("Error fetching VPS for dashboard:", err);
+        return [];
+      }
     },
     { revalidateOnFocus: false }
   );
