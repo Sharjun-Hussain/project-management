@@ -7,14 +7,14 @@ import { db } from "@/lib/firebase";
 import { collection, getDocs, doc, deleteDoc, orderBy, query } from "firebase/firestore";
 import { 
   Plus, Search, Briefcase, Trash2, Loader2, Database, Globe, Calendar, DollarSign,
-  LayoutGrid, List
+  LayoutGrid, List, Settings, X, GripVertical
 } from "lucide-react";
-import { updateDoc } from "firebase/firestore";
+import { updateDoc, setDoc } from "firebase/firestore";
 import Link from "next/link";
 
-const STAGES = ["All", "Prototyping", "Development", "Testing", "Active", "Completed", "On Hold"];
+const DEFAULT_STAGES = ["Prototyping", "Development", "Testing", "Active", "Completed", "On Hold"];
 
-export default function ProjectsListPage() {
+export default function ProjectsPage() {
   const router = useRouter();
   const [projects, setProjects] = useState([]);
   const [clients, setClients] = useState({});
@@ -22,10 +22,23 @@ export default function ProjectsListPage() {
   const [search, setSearch] = useState("");
   const [activeStage, setActiveStage] = useState("All");
   const [viewMode, setViewMode] = useState("table"); // "table" or "kanban"
+  
+  // Dynamic Stages State
+  const [stages, setStages] = useState(DEFAULT_STAGES);
+  const [isEditingStages, setIsEditingStages] = useState(false);
+  const [stageForm, setStageForm] = useState(DEFAULT_STAGES);
 
   const fetchData = async () => {
     try {
-      // Fetch Clients for mapping
+      // 1. Fetch Stages Settings
+      const settingsDoc = await getDocs(query(collection(db, "settings")));
+      const projSettings = settingsDoc.docs.find(d => d.id === "projects")?.data();
+      if (projSettings?.pipeline_stages) {
+        setStages(projSettings.pipeline_stages);
+        setStageForm(projSettings.pipeline_stages);
+      }
+
+      // 2. Fetch Clients for mapping
       const clientsSnap = await getDocs(collection(db, "clients"));
       const clientsMap = {};
       clientsSnap.docs.forEach(doc => {
@@ -78,6 +91,21 @@ export default function ProjectsListPage() {
     }
   };
 
+  const handleSaveStages = async () => {
+    try {
+      await setDoc(doc(db, "settings", "projects"), { pipeline_stages: stageForm }, { merge: true });
+      setStages(stageForm);
+      setIsEditingStages(false);
+      toast.success("Pipeline stages updated!");
+    } catch (err) {
+      toast.error("Failed to update stages: " + err.message);
+    }
+  };
+
+  const addStageField = () => setStageForm(prev => [...prev, "New Stage"]);
+  const removeStageField = (idx) => setStageForm(prev => prev.filter((_, i) => i !== idx));
+  const updateStageField = (idx, val) => setStageForm(prev => prev.map((item, i) => i === idx ? val : item));
+
   // Filter by search and stage
   const filtered = projects.filter(p => {
     const matchesSearch = p.name?.toLowerCase().includes(search.toLowerCase()) || 
@@ -86,8 +114,8 @@ export default function ProjectsListPage() {
     return matchesSearch && matchesStage;
   });
 
-  // Calculate counts
-  const stageCounts = STAGES.reduce((acc, stage) => {
+  // Calculate totals per stage
+  const stageCounts = ["All", ...stages].reduce((acc, stage) => {
     acc[stage] = stage === "All" ? projects.length : projects.filter(p => p.status === stage).length;
     return acc;
   }, {});
@@ -128,19 +156,28 @@ export default function ProjectsListPage() {
               className="w-72 pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-[13px] outline-none focus:ring-2 focus:ring-[#2C79F5]/20 focus:border-[#2C79F5] transition-all font-medium"
             />
           </div>
-          <div className="flex gap-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
+          <div className="flex gap-2">
             <button 
-              onClick={() => setViewMode("table")}
-              className={`p-1.5 rounded-md transition-colors ${viewMode === "table" ? "bg-white dark:bg-[#161B27] shadow-sm text-slate-800 dark:text-white" : "text-slate-500 hover:text-slate-800"}`}
+              onClick={() => setIsEditingStages(true)}
+              className="p-2 bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-white rounded-lg transition-colors border border-slate-200 dark:border-slate-700"
+              title="Customize Pipeline Stages"
             >
-              <List className="w-4 h-4" />
+              <Settings className="w-5 h-5" />
             </button>
-            <button 
-              onClick={() => setViewMode("kanban")}
-              className={`p-1.5 rounded-md transition-colors ${viewMode === "kanban" ? "bg-white dark:bg-[#161B27] shadow-sm text-slate-800 dark:text-white" : "text-slate-500 hover:text-slate-800"}`}
-            >
-              <LayoutGrid className="w-4 h-4" />
-            </button>
+            <div className="flex gap-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
+              <button 
+                onClick={() => setViewMode("table")}
+                className={`p-1.5 rounded-md transition-colors ${viewMode === "table" ? "bg-white dark:bg-[#161B27] shadow-sm text-slate-800 dark:text-white" : "text-slate-500 hover:text-slate-800"}`}
+              >
+                <List className="w-4 h-4" />
+              </button>
+              <button 
+                onClick={() => setViewMode("kanban")}
+                className={`p-1.5 rounded-md transition-colors ${viewMode === "kanban" ? "bg-white dark:bg-[#161B27] shadow-sm text-slate-800 dark:text-white" : "text-slate-500 hover:text-slate-800"}`}
+              >
+                <LayoutGrid className="w-4 h-4" />
+              </button>
+            </div>
           </div>
 
           <Link href="/app/projects/new">
@@ -158,7 +195,7 @@ export default function ProjectsListPage() {
           {/* Pipeline Tabs (Only in Table View) */}
           {viewMode === "table" && (
             <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar">
-              {STAGES.map(stage => {
+              {["All", ...stages].map(stage => {
                 const isActive = activeStage === stage;
                 return (
                   <button
@@ -190,7 +227,7 @@ export default function ProjectsListPage() {
                 <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Client</div>
                 <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Status</div>
                 <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Value</div>
-                <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Start Date</div>
+                <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Dates (Start - Delivery)</div>
                 <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider text-right">Actions</div>
               </div>
 
@@ -268,11 +305,15 @@ export default function ProjectsListPage() {
                         </div>
 
                         {/* Date Col */}
-                        <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
-                          <Calendar className="w-3.5 h-3.5 opacity-70" />
-                          <span className="text-[12px] font-medium">
-                            {pr.start_date ? new Date(pr.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : "N/A"}
-                          </span>
+                        <div className="flex flex-col text-slate-600 dark:text-slate-400">
+                          <div className="flex items-center gap-1.5 mb-1 text-[11px] font-medium">
+                            <Calendar className="w-3.5 h-3.5 opacity-70" />
+                            <span>{pr.start_date ? new Date(pr.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : "No Start"}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-[11px] font-semibold text-[#2C79F5]">
+                             <span className="opacity-70">Due:</span> 
+                             <span>{pr.expected_delivery ? new Date(pr.expected_delivery).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : "No Due Date"}</span>
+                          </div>
                         </div>
 
                         {/* Actions Col */}
@@ -299,7 +340,7 @@ export default function ProjectsListPage() {
           ) : (
             // KANBAN VIEW
             <div className="flex overflow-x-auto gap-4 pb-8 items-start h-[calc(100vh-200px)]">
-              {STAGES.filter(s => s !== "All").map(stage => {
+              {stages.map(stage => {
                 const stageProjects = projects.filter(p => (p.status || "Development") === stage && 
                   (p.name?.toLowerCase().includes(search.toLowerCase()) || p.domain_name?.toLowerCase().includes(search.toLowerCase()))
                 );
@@ -338,11 +379,16 @@ export default function ProjectsListPage() {
                               </div>
                             )}
 
-                            <div className="flex items-center justify-between mt-4">
+                            <div className="flex items-center justify-between mt-4 border-t border-slate-100 dark:border-slate-700/50 pt-3">
                               <span className="text-xs font-bold text-[#2C79F5]">Rs {(pr.total_cost || 0).toLocaleString()}</span>
-                              <span className="text-[10px] text-slate-400 font-medium">
-                                {pr.start_date ? new Date(pr.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : "No Date"}
-                              </span>
+                              <div className="flex flex-col items-end">
+                                <span className="text-[10px] text-slate-500 font-medium whitespace-nowrap">
+                                  {pr.start_date ? new Date(pr.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : "No Start"}
+                                </span>
+                                <span className="text-[10px] text-[#2C79F5] font-bold mt-0.5 whitespace-nowrap">
+                                  Due: {pr.expected_delivery ? new Date(pr.expected_delivery).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : "TBD"}
+                                </span>
+                              </div>
                             </div>
                           </div>
                         )
@@ -360,6 +406,38 @@ export default function ProjectsListPage() {
           )}
         </div>
       </div>
+
+      {/* Stage Editor Modal */}
+      {isEditingStages && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+          <div className="bg-white dark:bg-[#161B27] w-full max-w-md rounded-2xl shadow-xl overflow-hidden border border-slate-200 dark:border-slate-800">
+            <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-800">
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white">Customize Pipelines</h2>
+              <button onClick={() => setIsEditingStages(false)} className="text-slate-400 hover:text-slate-600"><X className="w-5 h-5"/></button>
+            </div>
+            <div className="p-5 max-h-[60vh] overflow-y-auto space-y-3">
+               <p className="text-xs text-slate-500 mb-4">Add, rename, or organize your project pipeline stages. Stages are used in both Kanban and Table views.</p>
+               {stageForm.map((s, idx) => (
+                 <div key={idx} className="flex gap-2 items-center">
+                   <div className="p-2 text-slate-300 cursor-move"><GripVertical className="w-4 h-4"/></div>
+                   <input 
+                     value={s} onChange={(e) => updateStageField(idx, e.target.value)} 
+                     className="flex-1 px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-700 dark:text-white outline-none focus:border-[#2C79F5]"
+                   />
+                   <button onClick={() => removeStageField(idx)} className="p-2 text-red-400 hover:bg-red-50 rounded-lg"><Trash2 className="w-4 h-4"/></button>
+                 </div>
+               ))}
+               <button onClick={addStageField} className="w-full mt-2 py-2 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-lg text-xs font-bold text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                 + Add New Stage
+               </button>
+            </div>
+            <div className="p-5 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 flex justify-end gap-3">
+              <button onClick={() => setIsEditingStages(false)} className="px-4 py-2 text-sm font-bold text-slate-500 hover:text-slate-800">Cancel</button>
+              <button onClick={handleSaveStages} className="px-4 py-2 bg-[#2C79F5] hover:bg-[#1a6ae0] text-white text-sm font-bold rounded-lg shadow-sm">Save Stages</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

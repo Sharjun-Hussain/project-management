@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { db } from "@/lib/firebase";
-import { collection, getDocs, addDoc, serverTimestamp } from "firebase/firestore";
+import { collection, getDocs, addDoc, doc, getDoc, serverTimestamp } from "firebase/firestore";
 import { ArrowLeft, Save, Loader2, Database, Globe, Server, Briefcase, FileText, Calendar } from "lucide-react";
 
 export default function CreateProjectPage() {
@@ -18,6 +18,7 @@ export default function CreateProjectPage() {
     status: "Development",
     description: "",
     start_date: "",
+    expected_delivery: "",
     total_cost: "0",
     domain_name: "",
     vps_id: "",
@@ -27,17 +28,31 @@ export default function CreateProjectPage() {
     db_pass: ""
   });
 
+  const [stages, setStages] = useState(["Prototyping", "Development", "Testing", "Active", "Completed", "On Hold"]);
+
   // Load clients across the CRM
   useEffect(() => {
-    const fetchClients = async () => {
+    const fetchDependencies = async () => {
       try {
+        // Fetch Clients
         const snap = await getDocs(collection(db, "clients"));
         setClients(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+
+        // Fetch custom stages
+        const settingsDoc = await getDoc(doc(db, "settings", "projects"));
+        if (settingsDoc.exists() && settingsDoc.data().pipeline_stages) {
+          const custStages = settingsDoc.data().pipeline_stages;
+          setStages(custStages);
+          if (custStages.length > 0) {
+             setFormData(prev => ({ ...prev, status: custStages[0] }));
+          }
+        }
+
       } catch (err) {
-        console.error("Error loading clients", err);
+        console.error("Error loading dependencies", err);
       }
     };
-    fetchClients();
+    fetchDependencies();
   }, []);
 
   const handleChange = (e) => {
@@ -145,13 +160,18 @@ export default function CreateProjectPage() {
                   name="status" value={formData.status} onChange={handleChange}
                   className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm outline-none focus:border-[#2C79F5] focus:ring-2 focus:ring-[#2C79F5]/20"
                 >
-                  <option value="Prototyping">Prototyping</option>
-                  <option value="Development">Development</option>
-                  <option value="Testing">Testing</option>
-                  <option value="Active">Active</option>
-                  <option value="Completed">Completed</option>
-                  <option value="On Hold">On Hold</option>
+                  {stages.map(stage => (
+                    <option key={stage} value={stage}>{stage}</option>
+                  ))}
                 </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Expected Delivery Date</label>
+                <input 
+                  type="date" name="expected_delivery" value={formData.expected_delivery} onChange={handleChange}
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm outline-none focus:border-[#2C79F5] focus:ring-2 focus:ring-[#2C79F5]/20"
+                />
               </div>
 
               <div>

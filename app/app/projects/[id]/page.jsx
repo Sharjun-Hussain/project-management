@@ -229,6 +229,12 @@ export default function ProjectDashboardPage() {
               </h2>
               
               <dl className="space-y-4">
+                {project.expected_delivery && (
+                  <div className="bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800/30 -mx-1 px-3 py-2.5 rounded-xl flex justify-between items-center mb-2">
+                    <dt className="text-[11px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5"/> Expected Delivery</dt>
+                    <dd className="text-[12px] font-bold text-blue-700 dark:text-blue-300 bg-white dark:bg-blue-950 px-2 py-0.5 rounded shadow-xs">{new Date(project.expected_delivery).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</dd>
+                  </div>
+                )}
                 <div>
                   <dt className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Assigned Domain</dt>
                   <dd className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 py-2 rounded-lg text-[13px] font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2 shadow-xs">
