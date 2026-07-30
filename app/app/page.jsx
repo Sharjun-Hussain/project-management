@@ -116,7 +116,7 @@ export default function Dashboard() {
 
   const kpis = [
     {
-      title: "Total Revenue",
+      title: "Total Spend (MTD)",
       value: `Rs. ${stats?.revenue?.total?.toLocaleString() || "0"}`,
       change: `${stats?.revenue?.growth_rate >= 0 ? "+" : ""}${stats?.revenue?.growth_rate || 0}%`,
       trend: stats?.revenue?.growth_rate >= 0 ? "up" : "down",
@@ -124,7 +124,7 @@ export default function Dashboard() {
       color: "bg-green-100 text-green-600",
     },
     {
-      title: "Total Orders",
+      title: "Active Projects",
       value: stats?.orders?.total || "0",
       change: "Lifetime",
       trend: "up",
@@ -132,7 +132,7 @@ export default function Dashboard() {
       color: "bg-blue-100 text-blue-600",
     },
     {
-      title: "New Customers",
+      title: "Managed Clients",
       value: stats?.customers?.new_30_days || "0",
       change: "Last 30 days",
       trend: "up",
@@ -140,7 +140,7 @@ export default function Dashboard() {
       color: "bg-purple-100 text-purple-600",
     },
     {
-      title: "Low Stock Items",
+      title: "Expiring Assets",
       value: stats?.inventory?.low_stock_count || "0",
       change: "Warning",
       trend: "down",
@@ -247,7 +247,7 @@ export default function Dashboard() {
         {/* REVENUE CHART (2/3 Width) */}
         <div className="lg:col-span-2 bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm">
           <div className="flex justify-between items-center mb-6">
-            <h3 className="font-bold text-slate-900 dark:text-white">Revenue Analytics</h3>
+            <h3 className="font-bold text-slate-900 dark:text-white">Spend Analytics</h3>
             <select
               value={revenuePeriod}
               onChange={(e) => setRevenuePeriod(e.target.value)}
@@ -278,7 +278,7 @@ export default function Dashboard() {
                 <YAxis yAxisId="left" axisLine={false} tickLine={false} tick={{ fill: "#94A3B8", fontSize: 10 }} tickFormatter={(val) => `Rs. ${val >= 1000 ? (val / 1000).toFixed(1) + 'k' : val}`} />
                 <Tooltip
                   contentStyle={{ backgroundColor: "var(--tooltip-bg, #fff)", borderRadius: "12px", border: "none", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)", color: "var(--tooltip-text, #000)" }}
-                  formatter={(value, name) => [name === "sales" ? `Rs. ${value.toLocaleString()}` : value, name === "sales" ? "Revenue" : "Orders"]}
+                  formatter={(value, name) => [name === "sales" ? `Rs. ${value.toLocaleString()}` : value, name === "sales" ? "Spend" : "Projects"]}
                 />
                 <Area yAxisId="left" type="monotone" dataKey="sales" stroke="#3B82F6" strokeWidth={3} fillOpacity={1} fill="url(#colorSales)" />
               </AreaChart>
@@ -289,7 +289,7 @@ export default function Dashboard() {
         {/* ORDER VOLUME CHART (1/3 Width) */}
         <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm flex flex-col">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="font-bold text-slate-900 dark:text-white">Daily Orders</h3>
+            <h3 className="font-bold text-slate-900 dark:text-white">Recent Deployments</h3>
           </div>
           <div className="h-[300px] w-full relative">
             {trendsLoading && (
@@ -302,7 +302,7 @@ export default function Dashboard() {
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" className="dark:stroke-slate-700" />
                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: "#94A3B8", fontSize: 10 }} dy={10} />
                 <YAxis axisLine={false} tickLine={false} tick={{ fill: "#94A3B8", fontSize: 10 }} />
-                <Tooltip cursor={{fill: 'transparent'}} contentStyle={{ borderRadius: "12px", border: "none", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }} formatter={(value) => [value, "Orders"]} />
+                <Tooltip cursor={{fill: 'transparent'}} contentStyle={{ borderRadius: "12px", border: "none", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }} formatter={(value) => [value, "Projects"]} />
                 <Bar dataKey="orders" fill="#10B981" radius={[4, 4, 0, 0]} barSize={20} />
               </BarChart>
             </ResponsiveContainer>
@@ -312,7 +312,7 @@ export default function Dashboard() {
         {/* ORDER STATUS DISTRIBUTION PIE CHART */}
         <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm flex flex-col lg:col-span-1">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-bold text-slate-900 dark:text-white">Order Status</h3>
+            <h3 className="font-bold text-slate-900 dark:text-white">Project Status</h3>
           </div>
           <div className="flex-1 min-h-[300px] relative">
             {statsLoading && (
@@ -335,7 +335,7 @@ export default function Dashboard() {
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value) => [value, "Orders"]} contentStyle={{ borderRadius: "12px", border: "none", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }} />
+                <Tooltip formatter={(value) => [value, "Projects"]} contentStyle={{ borderRadius: "12px", border: "none", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }} />
                 <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
               </PieChart>
             </ResponsiveContainer>
@@ -345,8 +345,7 @@ export default function Dashboard() {
         {/* RECENT ACTIVITY */}
         <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm flex flex-col lg:col-span-2">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-bold text-slate-900 dark:text-white">Recent Orders</h3>
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{recentOrders.length} Recent</span>
+            <h3 className="font-bold text-slate-900 dark:text-white">Recent Projects</h3>
           </div>
           <div className="flex-1 overflow-auto">
             <div className="space-y-4">
@@ -393,13 +392,13 @@ export default function Dashboard() {
               ) : (
                 <div className="flex flex-col items-center justify-center py-10 text-center">
                   <Package className="w-10 h-10 text-slate-200 dark:text-slate-700 mb-2" />
-                  <p className="text-sm text-slate-500">No recent orders</p>
+                  <p className="text-sm text-slate-500">No recent projects</p>
                 </div>
               )}
             </div>
           </div>
-          <Link href="/app/orders" className="mt-4 w-full py-2 text-sm font-medium text-center text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors border border-transparent hover:border-blue-100 dark:hover:border-blue-900/30">
-            View All Orders
+          <Link href="/app/projects" className="mt-4 w-full py-2 text-sm font-medium text-center text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors border border-transparent hover:border-blue-100 dark:hover:border-blue-900/30">
+            View All Projects
           </Link>
         </div>
       </div>

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
+import nodemailer from 'nodemailer';
 
 export async function GET(request) {
   // Validate CRON_SECRET to protect the endpoint from unauthorized calls
@@ -105,6 +106,53 @@ export async function GET(request) {
     for (const alert of alertsToCreate) {
       const ref = await addDoc(collection(db, 'system_alerts'), alert);
       savedAlerts.push(ref.id);
+    }
+
+    // --- 4. Send Email Notification if there are alerts ---
+    if (alertsToCreate.length > 0 && process.env.FALLBACK_EMAIL_USER && process.env.FALLBACK_EMAIL_API_KEY) {
+      try {
+        const transporter = nodemailer.createTransport({
+          host: "smtp-relay.brevo.com",
+          port: 587,
+          secure: false, // true for 465, false for other ports
+          auth: {
+            user: process.env.FALLBACK_EMAIL_USER,
+            pass: process.env.FALLBACK_EMAIL_API_KEY,
+          },
+        });
+
+        const htmlList = alertsToCreate.map(alert => {
+          const color = alert.level === 'critical' ? '#dc2626' : alert.level === 'urgent' ? '#ea580c' : '#d97706';
+          return `<li style="margin-bottom: 10px;">
+            <strong style="color: ${color}; text-transform: uppercase;">[${alert.level}]</strong> 
+            <b>${alert.title}</b><br/>
+            <span style="color: #475569;">${alert.message}</span>
+          </li>`;
+        }).join('');
+
+        const mailOptions = {
+          from: `"${process.env.FALLBACK_EMAIL_NAME || 'System Alerts'}" <${process.env.FALLBACK_EMAIL_FROM}>`,
+          to: process.env.FALLBACK_EMAIL_FROM, // Send to yourself
+          subject: `⚠️ [Action Required] ${alertsToCreate.length} Infrastructure Alerts Generated`,
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1e293b;">
+              <h2 style="color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;">Infrastructure Expiration Report</h2>
+              <p>Your automated cron job just scanned the infrastructure and found <b>${alertsToCreate.length}</b> assets that require your attention:</p>
+              <ul style="list-style-type: none; padding-left: 0;">
+                ${htmlList}
+              </ul>
+              <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 20px 0;" />
+              <p style="font-size: 12px; color: #94a3b8;">This is an automated message from your Infrastructure Dashboard. Please log in to manage your domains and servers.</p>
+            </div>
+          `
+        };
+
+        await transporter.sendMail(mailOptions);
+        console.log("Infra alerts email dispatched.");
+      } catch (mailError) {
+        console.error("Failed to send alert email:", mailError);
+        // We do not fail the overall run if just the email fails
+      }
     }
 
     return NextResponse.json({ 
