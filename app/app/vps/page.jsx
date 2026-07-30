@@ -43,6 +43,7 @@ export default function VPSHostingContent() {
 
   const [formData, setFormData] = useState({
     name: "",
+    username: "",
     provider: "",
     ram: "",
     storage: "",
@@ -84,6 +85,7 @@ export default function VPSHostingContent() {
     setFormMode("create");
     setFormData({
       name: "",
+      username: "",
       provider: "",
       ram: "",
       storage: "",
@@ -103,6 +105,7 @@ export default function VPSHostingContent() {
     setSelectedVPS(vps);
     setFormData({
       name: vps.name || "",
+      username: vps.username || "",
       provider: vps.provider || "",
       ram: vps.ram || "",
       storage: vps.storage || "",
@@ -400,13 +403,18 @@ export default function VPSHostingContent() {
                
                <div className="grid grid-cols-2 gap-4">
                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Provider</label>
-                    <input name="provider" value={formData.provider} onChange={handleChange} placeholder="e.g. AWS, Contabo" className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm outline-none focus:border-[#2C79F5]" />
+                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Root / Username</label>
+                    <input name="username" value={formData.username} onChange={handleChange} placeholder="e.g. root" className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-mono outline-none focus:border-[#2C79F5]" />
                  </div>
                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">IP Address</label>
+                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Public IP Address</label>
                     <input name="ip_address" value={formData.ip_address} onChange={handleChange} placeholder="192.168.1.1" className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-mono outline-none focus:border-[#2C79F5]" />
                  </div>
+               </div>
+
+               <div>
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Hosting Provider</label>
+                  <input name="provider" value={formData.provider} onChange={handleChange} placeholder="e.g. AWS, Contabo" className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm outline-none focus:border-[#2C79F5]" />
                </div>
 
                <div className="grid grid-cols-2 gap-4">

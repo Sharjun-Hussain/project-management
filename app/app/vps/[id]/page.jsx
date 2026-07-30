@@ -208,11 +208,19 @@ export default function VPSDashboardPage() {
                     <Globe className="w-3.5 h-3.5 text-[#2C79F5]" /> {vps.provider || "Unassigned Provider"}
                   </dd>
                 </div>
-                <div>
-                  <dt className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Assigned Public IP</dt>
-                  <dd className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 py-2 rounded-lg text-[13px] font-mono text-slate-800 dark:text-slate-200 flex items-center gap-2 shadow-xs">
-                    <Network className="w-3.5 h-3.5 text-indigo-500" /> {vps.ip_address || "No IP Address"}
-                  </dd>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <dt className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Server Username</dt>
+                    <dd className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 py-2 rounded-lg text-[13px] font-mono text-slate-800 dark:text-slate-200 shadow-xs">
+                      {vps.username || "root"}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Assigned Public IP</dt>
+                    <dd className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 py-2 rounded-lg text-[13px] font-mono text-slate-800 dark:text-slate-200 flex items-center gap-2 shadow-xs">
+                      <Network className="w-3.5 h-3.5 text-indigo-500" /> {vps.ip_address || "No IP Address"}
+                    </dd>
+                  </div>
                 </div>
                 <div>
                   <dt className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Utilization</dt>
