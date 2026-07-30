@@ -48,6 +48,10 @@ export default function CreateProjectPage() {
           }
         }
 
+        // Fetch VPS
+        const vpsSnap = await getDocs(collection(db, "vps"));
+        setVpsList(vpsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+
       } catch (err) {
         console.error("Error loading dependencies", err);
       }
@@ -229,7 +233,9 @@ export default function CreateProjectPage() {
                       className="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm outline-none focus:border-[#2C79F5] focus:ring-2 focus:ring-[#2C79F5]/20 appearance-none"
                     >
                       <option value="">None yet (Pending configuration)</option>
-                      {/* Add actual VPS pulling from firestore later */}
+                      {vpsList.map(v => (
+                        <option key={v.id} value={v.id}>{v.name} ({v.provider} • {v.ip_address})</option>
+                      ))}
                     </select>
                   </div>
                 </div>
