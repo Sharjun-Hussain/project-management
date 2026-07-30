@@ -36,8 +36,9 @@ const ALL_MENU_GROUPS = [
     label: "Renewals & Alerts",
     items: [
       { title: "Renewals", icon: "ShoppingCart", href: "/app/renewals", permission: "Order Index" },
-      { title: "Alert Logs", icon: "MessageSquare", href: "/app/alerts", permission: "Review Index" },
+      { title: "Review Alerts", icon: "MessageSquare", href: "/app/alerts", permission: "Review Index" },
       { title: "Support Tickets", icon: "Mail", href: "/app/support", permission: "Contact Index" },
+      { title: "System Alerts", icon: "Bell", href: "/app/system-alerts", permission: "Review Index" },
     ],
   },
   {

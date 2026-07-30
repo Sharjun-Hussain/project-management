@@ -10,7 +10,10 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   MoreHorizontal, 
-  LayoutDashboard
+  LayoutDashboard,
+  Server,
+  HardDrive,
+  Cpu
 } from "lucide-react";
 import {
   AreaChart,
@@ -36,8 +39,9 @@ import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { Package } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
-import { useMemo } from "react";
+import { useState, useMemo } from "react";
+import { db } from "@/lib/firebase";
+import { collection, getDocs, query, orderBy, limit } from "firebase/firestore";
 
 // --- COMPONENTS ---
 
@@ -82,10 +86,19 @@ export default function Dashboard() {
     ([url]) => fetcher(url)
   );
 
+  const { data: vpsList, isLoading: vpsLoading } = useSWR(
+    session ? "dashboard-vps" : null,
+    async () => {
+      const snap = await getDocs(query(collection(db, "vps"), orderBy("created_at", "desc"), limit(5)));
+      return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    },
+    { revalidateOnFocus: false }
+  );
+
   const stats = statsRes?.data || null;
   const recentOrders = ordersRes?.data || [];
   const trendsData = useMemo(() => {
-    if (!trendsRes?.data) return [];
+    if (!trendsRes?.data || !Array.isArray(trendsRes.data)) return [];
     return trendsRes.data.map(item => ({
       name: new Date(item.date).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
       sales: parseFloat(item.total || 0),
@@ -383,6 +396,86 @@ export default function Dashboard() {
           <Link href="/app/orders" className="mt-4 w-full py-2 text-sm font-medium text-center text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors border border-transparent hover:border-blue-100 dark:hover:border-blue-900/30">
             View All Orders
           </Link>
+        </div>
+      </div>
+
+      {/* 4. VPS MONITORING WIDGET */}
+      <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm flex flex-col">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-orange-50 dark:bg-orange-900/40 text-orange-600 dark:text-orange-400 flex items-center justify-center">
+              <Server className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="font-bold text-slate-900 dark:text-white">Active VPS Instances</h3>
+              <p className="text-xs text-slate-500">Monitoring top infrastructure</p>
+            </div>
+          </div>
+          <Link href="/app/vps" className="text-sm font-semibold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400">
+            Manage All
+          </Link>
+        </div>
+
+        <div className="flex-1 overflow-x-auto">
+          {vpsLoading ? (
+            <div className="flex justify-center items-center py-10">
+              <Loader2 className="w-6 h-6 text-indigo-500 animate-spin" />
+            </div>
+          ) : vpsList?.length > 0 ? (
+            <table className="w-full text-left">
+              <thead>
+                <tr className="border-b border-slate-100 dark:border-slate-700 text-xs font-semibold text-slate-400 uppercase">
+                  <th className="pb-3 font-semibold">Instance Name</th>
+                  <th className="pb-3 font-semibold">IP Address</th>
+                  <th className="pb-3 font-semibold">Provider</th>
+                  <th className="pb-3 font-semibold text-center">Status</th>
+                  <th className="pb-3 font-semibold text-right">Renewal Date</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
+                {vpsList.map((vps) => {
+                  const isActive = vps.is_active !== false;
+                  return (
+                    <tr key={vps.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                      <td className="py-3">
+                        <div className="font-semibold text-sm text-slate-900 dark:text-white">{vps.name}</div>
+                        <div className="text-xs text-slate-500 tracking-tight flex items-center gap-2 mt-0.5">
+                           <span className="flex items-center gap-1"><Cpu className="w-3 h-3"/> {vps.ram}</span>
+                           <span className="flex items-center gap-1"><HardDrive className="w-3 h-3"/> {vps.storage}</span>
+                        </div>
+                      </td>
+                      <td className="py-3">
+                        <span className="text-sm font-mono text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-900 px-2 py-1 rounded">
+                          {vps.ip_address || '—'}
+                        </span>
+                      </td>
+                      <td className="py-3 text-sm text-slate-600 dark:text-slate-300 font-medium">
+                        {vps.provider || '—'}
+                      </td>
+                      <td className="py-3 text-center">
+                        <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-bold ${isActive ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30' : 'bg-rose-100 text-rose-700 dark:bg-rose-900/30'}`}>
+                          {isActive ? 'Active' : 'Offline'}
+                        </span>
+                      </td>
+                      <td className="py-3 text-right">
+                        <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                          {vps.next_renewal_date ? new Date(vps.next_renewal_date).toLocaleDateString("en-US", { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
+                        </span>
+                        <div className="text-[10px] text-slate-400 mt-0.5">
+                          {vps.renewal_price ? `Rs. ${vps.renewal_price}` : '—'} / {vps.billing_cycle || 'Mo'}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          ) : (
+            <div className="text-center py-10">
+               <Server className="w-10 h-10 mx-auto text-slate-300 dark:text-slate-600 mb-3" />
+               <p className="text-slate-500 font-medium">No VPS instances configured yet.</p>
+            </div>
+          )}
         </div>
       </div>
     </div>
