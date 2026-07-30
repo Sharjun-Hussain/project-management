@@ -6,8 +6,10 @@ import { toast } from "sonner";
 import { db } from "@/lib/firebase";
 import { collection, getDocs, doc, deleteDoc, orderBy, query } from "firebase/firestore";
 import { 
-  Plus, Search, Briefcase, Trash2, Loader2, Database, Globe, Calendar, DollarSign
+  Plus, Search, Briefcase, Trash2, Loader2, Database, Globe, Calendar, DollarSign,
+  LayoutGrid, List
 } from "lucide-react";
+import { updateDoc } from "firebase/firestore";
 import Link from "next/link";
 
 const STAGES = ["All", "Prototyping", "Development", "Testing", "Active", "Completed", "On Hold"];
@@ -19,6 +21,7 @@ export default function ProjectsListPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [activeStage, setActiveStage] = useState("All");
+  const [viewMode, setViewMode] = useState("table"); // "table" or "kanban"
 
   const fetchData = async () => {
     try {
@@ -54,6 +57,24 @@ export default function ProjectsListPage() {
       fetchData();
     } catch (e) {
       toast.error("Failed to delete project: " + e.message);
+    }
+  };
+
+  const handleDrop = async (e, newStatus) => {
+    e.preventDefault();
+    const projectId = e.dataTransfer.getData("projectId");
+    if (!projectId) return;
+    
+    try {
+      // Optimistic update locally
+      setProjects(prev => prev.map(p => p.id === projectId ? { ...p, status: newStatus } : p));
+      
+      // Update Firestore
+      await updateDoc(doc(db, "projects", projectId), { status: newStatus });
+      toast.success(`Project moved to ${newStatus}`);
+    } catch (err) {
+      toast.error("Failed to move project");
+      fetchData(); // Rollback if fail
     }
   };
 
@@ -107,6 +128,21 @@ export default function ProjectsListPage() {
               className="w-72 pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-[13px] outline-none focus:ring-2 focus:ring-[#2C79F5]/20 focus:border-[#2C79F5] transition-all font-medium"
             />
           </div>
+          <div className="flex gap-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
+            <button 
+              onClick={() => setViewMode("table")}
+              className={`p-1.5 rounded-md transition-colors ${viewMode === "table" ? "bg-white dark:bg-[#161B27] shadow-sm text-slate-800 dark:text-white" : "text-slate-500 hover:text-slate-800"}`}
+            >
+              <List className="w-4 h-4" />
+            </button>
+            <button 
+              onClick={() => setViewMode("kanban")}
+              className={`p-1.5 rounded-md transition-colors ${viewMode === "kanban" ? "bg-white dark:bg-[#161B27] shadow-sm text-slate-800 dark:text-white" : "text-slate-500 hover:text-slate-800"}`}
+            >
+              <LayoutGrid className="w-4 h-4" />
+            </button>
+          </div>
+
           <Link href="/app/projects/new">
             <button className="flex items-center gap-2 px-5 py-2.5 bg-[#2C79F5] text-white text-sm font-bold rounded-lg shadow-sm hover:bg-[#1a6ae0] transition-colors">
               <Plus className="w-4 h-4" /> New Project
@@ -119,145 +155,209 @@ export default function ProjectsListPage() {
       <div className="flex-1 p-8">
         <div className="max-w-[1400px] mx-auto space-y-6">
           
-          {/* Pipeline Tabs */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar">
-            {STAGES.map(stage => {
-              const isActive = activeStage === stage;
-              return (
-                <button
-                  key={stage}
-                  onClick={() => setActiveStage(stage)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-full text-[13px] font-bold transition-all whitespace-nowrap border
-                    ${isActive 
-                      ? "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white shadow-sm" 
-                      : "bg-transparent border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 hover:bg-slate-200/50 dark:hover:bg-slate-800/50"
-                    }`}
-                >
-                  {stage}
-                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${isActive ? 'bg-[#2C79F5]/10 text-[#2C79F5]' : 'bg-slate-200/50 dark:bg-slate-800 text-slate-500'}`}>
-                    {stageCounts[stage] || 0}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+          {/* Pipeline Tabs (Only in Table View) */}
+          {viewMode === "table" && (
+            <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar">
+              {STAGES.map(stage => {
+                const isActive = activeStage === stage;
+                return (
+                  <button
+                    key={stage}
+                    onClick={() => setActiveStage(stage)}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-full text-[13px] font-bold transition-all whitespace-nowrap border
+                      ${isActive 
+                        ? "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white shadow-sm" 
+                        : "bg-transparent border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 hover:bg-slate-200/50 dark:hover:bg-slate-800/50"
+                      }`}
+                  >
+                    {stage}
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${isActive ? 'bg-[#2C79F5]/10 text-[#2C79F5]' : 'bg-slate-200/50 dark:bg-slate-800 text-slate-500'}`}>
+                      {stageCounts[stage] || 0}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
 
           {/* Table Container */}
-          <div className="bg-white dark:bg-[#161B27] rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-            
-            {/* Headers */}
-            <div className="grid grid-cols-[2fr_1.5fr_1fr_1fr_1fr_80px] gap-6 px-6 py-4 bg-slate-50/50 dark:bg-slate-900/30 border-b border-slate-100 dark:border-slate-800">
-              <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Project</div>
-              <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Client</div>
-              <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Status</div>
-              <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Value</div>
-              <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Start Date</div>
-              <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider text-right">Actions</div>
-            </div>
+          {viewMode === "table" ? (
+            <div className="bg-white dark:bg-[#161B27] rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+              
+              {/* Headers */}
+              <div className="grid grid-cols-[2fr_1.5fr_1fr_1fr_1fr_80px] gap-6 px-6 py-4 bg-slate-50/50 dark:bg-slate-900/30 border-b border-slate-100 dark:border-slate-800">
+                <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Project</div>
+                <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Client</div>
+                <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Status</div>
+                <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Value</div>
+                <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Start Date</div>
+                <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider text-right">Actions</div>
+              </div>
 
-            {/* List */}
-            <div className="divide-y divide-slate-100 dark:divide-slate-800/60">
-              {loading ? (
-                <div className="p-16 flex justify-center"><Loader2 className="w-8 h-8 animate-spin text-slate-400"/></div>
-              ) : filtered.length === 0 ? (
-                <div className="p-16 text-center">
-                  <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800/50 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Briefcase className="w-8 h-8 text-slate-300 dark:text-slate-600" />
-                  </div>
-                  <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-1">No projects found</h3>
-                  <p className="text-xs text-slate-500">Try adjusting your filters or search term.</p>
-                </div>
-              ) : (
-                filtered.map((pr) => {
-                  const client = clients[pr.client_id];
-                  
-                  return (
-                    <div 
-                      key={pr.id} 
-                      onClick={() => router.push(`/app/projects/${pr.id}`)}
-                      className="group grid grid-cols-[2fr_1.5fr_1fr_1fr_1fr_80px] gap-6 px-6 py-4 hover:bg-[#F0F5FF] dark:hover:bg-[#1e2740]/80 transition-colors duration-150 items-center cursor-pointer"
-                    >
-                      {/* Project Col */}
-                      <div>
-                        <p className="text-[14px] font-bold text-slate-900 dark:text-white mb-1">{pr.name}</p>
-                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                          {pr.domain_name && (
-                            <span className="flex items-center gap-1 text-[11px] text-slate-500 font-medium">
-                              <Globe className="w-3.5 h-3.5 text-slate-400" /> {pr.domain_name}
-                            </span>
-                          )}
-                          {pr.db_name && (
-                            <span className="flex items-center gap-1 text-[11px] text-slate-500 font-medium">
-                              <Database className="w-3.5 h-3.5 text-slate-400" /> {pr.db_name}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Client Col */}
-                      <div>
-                        {client ? (
-                           <div className="flex items-center gap-2">
-                             <div className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-500 border border-slate-200 dark:border-slate-700">
-                               {client.company_name?.charAt(0) || client.first_name?.charAt(0) || "?"}
-                             </div>
-                             <div>
-                               <p className="text-[13px] font-bold text-slate-700 dark:text-slate-300">{client.company_name || client.first_name}</p>
-                               <p className="text-[10px] text-slate-400">{client.email || 'No email'}</p>
-                             </div>
-                           </div>
-                        ) : (
-                          <span className="text-[12px] font-mono text-slate-400 truncate block w-full">{pr.client_id}</span>
-                        )}
-                      </div>
-
-                      {/* Status Col */}
-                      <div>
-                        <span className={`px-2.5 py-1 rounded-md text-[11px] font-bold border ${getStatusColor(pr.status || "Development")}`}>
-                          {pr.status || "Development"}
-                        </span>
-                      </div>
-
-                      {/* Value Col */}
-                      <div className="flex items-center gap-1.5">
-                        <div className={`w-6 h-6 rounded-full flex items-center justify-center ${pr.total_cost > 0 ? 'bg-emerald-50 dark:bg-emerald-900/20' : 'bg-slate-100 dark:bg-slate-800'}`}>
-                          <DollarSign className={`w-3.5 h-3.5 ${pr.total_cost > 0 ? 'text-emerald-500' : 'text-slate-400'}`} />
-                        </div>
-                        <span className={`text-[13px] font-bold ${pr.total_cost > 0 ? 'text-slate-900 dark:text-white' : 'text-slate-400'}`}>
-                          {pr.total_cost > 0 ? pr.total_cost.toLocaleString() : "Set Price"}
-                        </span>
-                      </div>
-
-                      {/* Date Col */}
-                      <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
-                        <Calendar className="w-3.5 h-3.5 opacity-70" />
-                        <span className="text-[12px] font-medium">
-                          {pr.start_date ? new Date(pr.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : "N/A"}
-                        </span>
-                      </div>
-
-                      {/* Actions Col */}
-                      <div className="flex justify-end items-center">
-                        <button
-                          onClick={(e) => handleDelete(e, pr.id)}
-                          className="p-1.5 rounded-md text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"
-                        >
-                          <Trash2 className="w-4 h-4"/>
-                        </button>
-                      </div>
+              {/* List */}
+              <div className="divide-y divide-slate-100 dark:divide-slate-800/60">
+                {loading ? (
+                  <div className="p-16 flex justify-center"><Loader2 className="w-8 h-8 animate-spin text-slate-400"/></div>
+                ) : filtered.length === 0 ? (
+                  <div className="p-16 text-center">
+                    <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800/50 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Briefcase className="w-8 h-8 text-slate-300 dark:text-slate-600" />
                     </div>
-                  );
-                })
-              )}
-            </div>
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-1">No projects found</h3>
+                    <p className="text-xs text-slate-500">Try adjusting your filters or search term.</p>
+                  </div>
+                ) : (
+                  filtered.map((pr) => {
+                    const client = clients[pr.client_id];
+                    
+                    return (
+                      <div 
+                        key={pr.id} 
+                        onClick={() => router.push(`/app/projects/${pr.id}`)}
+                        className="group grid grid-cols-[2fr_1.5fr_1fr_1fr_1fr_80px] gap-6 px-6 py-4 hover:bg-[#F0F5FF] dark:hover:bg-[#1e2740]/80 transition-colors duration-150 items-center cursor-pointer"
+                      >
+                        {/* Project Col */}
+                        <div>
+                          <p className="text-[14px] font-bold text-slate-900 dark:text-white mb-1">{pr.name}</p>
+                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                            {pr.domain_name && (
+                              <span className="flex items-center gap-1 text-[11px] text-slate-500 font-medium">
+                                <Globe className="w-3.5 h-3.5 text-slate-400" /> {pr.domain_name}
+                              </span>
+                            )}
+                            {pr.db_name && (
+                              <span className="flex items-center gap-1 text-[11px] text-slate-500 font-medium">
+                                <Database className="w-3.5 h-3.5 text-slate-400" /> {pr.db_name}
+                              </span>
+                            )}
+                          </div>
+                        </div>
 
-            {/* Footer */}
-            <div className="px-6 py-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30 flex justify-between items-center text-[11px] text-slate-400 font-semibold">
-               <span>Showing {filtered.length} projects</span>
-               <span>Sorted by: Newest First</span>
-            </div>
+                        {/* Client Col */}
+                        <div>
+                          {client ? (
+                            <div className="flex items-center gap-2">
+                              <div className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-500 border border-slate-200 dark:border-slate-700">
+                                {client.company_name?.charAt(0) || client.first_name?.charAt(0) || "?"}
+                              </div>
+                              <div>
+                                <p className="text-[13px] font-bold text-slate-700 dark:text-slate-300">{client.company_name || client.first_name}</p>
+                                <p className="text-[10px] text-slate-400">{client.email || 'No email'}</p>
+                              </div>
+                            </div>
+                          ) : (
+                            <span className="text-[12px] font-mono text-slate-400 truncate block w-full">{pr.client_id}</span>
+                          )}
+                        </div>
 
-          </div>
+                        {/* Status Col */}
+                        <div>
+                          <span className={`px-2.5 py-1 rounded-md text-[11px] font-bold border ${getStatusColor(pr.status || "Development")}`}>
+                            {pr.status || "Development"}
+                          </span>
+                        </div>
+
+                        {/* Value Col */}
+                        <div className="flex items-center gap-1.5">
+                          <div className={`w-6 h-6 rounded-full flex items-center justify-center ${pr.total_cost > 0 ? 'bg-emerald-50 dark:bg-emerald-900/20' : 'bg-slate-100 dark:bg-slate-800'}`}>
+                            <DollarSign className={`w-3.5 h-3.5 ${pr.total_cost > 0 ? 'text-emerald-500' : 'text-slate-400'}`} />
+                          </div>
+                          <span className={`text-[13px] font-bold ${pr.total_cost > 0 ? 'text-slate-900 dark:text-white' : 'text-slate-400'}`}>
+                            {pr.total_cost > 0 ? pr.total_cost.toLocaleString() : "Set Price"}
+                          </span>
+                        </div>
+
+                        {/* Date Col */}
+                        <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
+                          <Calendar className="w-3.5 h-3.5 opacity-70" />
+                          <span className="text-[12px] font-medium">
+                            {pr.start_date ? new Date(pr.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : "N/A"}
+                          </span>
+                        </div>
+
+                        {/* Actions Col */}
+                        <div className="flex justify-end items-center">
+                          <button
+                            onClick={(e) => handleDelete(e, pr.id)}
+                            className="p-1.5 rounded-md text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all opacity-0 group-hover:opacity-100"
+                          >
+                            <Trash2 className="w-4 h-4"/>
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+
+              {/* Footer */}
+              <div className="px-6 py-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30 flex justify-between items-center text-[11px] text-slate-400 font-semibold">
+                <span>Showing {filtered.length} projects</span>
+                <span>Sorted by: Newest First</span>
+              </div>
+            </div>
+          ) : (
+            // KANBAN VIEW
+            <div className="flex overflow-x-auto gap-4 pb-8 items-start h-[calc(100vh-200px)]">
+              {STAGES.filter(s => s !== "All").map(stage => {
+                const stageProjects = projects.filter(p => (p.status || "Development") === stage && 
+                  (p.name?.toLowerCase().includes(search.toLowerCase()) || p.domain_name?.toLowerCase().includes(search.toLowerCase()))
+                );
+
+                return (
+                  <div 
+                    key={stage}
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={(e) => handleDrop(e, stage)}
+                    className="flex-shrink-0 w-80 flex flex-col bg-slate-50/50 dark:bg-[#161B27]/40 rounded-xl border border-slate-200/60 dark:border-slate-800/60 min-h-[300px]"
+                  >
+                    <div className="p-3 border-b border-slate-200/60 dark:border-slate-800/60 flex items-center justify-between sticky top-0 bg-slate-50 dark:bg-[#161B27] rounded-t-xl z-10">
+                       <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300">{stage}</h3>
+                       <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-white dark:bg-slate-800 text-slate-500 shadow-xs border border-slate-100 dark:border-slate-700">{stageProjects.length}</span>
+                    </div>
+
+                    <div className="p-3 flex-1 overflow-y-auto space-y-3">
+                      {stageProjects.map(pr => {
+                        const client = clients[pr.client_id];
+                        return (
+                          <div 
+                            key={pr.id}
+                            draggable
+                            onDragStart={(e) => e.dataTransfer.setData("projectId", pr.id)}
+                            onClick={() => router.push(`/app/projects/${pr.id}`)}
+                            className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-xs border border-slate-200 dark:border-slate-700 cursor-grab active:cursor-grabbing hover:border-[#2C79F5] transition-colors group"
+                          >
+                            <h4 className="font-bold text-slate-900 dark:text-white text-sm mb-2">{pr.name}</h4>
+                            
+                            {client && (
+                              <div className="flex items-center gap-1.5 mb-3">
+                                <span className="w-5 h-5 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-[9px] font-bold text-slate-500">
+                                  {client.company_name?.charAt(0) || client.first_name?.charAt(0) || "?"}
+                                </span>
+                                <span className="text-xs text-slate-600 dark:text-slate-400 truncate">{client.company_name || client.first_name}</span>
+                              </div>
+                            )}
+
+                            <div className="flex items-center justify-between mt-4">
+                              <span className="text-xs font-bold text-[#2C79F5]">Rs {(pr.total_cost || 0).toLocaleString()}</span>
+                              <span className="text-[10px] text-slate-400 font-medium">
+                                {pr.start_date ? new Date(pr.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : "No Date"}
+                              </span>
+                            </div>
+                          </div>
+                        )
+                      })}
+                      {stageProjects.length === 0 && (
+                        <div className="text-center py-6 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-400 font-medium">
+                          Drop projects here
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
         </div>
       </div>
     </div>
