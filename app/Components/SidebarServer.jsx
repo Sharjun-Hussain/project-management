@@ -15,88 +15,36 @@ const ALL_MENU_GROUPS = [
     ],
   },
   {
-    label: "Product Catalog",
+    label: "Project Management",
     items: [
       {
-        title: "Products",
+        title: "Projects",
         icon: "ShoppingBag",
-        href: "/app/products",
+        href: "/app/projects",
         permission: "Product Index",
         submenu: [
-          { title: "All Products", href: "/app/products" },
-          { title: "Add Product", href: "/app/products/new" },
+          { title: "All Projects", href: "/app/projects" },
+          { title: "Add Project", href: "/app/projects/new" },
         ],
       },
-      { title: "Categories", icon: "Layers", href: "/app/categories", permission: "Category Index" },
-      { title: "Sub Categories", icon: "Layers", href: "/app/sub-categories", permission: "SubCategory Index" },
-      { title: "Brands", icon: "Tag", href: "/app/brand", permission: "Brand Index" },
+      { title: "VPS Hosting", icon: "Layers", href: "/app/vps", permission: "Category Index" },
+      { title: "Domains", icon: "Layers", href: "/app/domains", permission: "SubCategory Index" },
+      { title: "Purchased Licenses", icon: "Tag", href: "/app/licenses", permission: "Brand Index" },
     ],
   },
   {
-    label: "Sales Management",
+    label: "Renewals & Alerts",
     items: [
-      { title: "Orders", icon: "ShoppingCart", href: "/app/orders", permission: "Order Index" },
-      { title: "Reviews", icon: "MessageSquare", href: "/app/reviews", permission: "Review Index" },
-      { title: "Inquiries", icon: "Mail", href: "/app/contacts", permission: "Contact Index" },
+      { title: "Renewals", icon: "ShoppingCart", href: "/app/renewals", permission: "Order Index" },
+      { title: "Alert Logs", icon: "MessageSquare", href: "/app/alerts", permission: "Review Index" },
+      { title: "Support Tickets", icon: "Mail", href: "/app/support", permission: "Contact Index" },
     ],
   },
   {
-    label: "Promotions",
+    label: "Client Management",
     items: [
-      { title: "Coupons", icon: "Tag", href: "/app/coupons", permission: "Coupon Index" },
-    ],
-  },
-  {
-    label: "User Management",
-    items: [
-      { title: "Customers", icon: "Users", href: "/app/customers", permission: "Customer Index" },
-      { title: "Staff", icon: "ShieldCheck", href: "/app/users", permission: "Admin User Index" },
-    ],
-  },
-  {
-    label: "Design & Content",
-    items: [
-      // {
-      //   title: "Happy Customers",
-      //   icon: "Smile",
-      //   href: "/app/cms/happy-customers",
-      //   permission: "CMS Index",
-      // },
-      {
-        title: "Home Page",
-        icon: "Monitor",
-        href: "#",
-        permission: "CMS Index",
-        submenu: [
-          { title: "Hero Banners", href: "/app/cms/hero" },
-
-          { title: "Promo Banners", href: "/app/cms/featured-sections" },
-          // { title: "Promises", href: "/app/cms/promises" },
-          // { title: "Product Showcase", href: "/app/cms/product-showcase" },
-          // { title: "Delivery Process", href: "/app/cms/delivery-process" },
-          // { title: "FAQs", href: "/app/cms/faqs" },
-          // { title: "Header", href: "/app/cms/header" },
-          // { title: "Footer", href: "/app/cms/footer" },
-        ],
-      },
-      {
-        title: "Shop Page",
-        icon: "Monitor",
-        href: "#",
-        permission: "CMS Index",
-        submenu: [
-          { title: "Shop Hero", href: "/app/cms/shop" },
-        ],
-      },
-      {
-        title: "Contact Page",
-        icon: "Monitor",
-        href: "#",
-        permission: "CMS Index",
-        submenu: [
-          { title: "Contact Hero", href: "/app/cms/contact" },
-        ],
-      },
+      { title: "Clients", icon: "Users", href: "/app/clients", permission: "Customer Index" },
+      // { title: "Staff", icon: "ShieldCheck", href: "/app/users", permission: "Admin User Index" },
     ],
   },
   {
@@ -104,8 +52,8 @@ const ALL_MENU_GROUPS = [
     items: [
       { title: "Settings", icon: "Settings", href: "/app/settings", permission: "Setting Index" },
       { title: "Activity Logs", icon: "History", href: "/app/logs", permission: "Activity Log Index" },
-      { title: "Roles", icon: "ShieldCheck", href: "/app/roles", permission: "Role Index" },
-      { title: "Permissions", icon: "Lock", href: "/app/permissions", permission: "Permission Index" },
+      // { title: "Roles", icon: "ShieldCheck", href: "/app/roles", permission: "Role Index" },
+      // { title: "Permissions", icon: "Lock", href: "/app/permissions", permission: "Permission Index" },
     ],
   },
 ];
