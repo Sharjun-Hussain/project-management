@@ -1,1720 +1,263 @@
 "use client";
 
-import { useRef, useState, useEffect, useMemo } from "react";
-import { useSession, signOut } from "next-auth/react";
-import { useDebounce } from "../hooks/useDebounce";
-import { gsap } from "gsap";
-import { useGSAP } from "@gsap/react";
-import useSWR, { useSWRConfig } from "swr";
-import { fetcher as globalFetcher } from "../../../lib/fetcher";
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import {
-  Search,
-  Plus,
-  Filter,
-  LayoutGrid,
-  List as ListIcon,
-  Package,
-  AlertTriangle,
-  XCircle,
-  Clock,
-  X,
-  MoreHorizontal,
-  CheckCircle2,
-  DollarSign,
-  TrendingUp,
-  ShoppingCart,
-  ArrowRight,
-  Loader2,
-  Image as ImageIcon,
-  Layers,
-  Download,
-  Tag,
-  Box,
-  ChevronLeft,
-  ChevronRight,
-  Info,
+import { db } from "@/lib/firebase";
+import { collection, getDocs, doc, deleteDoc, orderBy, query } from "firebase/firestore";
+import { 
+  Plus, Search, Briefcase, Trash2, Loader2, Database, Globe, Calendar, DollarSign
 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Trash2, Pencil } from "lucide-react";
-import { exportToCSV } from "@/app/lib/exportUtils";
 
-// --- HELPER: Image URL ---
-const getImageUrl = (path) => {
-  if (!path) return null;
-  if (path.startsWith("http")) return path;
-  
-  let baseUrl = (process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(/\/api\/v1\/?$/i, "");
-  if (baseUrl.endsWith("/")) {
-    baseUrl = baseUrl.slice(0, -1);
-  }
-  
-  const cleanPath = path.replace(/\\/g, "/").replace(/\/+/g, "/");
-  const finalPath = cleanPath.startsWith("/") ? cleanPath : `/${cleanPath}`;
-  
-  return `${baseUrl}${finalPath}`;
-};
+const STAGES = ["All", "Prototyping", "Development", "Testing", "Active", "Completed", "On Hold"];
 
-// --- HELPER: Price Formatter ---
-const formatPrice = (price) => {
-  return parseFloat(price).toLocaleString('en-US', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  });
-};
+export default function ProjectsListPage() {
+  const router = useRouter();
+  const [projects, setProjects] = useState([]);
+  const [clients, setClients] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [activeStage, setActiveStage] = useState("All");
 
-// --- COMPONENT: DELETE MODAL ---
-const DeleteModal = ({ isOpen, onClose, onConfirm, title, message, isDeleting }) => {
-  const modalRef = useRef(null);
-  const contentRef = useRef(null);
+  const fetchData = async () => {
+    try {
+      // Fetch Clients for mapping
+      const clientsSnap = await getDocs(collection(db, "clients"));
+      const clientsMap = {};
+      clientsSnap.docs.forEach(doc => {
+        clientsMap[doc.id] = doc.data();
+      });
+      setClients(clientsMap);
 
-  useGSAP(() => {
-    if (isOpen) {
-      gsap.fromTo(modalRef.current, { opacity: 0 }, { opacity: 1, duration: 0.3 });
-      gsap.fromTo(contentRef.current, { scale: 0.9, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.3, delay: 0.1, ease: "back.out(1.7)" });
+      // Fetch Projects
+      const snap = await getDocs(query(collection(db, "projects"), orderBy("created_at", "desc")));
+      setProjects(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to load projects");
+    } finally {
+      setLoading(false);
     }
-  }, [isOpen]);
-
-  if (!isOpen) return null;
-
-  return (
-    <div ref={modalRef} className="fixed inset-0 z-60 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm">
-      <div ref={contentRef} className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-6 max-w-md w-full mx-4 border border-slate-200 dark:border-slate-700">
-        <div className="w-12 h-12 rounded-full bg-red-50 dark:bg-red-900/20 flex items-center justify-center mb-4 mx-auto">
-          <Trash2 className="w-6 h-6 text-red-500" />
-        </div>
-        <h3 className="text-xl font-bold text-center text-slate-900 dark:text-white mb-2">{title}</h3>
-        <p className="text-center text-slate-500 dark:text-slate-400 mb-6">{message}</p>
-        <div className="flex gap-3">
-          <button onClick={onClose} disabled={isDeleting} className="flex-1 px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl font-bold hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors disabled:opacity-50">
-            Cancel
-          </button>
-          <button onClick={onConfirm} disabled={isDeleting} className="flex-1 px-4 py-2 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition-colors shadow-lg shadow-red-600/20 disabled:opacity-50 flex items-center justify-center gap-2">
-            {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-            <span>Delete</span>
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// --- COMPONENT: PRODUCT SHEET ---
-const ProjectSheet = ({ project: initialProject, onClose, hasPermission }) => {
-  const sheetRef = useRef(null);
-  const router = useRouter()
-  const contentRef = useRef(null);
-  const { data: session } = useSession();
-  const [activeTab, setActiveTab] = useState("overview");
-  const [deleteVariant, setDeleteVariant] = useState(null);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const { mutate } = useSWRConfig();
-
-  // --- FETCH DETAILED DATA ---
-  const fetcher = async (url) => {
-    const data = await globalFetcher(url, session?.accessToken);
-    return data;
   };
 
-  const { data: apiResponse, isLoading } = useSWR(
-    session?.accessToken && initialProject?.id
-      ? [`${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/products/${initialProject.id}`, session.accessToken]
-      : null,
-    ([url]) => fetcher(url)
-  );
-
-  // Use fetched data if available, otherwise fallback to initial data (for smooth transition)
-  const projectData = apiResponse?.data || initialProject;
-
-  // Calculate stock from variants if available in detailed data
-  const stock = projectData.variants?.reduce((sum, v) => sum + v.stock_quantity, 0) || projectData.stock || 0;
-
-  // Ensure prices are parsed as numbers
-  const firstVariant = projectData.variants?.[0] || {};
-  const price = parseFloat(projectData.price || firstVariant.price || 0);
-  const sales_price = parseFloat(projectData.sales_price || firstVariant.sales_price || price);
-  const is_offer = !!(projectData.is_offer !== undefined ? projectData.is_offer : firstVariant.is_offer);
-  const offer_price = parseFloat(projectData.offer_price || firstVariant.offer_price || 0);
-
-  useGSAP(() => {
-    gsap.fromTo(
-      sheetRef.current,
-      { x: "100%" },
-      { x: "0%", duration: 0.5, ease: "power3.out" }
-    );
-    gsap.fromTo(
-      ".sheet-animate",
-      { y: 20, opacity: 0 },
-      { y: 0, opacity: 1, duration: 0.4, stagger: 0.05, delay: 0.2 }
-    );
+  useEffect(() => {
+    fetchData();
   }, []);
 
-  const handleClose = () => {
-    gsap.to(sheetRef.current, {
-      x: "100%",
-      duration: 0.3,
-      ease: "power3.in",
-      onComplete: onClose,
-    });
-  };
-
-  const handleDeleteVariant = async () => {
-    if (!deleteVariant) return;
-    setIsDeleting(true);
+  const handleDelete = async (e, id) => {
+    e.stopPropagation();
+    if (!window.confirm("Delete this project completely? This action cannot be undone.")) return;
     try {
-      const data = await globalFetcher(`${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/products/variants/${deleteVariant.id}`, session?.accessToken, {
-        method: "DELETE",
-      });
-
-      toast.success("Variant deleted successfully");
-      mutate([`${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/products/${initialProject.id}`, session.accessToken]);
-      // Also revalidate the main projects list to update stock/price if needed
-      mutate(key => typeof key === 'string' && key.includes('/admin/products?'));
-      setDeleteVariant(null);
-    } catch (error) {
-      toast.error(error.message);
-    } finally {
-      setIsDeleting(false);
+      await deleteDoc(doc(db, "projects", id));
+      toast.success("Project deleted");
+      fetchData();
+    } catch (e) {
+      toast.error("Failed to delete project: " + e.message);
     }
   };
 
-  return (
-    <>
-      <DeleteModal
-        isOpen={!!deleteVariant}
-        onClose={() => setDeleteVariant(null)}
-        onConfirm={handleDeleteVariant}
-        title="Delete Variant?"
-        message={`Are you sure you want to delete "${deleteVariant?.variant_name}"? This action cannot be undone.`}
-        isDeleting={isDeleting}
-      />
-      <div className="fixed inset-0 z-50 flex justify-end">
-        <div
-          onClick={handleClose}
-          className="absolute inset-0 bg-slate-900/20 dark:bg-slate-950/50 backdrop-blur-sm transition-opacity opacity-100"
-        />
+  // Filter by search and stage
+  const filtered = projects.filter(p => {
+    const matchesSearch = p.name?.toLowerCase().includes(search.toLowerCase()) || 
+                          p.domain_name?.toLowerCase().includes(search.toLowerCase());
+    const matchesStage = activeStage === "All" || p.status === activeStage;
+    return matchesSearch && matchesStage;
+  });
 
-        <div
-          ref={sheetRef}
-          className="relative w-full max-w-2xl h-full bg-white dark:bg-slate-800 shadow-2xl flex flex-col overflow-hidden border-l border-slate-200 dark:border-slate-700"
-        >
-          {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 z-10">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                  Project Details
-                </span>
-                <span
-                  className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${(projectData.status === "published" || projectData.is_active)
-                    ? "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800/50"
-                    : "bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-600"
-                    }`}
-                >
-                  {projectData.status || (projectData.is_active ? "published" : "draft")}
-                </span>
-              </div>
-              <h2 className="text-xl font-bold text-slate-900 dark:text-white">
-                {projectData.name}
-              </h2>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={handleClose}
-                className="p-2 text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-
-          {/* Scrollable Content */}
-          <div
-            ref={contentRef}
-            className="flex-1 overflow-y-auto bg-slate-50/50 dark:bg-slate-900/50 p-6 space-y-6"
-          >
-            {isLoading && !apiResponse ? (
-              <div className="flex items-center justify-center py-20">
-                <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
-              </div>
-            ) : (
-              <>
-                {/* Hero Section */}
-                <div className="sheet-animate bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col sm:flex-row gap-6">
-                  <div className="w-32 h-32 bg-slate-100 dark:bg-slate-700 rounded-xl overflow-hidden shrink-0 border border-slate-100 dark:border-slate-600 flex items-center justify-center">
-                    {projectData.primary_image_path || projectData.image ? (
-                      <img
-                        src={getImageUrl(projectData.primary_image_path || projectData.image)}
-                        className="w-full h-full object-cover"
-                        alt="Project"
-                      />
-                    ) : (
-                      <ImageIcon className="w-10 h-10 text-slate-300 dark:text-slate-600" />
-                    )}
-                  </div>
-                  <div className="flex-1 flex flex-col justify-center">
-                    <div className="grid grid-cols-2 gap-4 mb-4">
-                      <div>
-                        <p className="text-xs text-slate-500 mb-1">Pricing</p>
-                        <div className="space-y-0.5">
-                          <div className="text-[10px] text-slate-400 line-through">
-                            Reg: Rs {formatPrice(price)}
-                          </div>
-                          <div className="text-xl font-extrabold text-slate-900 dark:text-white">
-                            Sale: Rs {formatPrice(sales_price)}
-                          </div>
-                          {is_offer && offer_price > 0 && (
-                            <div className="text-xs font-bold text-amber-600 dark:text-amber-500 mt-0.5">
-                              <span className="bg-amber-50 dark:bg-amber-950/30 px-1.5 py-0.5 rounded">Offer: Rs {formatPrice(offer_price)}</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      <div>
-                        <p className="text-xs text-slate-500 mb-1">Total Stock</p>
-                        <div className="flex items-center gap-2">
-                          <p className="text-2xl font-bold text-slate-900 dark:text-white">
-                            {stock}
-                          </p>
-                          <div
-                            className={`w-2.5 h-2.5 rounded-full ${stock > 10 ? "bg-emerald-500" : "bg-amber-500"
-                              }`}
-                          ></div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex gap-3">
-                      {hasPermission("Project Update") && (
-                        <Link
-                          href={`/app/projects/new?projectId=${projectData.id}`}
-                          className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg text-sm font-bold  transition-colors text-center"
-                        >
-                          Edit Project
-                        </Link>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Tabs */}
-                <div className="sheet-animate flex gap-6 border-b border-slate-200 dark:border-slate-700 px-2 overflow-x-auto">
-                  {["overview", "variants", "gallery", "related", "buy_together"].map((tab) => (
-                    <button
-                      key={tab}
-                      onClick={() => setActiveTab(tab)}
-                      className={`pb-3 text-sm font-bold transition-colors relative capitalize whitespace-nowrap ${activeTab === tab
-                        ? "text-indigo-600 dark:text-indigo-400"
-                        : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
-                        }`}
-                    >
-                      {tab.replace("_", " ")}
-                      {activeTab === tab && (
-                        <div className="absolute bottom-0 left-0 w-full h-0.5 bg-indigo-600 rounded-t-full"></div>
-                      )}
-                    </button>
-                  ))}
-                </div>
-
-                {/* Tab Content: Overview */}
-                {activeTab === "overview" && (
-                  <div className="space-y-6">
-                    {/* Basic Info */}
-                    <div className="sheet-animate bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
-                      <div className="p-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 flex items-center gap-2">
-                        <Info className="w-4 h-4 text-indigo-500" />
-                        <h3 className="font-bold text-slate-900 dark:text-white text-sm">
-                          Basic Information
-                        </h3>
-                      </div>
-                      <div className="divide-y divide-slate-100 dark:divide-slate-700">
-                        <div className="flex justify-between p-4 text-sm">
-                          <span className="text-slate-500">Code</span>
-                          <span className="font-mono font-bold text-slate-700 dark:text-slate-300">
-                            {projectData.code}
-                          </span>
-                        </div>
-                        <div className="flex justify-between p-4 text-sm">
-                          <span className="text-slate-500">Brand</span>
-                          <span className="font-bold text-slate-700 dark:text-slate-300">
-                            {projectData.Brand?.name || projectData.brand?.name || "N/A"}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Dynamic Specifications */}
-                    {projectData.specifications?.length > 0 && (
-                      <div className="sheet-animate bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
-                        <div className="p-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 flex items-center gap-2">
-                          <Layers className="w-4 h-4 text-indigo-500" />
-                          <h3 className="font-bold text-slate-900 dark:text-white text-sm">
-                            Specifications
-                          </h3>
-                        </div>
-                        <div className="divide-y divide-slate-100 dark:divide-slate-700">
-                          {projectData.specifications.map((spec) => (
-                            <div key={spec.id} className="flex justify-between p-4 text-sm">
-                              <span className="text-slate-500">{spec.specification_name}</span>
-                              <span className="font-bold text-slate-700 dark:text-slate-300 text-right">
-                                {spec.specification_value}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Features */}
-                    {projectData.features?.length > 0 && (
-                      <div className="sheet-animate bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm p-4">
-                        <div className="flex items-center gap-2 mb-3">
-                          <CheckCircle2 className="w-4 h-4 text-indigo-500" />
-                          <h3 className="font-bold text-slate-900 dark:text-white text-sm">Features</h3>
-                        </div>
-                        <ul className="space-y-2">
-                          {projectData.features.map((feature) => (
-                            <li key={feature.id} className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-400">
-                              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0"></div>
-                              <span>{feature.name}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-
-                    {/* Tags */}
-                    {projectData.tags?.length > 0 && (
-                      <div className="sheet-animate">
-                        <h3 className="font-bold text-slate-900 dark:text-white text-sm mb-3 px-1">Tags</h3>
-                        <div className="flex flex-wrap gap-2">
-                          {projectData.tags.map((tag) => (
-                            <span key={tag.id} className="px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-xs font-bold border border-slate-200 dark:border-slate-700 flex items-center gap-1">
-                              <Tag className="w-3 h-3" />
-                              {tag.name}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Description */}
-                    {projectData.full_description && (
-                      <div className="sheet-animate bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm p-4 overflow-hidden w-full">
-                        <h3 className="font-bold text-slate-900 dark:text-white text-sm mb-2">Description</h3>
-                        <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed break-words whitespace-pre-wrap">
-                          {projectData.full_description}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Tab Content: Variants (Accordion Style) */}
-                {activeTab === "variants" && (
-                  <div className="space-y-4">
-                    <div className="flex justify-end">
-                      {hasPermission("Project Variant Create") && (
-                        <button
-                          onClick={() => router.push(`/app/projects/new?projectId=${projectData.id}&step=variants`)}
-                          className="flex items-center gap-2 px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-lg text-xs font-bold hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors"
-                        >
-                          <Plus className="w-3 h-3" /> Add Variant
-                        </button>
-                      )}
-                    </div>
-
-                    <div className="space-y-3">
-                      {projectData.variants?.map((variant) => (
-                        <details
-                          key={variant.id}
-                          className="sheet-animate group bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden"
-                        >
-                          <summary className="flex items-center justify-between p-4 cursor-pointer list-none select-none hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                            <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-bold text-xs">
-                                {variant.storage_size?.replace(/"/g, "") || "V"}
-                              </div>
-                              <div>
-                                <h4 className="font-bold text-slate-900 dark:text-white text-sm">
-                                  {variant.variant_name?.replace(/"/g, "")}
-                                </h4>
-                                <p className="text-xs text-slate-500 font-mono">{variant.sku?.replace(/"/g, "")}</p>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-4">
-                              <div className="text-right">
-                                <p className="font-bold  text-slate-900 dark:text-white text-sm">Rs {formatPrice(variant.price)}</p>
-                                <p className={`text-[2px] font-bold ${variant.stock_quantity > 0 ? "text-emerald-600" : "text-red-600"}`}>
-                                  {variant.stock_quantity} in stock
-                                </p>
-                              </div>
-                              {hasPermission("Project Variant Delete") && (
-                                <button
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    setDeleteVariant(variant);
-                                  }}
-                                  className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
-                              )}
-                              <ChevronRight className="w-5 h-5 text-slate-400 group-open:rotate-90 transition-transform" />
-                            </div>
-                          </summary>
-
-                          <div className="p-4 pt-0 border-t border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50">
-                            <div className="grid grid-cols-2 gap-4 mt-4">
-                              <div className="space-y-1">
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Storage</p>
-                                <p className="text-sm font-medium text-slate-700 dark:text-slate-300">{variant.storage_size?.replace(/"/g, "") || "N/A"}</p>
-                              </div>
-                              <div className="space-y-1">
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">RAM</p>
-                                <p className="text-sm font-medium text-slate-700 dark:text-slate-300">{variant.ram_size?.replace(/"/g, "") || "N/A"}</p>
-                              </div>
-                              <div className="space-y-1">
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Color</p>
-                                <p className="text-sm font-medium text-slate-700 dark:text-slate-300">{variant.color?.replace(/"/g, "") || "N/A"}</p>
-                              </div>
-                              <div className="space-y-1">
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Barcode</p>
-                                <p className="text-sm font-mono text-slate-700 dark:text-slate-300">{variant.barcode?.replace(/"/g, "") || "N/A"}</p>
-                              </div>
-                            </div>
-
-                            <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700 grid grid-cols-2 gap-4">
-                              <div>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Pricing</p>
-                                <div className="space-y-1">
-                                  <div className="flex justify-between text-xs">
-                                    <span className="text-slate-500">Regular Price:</span>
-                                    <span className="font-medium">Rs {formatPrice(variant.price)}</span>
-                                  </div>
-                                  <div className="flex justify-between text-xs">
-                                    <span className="text-slate-500">Sales Price:</span>
-                                    <span className="font-medium">Rs {formatPrice(variant.sales_price)}</span>
-                                  </div>
-                                  {variant.is_offer && (
-                                    <div className="flex justify-between text-xs text-amber-600 font-bold">
-                                      <span>Offer Price:</span>
-                                      <span>Rs {formatPrice(variant.offer_price)}</span>
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                              <div>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Status</p>
-                                <div className="flex flex-wrap gap-2">
-                                  {variant.is_active && <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-green-100 text-green-700">Active</span>}
-                                  {variant.is_trending && <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-700">Trending</span>}
-                                  {variant.is_featured && <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-700">Featured</span>}
-                                  {variant.is_offer && <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700">Offer</span>}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </details>
-                      ))}
-                      {(!projectData.variants || projectData.variants.length === 0) && (
-                        <div className="p-8 text-center text-slate-500 bg-slate-50 dark:bg-slate-900 rounded-xl border border-dashed border-slate-200 dark:border-slate-700">
-                          No variants found.
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Tab Content: Gallery */}
-                {activeTab === "gallery" && (
-                  <div className="space-y-4">
-                    <div className="flex justify-end">
-                      {hasPermission("Project Update") && (
-                        <button className="flex items-center gap-2 px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-lg text-xs font-bold hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors">
-                          <Plus className="w-3 h-3" /> Add Image
-                        </button>
-                      )}
-                    </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                      {projectData.images?.map((img) => (
-                        <div
-                          key={img.id}
-                          className="sheet-animate aspect-square rounded-xl bg-slate-100 dark:bg-slate-700 overflow-hidden border border-slate-200 dark:border-slate-600 relative group"
-                        >
-                          <img
-                            src={getImageUrl(img.image_path)}
-                            className="w-full h-full object-cover"
-                            alt="Gallery"
-                          />
-                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                            {hasPermission("Project Update") && (
-                              <button className="p-2 bg-white/20 hover:bg-white/40 rounded-lg text-white backdrop-blur-sm transition-colors">
-                                <Trash2 className="w-4 h-4" />
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                      {(!projectData.images || projectData.images.length === 0) && (
-                        <div className="col-span-full py-10 text-center text-slate-500 border border-dashed border-slate-300 dark:border-slate-700 rounded-xl">
-                          No gallery images.
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Tab Content: Related Projects */}
-                {activeTab === "related" && (
-                  <div className="space-y-4">
-                    <h3 className="font-bold text-slate-900 dark:text-white text-sm px-1 sheet-animate">Related Projects</h3>
-                    {projectData.compatible_projects?.length > 0 ? (
-                      <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
-                        {projectData.compatible_projects.map((project) => (
-                          <div key={project.id} className="sheet-animate bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-2 shadow-xs hover:shadow-sm transition-shadow">
-                            <div className="aspect-square rounded-md bg-slate-100 dark:bg-slate-700 overflow-hidden mb-1.5 relative">
-                              {project.primary_image_path ? (
-                                <img src={getImageUrl(project.primary_image_path)} className="w-full h-full object-cover" alt={project.name} />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center text-slate-400">
-                                  <ImageIcon className="w-4 h-4" />
-                                </div>
-                              )}
-                            </div>
-                            <h4 className="font-bold text-slate-900 dark:text-white text-[10px] leading-tight line-clamp-2">{project.name}</h4>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="sheet-animate p-8 text-center text-slate-500 bg-slate-50 dark:bg-slate-900 rounded-xl border border-dashed border-slate-200 dark:border-slate-700">
-                        No related projects found.
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Tab Content: Buy Together */}
-                {activeTab === "buy_together" && (
-                  <div className="space-y-4">
-                    <h3 className="font-bold text-slate-900 dark:text-white text-sm px-1 sheet-animate">Frequently Bought Together</h3>
-                    {projectData.bundled_projects?.length > 0 ? (
-                      <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
-                        {projectData.bundled_projects.map((project) => (
-                          <div key={project.id} className="sheet-animate bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-2 shadow-xs hover:shadow-sm transition-shadow">
-                            <div className="aspect-square rounded-md bg-slate-100 dark:bg-slate-700 overflow-hidden mb-1.5 relative">
-                              {project.primary_image_path ? (
-                                <img src={getImageUrl(project.primary_image_path)} className="w-full h-full object-cover" alt={project.name} />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center text-slate-400">
-                                  <ImageIcon className="w-4 h-4" />
-                                </div>
-                              )}
-                            </div>
-                            <h4 className="font-bold text-slate-900 dark:text-white text-[10px] leading-tight line-clamp-2">{project.name}</h4>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="sheet-animate p-8 text-center text-slate-500 bg-slate-50 dark:bg-slate-900 rounded-xl border border-dashed border-slate-200 dark:border-slate-700">
-                        No frequently bought together projects found.
-                      </div>
-                    )}
-                  </div>
-                )}
-
-
-              </>
-            )}
-          </div>
-        </div>
-      </div>
-    </>
-  );
-};
-
-// --- COMPONENT: BULK IMPORT MODAL ---
-const BulkImportModal = ({ isOpen, onClose, session, onImportSuccess }) => {
-  const modalRef = useRef(null);
-  const contentRef = useRef(null);
-  const [file, setFile] = useState(null);
-  const [isUploading, setIsUploading] = useState(false);
-  const [result, setResult] = useState(null);
-
-  useGSAP(() => {
-    if (isOpen) {
-      gsap.fromTo(modalRef.current, { opacity: 0 }, { opacity: 1, duration: 0.3 });
-      gsap.fromTo(contentRef.current, { scale: 0.9, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.3, delay: 0.1, ease: "back.out(1.7)" });
-    }
-  }, [isOpen]);
-
-  if (!isOpen) return null;
-
-  const handleDownloadTemplate = async () => {
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/products/import-template`, {
-        headers: {
-          Authorization: `Bearer ${session?.accessToken}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to download template");
-      }
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", "bulk_project_import_template.xlsx");
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-      toast.success("Excel Template download started");
-    } catch (error) {
-      toast.error(error.message || "Could not download Excel template");
-    }
-  };
-
-  const handleFileChange = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
-      setResult(null);
-    }
-  };
-
-  const handleUpload = async () => {
-    if (!file) {
-      toast.error("Please select a file first");
-      return;
-    }
-    setIsUploading(true);
-    setResult(null);
-
-    const formData = new FormData();
-    formData.append("file", file);
-
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/products/import`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${session?.accessToken}`,
-        },
-        body: formData,
-      });
-
-      const resData = await response.json();
-      if (!response.ok) {
-        throw new Error(resData.message || "Failed to import projects");
-      }
-
-      setResult(resData.data);
-      toast.success(resData.message || "Bulk import completed successfully");
-      if (onImportSuccess) {
-        onImportSuccess();
-      }
-    } catch (error) {
-      toast.error(error.message || "Something went wrong during import");
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
-  return (
-    <div ref={modalRef} className="fixed inset-0 z-60 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
-      <div ref={contentRef} className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-6 max-w-xl w-full mx-4 border border-slate-200 dark:border-slate-700 flex flex-col max-h-[90vh]">
-        <div className="flex justify-between items-center mb-6 border-b border-slate-100 dark:border-slate-700 pb-3">
-          <h3 className="text-xl font-bold text-slate-900 dark:text-white">Bulk Import Projects</h3>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        <div className="flex-1 overflow-y-auto space-y-6 pr-1">
-          <div className="p-4 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800/50 rounded-xl text-sm text-indigo-700 dark:text-indigo-300 flex items-start gap-3">
-            <Info className="w-5 h-5 shrink-0 mt-0.5" />
-            <div>
-              <p className="font-bold mb-1">Import Guidelines:</p>
-              <ul className="list-disc pl-4 space-y-1 text-xs">
-                <li>Make sure the category name exactly matches an existing category.</li>
-                <li>Make sure the subcategory name matches an existing subcategory belonging to the category (optional).</li>
-                <li>Make sure the brand name matches an existing brand (optional).</li>
-                <li>Prices must be numeric values.</li>
-                <li>Default project variants are automatically created.</li>
-              </ul>
-            </div>
-          </div>
-
-          <div className="flex justify-between items-center">
-            <span className="text-sm font-semibold text-slate-600 dark:text-slate-400">Need the template format?</span>
-            <button
-              onClick={handleDownloadTemplate}
-              className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg text-xs font-bold text-slate-700 dark:text-slate-300 transition-colors border border-slate-200 dark:border-slate-600"
-            >
-              <Download className="w-3.5 h-3.5" /> Download Excel Template
-            </button>
-          </div>
-
-          <div className="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl p-8 text-center hover:border-indigo-500 transition-colors relative">
-            <input
-              type="file"
-              accept=".csv,.xlsx"
-              onChange={handleFileChange}
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-              disabled={isUploading}
-            />
-            <div className="space-y-2">
-              <ImageIcon className="w-10 h-10 text-slate-400 mx-auto" />
-              <div className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                {file ? file.name : "Click to upload or drag & drop"}
-              </div>
-              <div className="text-xs text-slate-500">Supports .csv, .xlsx up to 10MB</div>
-            </div>
-          </div>
-
-          {result && (
-            <div className="p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-700 space-y-3">
-              <h4 className="font-bold text-sm text-slate-900 dark:text-white">Import Summary</h4>
-              <div className="grid grid-cols-2 gap-4 text-xs">
-                <div className="p-3 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 rounded-lg font-semibold">
-                  Successfully Imported: {result.successCount}
-                </div>
-                <div className="p-3 bg-red-50 dark:bg-red-950/20 text-red-700 dark:text-red-400 rounded-lg font-semibold">
-                  Failed: {result.failedCount}
-                </div>
-              </div>
-              {result.errors && result.errors.length > 0 && (
-                <div className="space-y-1.5">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-red-500">Details / Errors</span>
-                  <div className="max-h-32 overflow-y-auto bg-white dark:bg-slate-800 p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 space-y-1">
-                    {result.errors.map((err, idx) => (
-                      <div key={idx} className="text-[11px] text-red-600 dark:text-red-400 font-medium leading-relaxed">{err}</div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        <div className="flex gap-3 mt-6 pt-4 border-t border-slate-100 dark:border-slate-700 shrink-0">
-          <button
-            onClick={onClose}
-            disabled={isUploading}
-            className="flex-1 px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl font-bold hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors disabled:opacity-50"
-          >
-            Close
-          </button>
-          <button
-            onClick={handleUpload}
-            disabled={isUploading || !file}
-            className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-600/20 disabled:opacity-50 flex items-center justify-center gap-2"
-          >
-            {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-            <span>{isUploading ? "Uploading..." : "Start Import"}</span>
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// --- MAIN PAGE COMPONENT ---
-export default function ProjectsPage() {
-  const containerRef = useRef(null);
-  const router = useRouter();
-  const { data: session } = useSession();
-  const [viewMode, setViewMode] = useState("list");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [selectedProject, setSelectedProject] = useState(null);
-  const [deleteProject, setDeleteProject] = useState(null);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
-  const [localDrafts, setLocalDrafts] = useState([]);
-  const debouncedSearch = useDebounce(searchTerm, 500);
-  const { mutate } = useSWRConfig();
-  const DRAFTS_KEY = useMemo(() =>
-    session?.user?.id ? `igen_project_drafts_${session.user.id}` : "igen_project_drafts",
-    [session?.user?.id]
-  );
-
-  const userRoles = session?.user?.roles || [];
-  const isAdmin = userRoles.some(role => role.name === "Admin" || role.name === "Super Admin");
-
-  const hasPermission = (permissionName) => {
-    if (isAdmin) return true;
-    return userRoles.some(role =>
-      role.permissions?.some(p => p.name === permissionName)
-    );
-  };
-
-  // --- FILTER STATES ---
-  const [showFilterMenu, setShowFilterMenu] = useState(false);
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [conditionFilter, setConditionFilter] = useState("all");
-  const [categoryFilter, setCategoryFilter] = useState("all");
-  const [brandFilter, setBrandFilter] = useState("all");
-
-  // Reset page when filters/search changes
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, statusFilter, conditionFilter, categoryFilter, brandFilter]);
-
-  // --- API FETCHING ---
-  const fetcher = async (url) => {
-    const data = await globalFetcher(url, session?.accessToken);
-    return data;
-  };
-
-  // Load local drafts
-  useEffect(() => {
-    if (!session?.user?.id) return;
-    const drafts = JSON.parse(localStorage.getItem(DRAFTS_KEY) || "[]");
-    setLocalDrafts(drafts);
-  }, [DRAFTS_KEY, session]);
-
-  const handleDeleteLocalDraft = (id) => {
-    const updatedDrafts = localDrafts.filter((d) => d.id !== id);
-    localStorage.setItem(DRAFTS_KEY, JSON.stringify(updatedDrafts));
-    setLocalDrafts(updatedDrafts);
-    toast.success("Local draft removed");
-  };
-
-  // Fetch Categories & Brands for Filter
-  const { data: categoriesRes } = useSWR(
-    session?.accessToken ? [`${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/categories/active/list`, session.accessToken] : null,
-    ([url]) => fetcher(url)
-  );
-  const categories = categoriesRes?.data || [];
-
-  const { data: brandsRes } = useSWR(
-    session?.accessToken ? [`${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/brands/active/list`, session.accessToken] : null,
-    ([url]) => fetcher(url)
-  );
-  const brands = brandsRes?.data || [];
-
-  // Build API Query
-  const buildApiUrl = () => {
-    let url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/products?page=${currentPage}`;
-    if (debouncedSearch) url += `&search=${encodeURIComponent(debouncedSearch)}`;
-    if (statusFilter !== "all") url += `&status=${statusFilter}`;
-    if (conditionFilter !== "all") url += `&condition=${conditionFilter}`;
-    if (categoryFilter !== "all") url += `&category_id=${categoryFilter}`;
-    if (brandFilter !== "all") url += `&brand_id=${brandFilter}`;
-    return url;
-  };
-
-  const { data: apiResponse, error, isLoading } = useSWR(
-    session?.accessToken ? [buildApiUrl(), session.accessToken] : null,
-    ([url]) => fetcher(url),
-    { keepPreviousData: true }
-  );
-
-  const projectsData = apiResponse?.data?.data || [];
-  const totalPages = apiResponse?.data?.last_page || 1;
-  const totalItems = apiResponse?.data?.total || 0;
-
-  // Transform Data
-  const projects = useMemo(() => {
-    const apiProjects = projectsData.map((p) => {
-      // Calculate total stock from variants
-      const totalStock = p.variants?.reduce((sum, v) => sum + v.stock_quantity, 0) || 0;
-
-      // Get price from first variant or default
-      const firstVariant = p.variants?.[0] || {};
-      const price = firstVariant.price || 0;
-      const sales_price = firstVariant.sales_price || 0;
-      const is_offer = firstVariant.is_offer || false;
-      const offer_price = firstVariant.offer_price || 0;
-
-      return {
-        ...p,
-        stock: totalStock,
-        price: parseFloat(price),
-        sales_price: parseFloat(sales_price),
-        is_offer: !!is_offer,
-        offer_price: parseFloat(offer_price),
-        image: getImageUrl(p.primary_image_path),
-        status: p.is_active ? "published" : "draft", // Map boolean to string for UI
-      };
-    });
-
-    // Merge local drafts if on first page and no search
-    if (currentPage === 1 && !debouncedSearch) {
-      const formattedDrafts = localDrafts.map((d) => {
-        const firstVariant = d.variants?.[0] || {};
-        return {
-          ...d,
-          stock: d.variants?.reduce((sum, v) => sum + parseInt(v.stock_quantity || 0), 0) || 0,
-          price: parseFloat(firstVariant.price || 0),
-          sales_price: parseFloat(firstVariant.sales_price || firstVariant.price || 0),
-          is_offer: !!firstVariant.is_offer,
-          offer_price: parseFloat(firstVariant.offer_price || 0),
-          image: null, // Local drafts don't have persistent image URLs
-          status: "draft",
-          is_local_draft: true,
-        };
-      });
-      return [...formattedDrafts, ...apiProjects];
-    }
-
-    return apiProjects;
-  }, [projectsData, localDrafts, currentPage, debouncedSearch]);
-
-  // Calculate dynamic stats from current view projects
-  const { lowStockCount, outOfStockCount, avgPrice } = useMemo(() => {
-    if (projects.length === 0) return { lowStockCount: 0, outOfStockCount: 0, avgPrice: 0 };
-
-    let lowStock = 0;
-    let outOfStock = 0;
-    let totalPrice = 0;
-
-    projects.forEach(p => {
-      if (p.stock === 0) outOfStock++;
-      else if (p.stock < 10) lowStock++;
-      totalPrice += p.price;
-    });
-
-    return {
-      lowStockCount: lowStock,
-      outOfStockCount: outOfStock,
-      avgPrice: totalPrice / projects.length
-    };
-  }, [projects]);
-
-  // --- ANIMATIONS ---
-  useGSAP(
-    () => {
-      const tl = gsap.timeline({ defaults: { ease: "power4.out" } });
-      tl.fromTo(
-        ".animate-up",
-        { y: 20, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.8, stagger: 0.05 }
-      );
-    },
-    { scope: containerRef }
-  );
+  // Calculate counts
+  const stageCounts = STAGES.reduce((acc, stage) => {
+    acc[stage] = stage === "All" ? projects.length : projects.filter(p => p.status === stage).length;
+    return acc;
+  }, {});
 
   const getStatusColor = (status) => {
     switch (status) {
-      case "published":
-        return "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 border-emerald-100 dark:border-emerald-800/50";
-      case "draft":
-        return "text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700";
-      default:
-        return "text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800";
+      case "Active": return "bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-900/30 dark:border-emerald-800";
+      case "Development": return "bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-900/30 dark:border-blue-800";
+      case "Testing": return "bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-900/30 dark:border-amber-800";
+      case "Prototyping": return "bg-purple-50 text-purple-600 border-purple-200 dark:bg-purple-900/30 dark:border-purple-800";
+      case "Completed": return "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:border-slate-700";
+      case "On Hold": return "bg-red-50 text-red-600 border-red-200 dark:bg-red-900/30 dark:border-red-800";
+      default: return "bg-slate-50 text-slate-600 border-slate-200 dark:bg-slate-800 dark:border-slate-700";
     }
-  };
-
-  const getConditionColor = (condition) => {
-    switch (condition?.toLowerCase()) {
-      case "new":
-        return "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 border-emerald-100 dark:border-emerald-800/50";
-      case "used":
-        return "text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30 border-amber-100 dark:border-amber-800/50";
-      case "refurbished":
-        return "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 border-blue-100 dark:border-blue-800/50";
-      default:
-        return "text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700";
-    }
-  };
-
-  const getStockColor = (count) => {
-    if (count === 0) return "bg-red-500";
-    if (count < 10) return "bg-amber-500";
-    return "bg-emerald-500";
-  };
-
-  const handlePageChange = (newPage) => {
-    if (newPage >= 1 && newPage <= totalPages) {
-      setCurrentPage(newPage);
-    }
-  };
-
-  const handleDeleteProject = async () => {
-    if (!deleteProject) return;
-
-    if (deleteProject.is_local_draft) {
-      handleDeleteLocalDraft(deleteProject.id);
-      setDeleteProject(null);
-      return;
-    }
-
-    setIsDeleting(true);
-    try {
-      const data = await globalFetcher(`${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/products/${deleteProject.id}`, session?.accessToken, {
-        method: "DELETE",
-      });
-
-      toast.success("Project deleted successfully");
-      mutate([`${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/products?page=${currentPage}&search=${debouncedSearch}`, session.accessToken]);
-      setDeleteProject(null);
-    } catch (error) {
-      toast.error(error.message);
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-
-  const handleExport = () => {
-    const projectsToExport = projects.map(p => ({
-      ...p,
-      category_name: p.category?.name || "N/A",
-      brand_name: p.brand?.name || "N/A",
-    }));
-
-    const headerMap = {
-      code: "Code",
-      name: "Project Name",
-      price: "Price",
-      stock: "Stock",
-      category_name: "Category",
-      brand_name: "Brand",
-      status: "Status",
-    };
-
-    exportToCSV(projectsToExport, "Projects", headerMap);
   };
 
   return (
-    <div
-      ref={containerRef}
-      className="min-h-screen bg-slate-50/50 dark:bg-slate-900 font-sans text-slate-900 dark:text-white relative"
-      onClick={() => {
-        if (showFilterMenu) setShowFilterMenu(false);
-      }}
-    >
-      <DeleteModal
-        isOpen={!!deleteProject}
-        onClose={() => setDeleteProject(null)}
-        onConfirm={handleDeleteProject}
-        title="Delete Project?"
-        message={`Are you sure you want to delete "${deleteProject?.name}"? This action cannot be undone.`}
-        isDeleting={isDeleting}
-      />
-
-      {/* RENDER SHEET IF PRODUCT SELECTED */}
-      {selectedProject && (
-        <ProjectSheet
-          project={selectedProject}
-          onClose={() => setSelectedProject(null)}
-          hasPermission={hasPermission}
-        />
-      )}
-
-      <BulkImportModal
-        isOpen={isImportModalOpen}
-        onClose={() => setIsImportModalOpen(false)}
-        session={session}
-        onImportSuccess={() => {
-          mutate(key => Array.isArray(key) && typeof key[0] === 'string' && key[0].includes('/admin/products'));
-        }}
-      />
-
-      {/* 1. HEADER SECTION */}
-      <div className="max-w-7xl mx-auto mb-10 p-6 md:p-8 pb-0">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
-          <div className="animate-up">
-            <div className="flex gap-4 items-stretch">
-            <div className="w-14 rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 flex flex-col items-center justify-center shrink-0 border border-indigo-100 dark:border-indigo-800/50 shadow-sm py-2">
-              <Package className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
-            </div>
-            <div className="flex flex-col justify-center py-1">
-              <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-1">Projects</h1>
-              <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">Manage inventory, pricing, and project details.</p>
-            </div>
-          </div>
-          </div>
-          <div className="animate-up flex gap-2">
-            <button
-              onClick={handleExport}
-              className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm"
-            >
-              <Download className="w-4 h-4" /> Export
-            </button>
-            {hasPermission("Project Create") && (
-              <>
-                <button
-                  onClick={() => setIsImportModalOpen(true)}
-                  className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm"
-                >
-                  <Plus className="w-4 h-4" /> Import Bulk
-                </button>
-                <Link
-                  href="/app/projects/new"
-                  className="group flex items-center gap-2 px-5 py-3 bg-indigo-600 text-white rounded-xl text-sm font-semibold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-600/20 active:scale-95 will-change-transform"
-                >
-                  <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform duration-300" />
-                  <span>Add Project</span>
-                </Link>
-              </>
-            )}
-          </div>
+    <div className="min-h-screen bg-[#F5F7FA] dark:bg-[#0F1117] font-sans flex flex-col">
+      
+      {/* Top Header - Sticky */}
+      <div className="bg-white dark:bg-[#161B27] border-b border-slate-200 dark:border-slate-800 px-8 flex items-center justify-between sticky top-0 z-20 shadow-sm h-20">
+        <div>
+          <h1 className="text-xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+            <Briefcase className="w-6 h-6 text-[#2C79F5]" /> 
+            Projects Pipeline
+          </h1>
+          <p className="text-[13px] text-slate-500 mt-0.5">Manage deliverables, domains, and budgets</p>
         </div>
 
-        {/* 2. STATS OVERVIEW */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          {[
-            {
-              label: "Total Projects",
-              val: totalItems.toLocaleString(),
-              icon: Package,
-              color: "text-indigo-600",
-            },
-            {
-              label: "Low Stock ",
-              val: lowStockCount.toString(),
-              icon: AlertTriangle,
-              color: "text-amber-600",
-            },
-            {
-              label: "Out of Stock ",
-              val: outOfStockCount.toString(),
-              icon: XCircle,
-              color: "text-red-600",
-            },
-            {
-              label: "Avg Price ",
-              val: `Rs ${formatPrice(avgPrice)}`,
-              icon: DollarSign,
-              color: "text-emerald-600",
-            },
-          ].map((stat, i) => (
-            <div
-              key={i}
-              className="animate-up bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow"
-            >
-              <div
-                className={`w-12 h-12 rounded-xl bg-slate-50 dark:bg-slate-900 flex items-center justify-center ${stat.color}`}
-              >
-                <stat.icon className="w-6 h-6" />
-              </div>
-              <div>
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">
-                  {stat.label}
-                </p>
-                <h4 className="text-xl font-bold text-slate-900 dark:text-white">
-                  {stat.val}
-                </h4>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* 3. TOOLBAR */}
-        <div className="animate-up sticky top-4 z-20 bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 shadow-lg shadow-slate-200/50 dark:shadow-slate-900/50 rounded-2xl p-2 flex flex-col sm:flex-row gap-3 items-center justify-between mb-8">
-          <div className="relative w-full sm:w-96 group">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
-            <input
+        <div className="flex items-center gap-4">
+          <div className="relative">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <input 
               type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="block w-full pl-10 pr-3 py-2.5 bg-transparent rounded-xl text-sm placeholder:text-slate-400 dark:placeholder:text-slate-500 dark:text-white focus:outline-none focus:bg-slate-50 dark:focus:bg-slate-900 transition-all"
-              placeholder="Search by name, SKU..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search domains or projects..." 
+              className="w-72 pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-[13px] outline-none focus:ring-2 focus:ring-[#2C79F5]/20 focus:border-[#2C79F5] transition-all font-medium"
             />
           </div>
-          <div className="flex items-center gap-2 w-full sm:w-auto p-1">
-            {/* MORE FILTERS DROPDOWN */}
-            <div className="relative">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowFilterMenu(!showFilterMenu);
-                }}
-                className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${showFilterMenu || statusFilter !== "all" || conditionFilter !== "all" || categoryFilter !== "all" || brandFilter !== "all"
-                  ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800"
-                  : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 border border-transparent"
-                  }`}
-              >
-                <div className="relative">
-                  <Filter className="w-4 h-4" />
-                  {(statusFilter !== "all" || conditionFilter !== "all" || categoryFilter !== "all" || brandFilter !== "all") && (
-                    <span className="absolute -top-1 -right-1 w-2 h-2 bg-indigo-600 rounded-full border border-white dark:border-slate-800"></span>
-                  )}
-                </div>
-                Filters
-              </button>
-
-              {showFilterMenu && (
-                <div
-                  onClick={(e) => e.stopPropagation()}
-                  className="absolute top-full mt-2 right-0 md:right-auto md:left-0 lg:right-0 lg:left-auto w-72 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 p-4 z-30 animate-in fade-in slide-in-from-top-2 duration-200 overflow-y-auto max-h-[80vh]"
-                >
-                  <div className="flex items-center justify-between mb-3">
-                    <h4 className="text-sm font-bold text-slate-900 dark:text-white">Filter Projects</h4>
-                    {(statusFilter !== "all" || conditionFilter !== "all" || categoryFilter !== "all" || brandFilter !== "all") && (
-                      <button
-                        onClick={() => {
-                          setStatusFilter("all");
-                          setConditionFilter("all");
-                          setCategoryFilter("all");
-                          setBrandFilter("all");
-                        }}
-                        className="text-xs text-indigo-600 font-medium hover:underline"
-                      >
-                        Clear All
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Category Filter */}
-                  <div className="mb-4">
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block px-1">
-                      Category
-                    </label>
-                    <select
-                      value={categoryFilter}
-                      onChange={(e) => setCategoryFilter(e.target.value)}
-                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-indigo-500 outline-none text-slate-700 dark:text-slate-300"
-                    >
-                      <option value="all">All Categories</option>
-                      {categories.map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {c.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Brand Filter */}
-                  <div className="mb-4">
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block px-1">
-                      Brand
-                    </label>
-                    <select
-                      value={brandFilter}
-                      onChange={(e) => setBrandFilter(e.target.value)}
-                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-indigo-500 outline-none text-slate-700 dark:text-slate-300"
-                    >
-                      <option value="all">All Brands</option>
-                      {brands.map((b) => (
-                        <option key={b.id} value={b.id}>
-                          {b.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Status Filter */}
-                  <div className="mb-4">
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block px-1">
-                      Status
-                    </label>
-                    <select
-                      value={statusFilter}
-                      onChange={(e) => setStatusFilter(e.target.value)}
-                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-indigo-500 outline-none text-slate-700 dark:text-slate-300"
-                    >
-                      <option value="all">All Statuses</option>
-                      <option value="published">Published</option>
-                      <option value="draft">Draft</option>
-                    </select>
-                  </div>
-
-                  {/* Condition Filter */}
-                  <div className="mb-2">
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block px-1">
-                      Condition
-                    </label>
-                    <div className="flex flex-wrap gap-2">
-                      {[
-                        { id: "all", label: "All" },
-                        { id: "new", label: "New" },
-                        { id: "used", label: "Used" },
-                        { id: "refurbished", label: "Refurbished" },
-                      ].map((cond) => (
-                        <button
-                          key={cond.id}
-                          onClick={() => setConditionFilter(cond.id)}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${conditionFilter === cond.id
-                            ? "bg-indigo-600 text-white shadow-sm"
-                            : "bg-slate-50 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-600"
-                            }`}
-                        >
-                          {cond.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-            <div className="w-px h-6 bg-slate-200 dark:bg-slate-700 mx-1"></div>
-            <div className="flex bg-slate-100/50 dark:bg-slate-900 rounded-lg p-1">
-              <button
-                onClick={() => setViewMode("list")}
-                className={`p-2 rounded-md transition-all ${viewMode === "list"
-                  ? "bg-white dark:bg-slate-800 shadow-sm text-indigo-600 dark:text-indigo-400"
-                  : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
-                  }`}
-              >
-                <ListIcon className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => setViewMode("grid")}
-                className={`p-2 rounded-md transition-all ${viewMode === "grid"
-                  ? "bg-white dark:bg-slate-800 shadow-sm text-indigo-600 dark:text-indigo-400"
-                  : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
-                  }`}
-              >
-                <LayoutGrid className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
+          <Link href="/app/projects/new">
+            <button className="flex items-center gap-2 px-5 py-2.5 bg-[#2C79F5] text-white text-sm font-bold rounded-lg shadow-sm hover:bg-[#1a6ae0] transition-colors">
+              <Plus className="w-4 h-4" /> New Project
+            </button>
+          </Link>
         </div>
+      </div>
 
-        {/* 4. CONTENT AREA */}
-        <div className="min-h-[500px]">
-          {isLoading ? (
-            <div className="flex items-center justify-center h-64">
-              <Loader2 className="w-10 h-10 text-indigo-500 animate-spin" />
-            </div>
-          ) : error ? (
-            <div className="text-center py-20 bg-white dark:bg-slate-800 border border-dashed border-red-200 dark:border-red-900/50 rounded-3xl">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-50 dark:bg-red-900/20 mb-4">
-                <AlertTriangle className="w-6 h-6 text-red-500" />
-              </div>
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white">
-                Failed to load projects
-              </h3>
-              <p className="text-slate-500 dark:text-slate-400 mt-1">
-                Please try again later.
-              </p>
-            </div>
-          ) : projects.length === 0 ? (
-            <div className="animate-up flex flex-col items-center justify-center py-20 bg-white dark:bg-slate-800 rounded-3xl border border-dashed border-slate-300 dark:border-slate-700 shadow-sm text-center px-6">
-              <div className="w-20 h-20 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 rounded-full flex items-center justify-center mb-6 shadow-inner">
-                <Package className="w-10 h-10" />
-              </div>
-              <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">No projects found</h3>
-              <p className="text-slate-500 dark:text-slate-400 max-w-sm mb-8 font-medium">
-                Start building your catalog by adding your first project with its variants and specifications.
-              </p>
-              {hasPermission("Project Create") && (
+      {/* Main Content */}
+      <div className="flex-1 p-8">
+        <div className="max-w-[1400px] mx-auto space-y-6">
+          
+          {/* Pipeline Tabs */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar">
+            {STAGES.map(stage => {
+              const isActive = activeStage === stage;
+              return (
                 <button
-                  onClick={() => router.push("/app/projects/new")}
-                  className="flex items-center gap-2 px-8 py-4 bg-indigo-600 text-white rounded-2xl text-sm font-bold hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-600/20 active:scale-95 group"
+                  key={stage}
+                  onClick={() => setActiveStage(stage)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-full text-[13px] font-bold transition-all whitespace-nowrap border
+                    ${isActive 
+                      ? "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white shadow-sm" 
+                      : "bg-transparent border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 hover:bg-slate-200/50 dark:hover:bg-slate-800/50"
+                    }`}
                 >
-                  <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform" />
-                  Create Your First Project
+                  {stage}
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${isActive ? 'bg-[#2C79F5]/10 text-[#2C79F5]' : 'bg-slate-200/50 dark:bg-slate-800 text-slate-500'}`}>
+                    {stageCounts[stage] || 0}
+                  </span>
                 </button>
-              )}
+              );
+            })}
+          </div>
+
+          {/* Table Container */}
+          <div className="bg-white dark:bg-[#161B27] rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+            
+            {/* Headers */}
+            <div className="grid grid-cols-[2fr_1.5fr_1fr_1fr_1fr_80px] gap-6 px-6 py-4 bg-slate-50/50 dark:bg-slate-900/30 border-b border-slate-100 dark:border-slate-800">
+              <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Project</div>
+              <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Client</div>
+              <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Status</div>
+              <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Value</div>
+              <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Start Date</div>
+              <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider text-right">Actions</div>
             </div>
-          ) : (
-            <>
-              {viewMode === "list" ? (
-                <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
-                  <table className="w-full text-left border-collapse">
-                    <thead className="bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700">
-                      <tr>
-                        <th className="p-4 pl-6 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                          Project
-                        </th>
-                        <th className="p-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                          Code
-                        </th>
-                        <th className="p-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                          Stock
-                        </th>
-                        <th className="p-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                          Price
-                        </th>
-                        <th className="p-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                          Status
-                        </th>
-                        <th className="p-4 pr-6 text-right"></th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
-                      {projects.map((project) => (
-                        <tr
-                          key={project.id}
-                          onClick={() => {
-                            if (project.is_local_draft) {
-                              router.push(`/app/projects/new?draftId=${project.id}`);
-                            } else {
-                              setSelectedProject(project);
-                            }
-                          }}
-                          className="project-item group hover:bg-slate-50/80 dark:hover:bg-slate-700/80 transition-colors cursor-pointer"
-                        >
-                          <td className="p-4 pl-6">
-                            <div className="flex items-center gap-4">
-                              <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-700 overflow-hidden shrink-0 border border-slate-200 dark:border-slate-600 flex items-center justify-center">
-                                {project.image ? (
-                                  <img
-                                    src={project.image}
-                                    alt=""
-                                    className="w-full h-full object-cover"
-                                  />
-                                ) : (
-                                  <ImageIcon className="w-5 h-5 text-slate-300 dark:text-slate-600" />
-                                )}
-                              </div>
-                              <div>
-                                <div className="font-semibold text-slate-900 dark:text-white text-sm group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                                  {project.name}
-                                </div>
-                                <div className="text-xs text-slate-500 dark:text-slate-400">
-                                  {project.Brand?.name || project.brand?.name || "No Brand"}
-                                </div>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="p-4 text-sm font-mono text-slate-500 dark:text-slate-400">
-                            {project.code}
-                          </td>
-                          <td className="p-4">
-                            <div className="w-32">
-                              <div className="flex justify-between text-xs mb-1">
-                                <span className="font-medium text-slate-700 dark:text-slate-300">
-                                  {project.stock} in stock
-                                </span>
-                              </div>
-                              <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
-                                <div
-                                  className={`h-full rounded-full ${getStockColor(
-                                    project.stock
-                                  )}`}
-                                  style={{
-                                    width: `${Math.min(project.stock, 100)}%`,
-                                  }}
-                                ></div>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="p-4">
-                            <div className="space-y-0.5">
-                              <div className="text-xs text-slate-400 dark:text-slate-500">
-                                Reg: <span className="line-through">Rs {formatPrice(project.price)}</span>
-                              </div>
-                              <div className="text-sm font-semibold text-slate-900 dark:text-white">
-                                Sale: Rs {formatPrice(project.sales_price)}
-                              </div>
-                              {project.is_offer && project.offer_price && (
-                                <div className="text-[10px] font-bold text-amber-600 dark:text-amber-500 flex items-center mt-0.5">
-                                  <span className="bg-amber-50 dark:bg-amber-950/30 px-1 py-0.5 rounded">Offer: Rs {formatPrice(project.offer_price)}</span>
-                                </div>
-                              )}
-                            </div>
-                          </td>
-                          <td className="p-4">
-                            <span
-                              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${getStatusColor(
-                                project.status
-                              )}`}
-                            >
-                              {project.is_local_draft ? (
-                                <>
-                                  <Clock className="w-3 h-3" />
-                                  Local Draft
-                                </>
-                              ) : (
-                                <>
-                                  {project.status === "published" && (
-                                    <CheckCircle2 className="w-3 h-3" />
-                                  )}
-                                  {project.status}
-                                </>
-                              )}
-                            </span>
-                          </td>
-                          <td className="p-4 pr-6 text-right">
-                            {hasPermission("Project Delete") && (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setDeleteProject(project);
-                                }}
-                                className="p-2 text-slate-400 dark:text-slate-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all opacity-0 group-hover:opacity-100"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+
+            {/* List */}
+            <div className="divide-y divide-slate-100 dark:divide-slate-800/60">
+              {loading ? (
+                <div className="p-16 flex justify-center"><Loader2 className="w-8 h-8 animate-spin text-slate-400"/></div>
+              ) : filtered.length === 0 ? (
+                <div className="p-16 text-center">
+                  <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800/50 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Briefcase className="w-8 h-8 text-slate-300 dark:text-slate-600" />
+                  </div>
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-1">No projects found</h3>
+                  <p className="text-xs text-slate-500">Try adjusting your filters or search term.</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {projects.map((project) => (
-                    <div
-                      key={project.id}
-                      onClick={() => {
-                        if (project.is_local_draft) {
-                          router.push(`/app/projects/new?draftId=${project.id}`);
-                        } else {
-                          setSelectedProject(project);
-                        }
-                      }}
-                      className="project-item group bg-white dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700 p-3 hover:border-indigo-100 dark:hover:border-indigo-900/50 hover:shadow-xl hover:shadow-indigo-900/5 dark:hover:shadow-indigo-900/20 transition-all duration-300 cursor-pointer"
+                filtered.map((pr) => {
+                  const client = clients[pr.client_id];
+                  
+                  return (
+                    <div 
+                      key={pr.id} 
+                      onClick={() => router.push(`/app/projects/${pr.id}`)}
+                      className="group grid grid-cols-[2fr_1.5fr_1fr_1fr_1fr_80px] gap-6 px-6 py-4 hover:bg-[#F0F5FF] dark:hover:bg-[#1e2740]/80 transition-colors duration-150 items-center cursor-pointer"
                     >
-                      <div className="relative aspect-square rounded-2xl bg-slate-100 dark:bg-slate-700 overflow-hidden mb-3 flex items-center justify-center">
-                        {project.image ? (
-                          <img
-                            src={project.image}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                            alt={project.name}
-                          />
-                        ) : (
-                          <ImageIcon className="w-10 h-10 text-slate-300 dark:text-slate-600" />
-                        )}
-                        <div className="absolute top-3 right-3 flex gap-2">
-                          <span
-                            className={`backdrop-blur-md px-2 py-1 rounded-full text-xs font-bold border ${getStatusColor(
-                              project.status
-                            )}`}
-                          >
-                            {project.is_local_draft ? (
-                              <span className="flex items-center gap-1">
-                                <Clock className="w-3 h-3" />
-                                Local Draft
-                              </span>
-                            ) : (
-                              project.status
-                            )}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="px-1 pb-2">
-                        <div className="flex justify-between items-start mb-1">
-                          <h3 className="font-bold text-slate-900 dark:text-white line-clamp-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                            {project.name}
-                          </h3>
-                          <div className="text-right shrink-0 ml-2">
-                            <div className="text-xs font-bold text-slate-900 dark:text-white">
-                              Sale: Rs {formatPrice(project.sales_price)}
-                            </div>
-                            <div className="text-[10px] text-slate-400 line-through">
-                              Reg: Rs {formatPrice(project.price)}
-                            </div>
-                            {project.is_offer && project.offer_price && (
-                              <div className="text-[10px] font-bold text-amber-600 dark:text-amber-500 mt-0.5">
-                                Offer: Rs {formatPrice(project.offer_price)}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex justify-between items-center text-xs text-slate-500 dark:text-slate-400 mb-3">
-                          <span className="font-mono bg-slate-50 dark:bg-slate-900 px-1.5 py-0.5 rounded">
-                            {project.code}
-                          </span>
-                          <span>{project.Brand?.name || project.brand?.name || "No Brand"}</span>
-                        </div>
-                        <div className="flex items-center justify-between pt-3 border-t border-slate-50 dark:border-slate-700">
-                          <div className="flex items-center gap-2">
-                            <div
-                              className={`w-2 h-2 rounded-full ${getStockColor(
-                                project.stock
-                              )}`}
-                            ></div>
-                            <span className="text-xs font-medium text-slate-600 dark:text-slate-400">
-                              {project.stock > 0
-                                ? `${project.stock} in stock`
-                                : "Out of stock"}
+                      {/* Project Col */}
+                      <div>
+                        <p className="text-[14px] font-bold text-slate-900 dark:text-white mb-1">{pr.name}</p>
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                          {pr.domain_name && (
+                            <span className="flex items-center gap-1 text-[11px] text-slate-500 font-medium">
+                              <Globe className="w-3.5 h-3.5 text-slate-400" /> {pr.domain_name}
                             </span>
-                          </div>
-                          <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-all">
-                            {hasPermission("Project Update") && (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  if (project.is_local_draft) {
-                                    router.push(`/app/projects/new?draftId=${project.id}`);
-                                  } else {
-                                    router.push(`/app/projects/new?projectId=${project.id}`);
-                                  }
-                                }}
-                                className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
-                                title="Edit Project"
-                              >
-                                <Pencil className="w-3.5 h-3.5" />
-                              </button>
-                            )}
-                            {hasPermission("Project Delete") && (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setDeleteProject(project);
-                                }}
-                                className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
-                                title="Delete Project"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            )}
-                          </div>
+                          )}
+                          {pr.db_name && (
+                            <span className="flex items-center gap-1 text-[11px] text-slate-500 font-medium">
+                              <Database className="w-3.5 h-3.5 text-slate-400" /> {pr.db_name}
+                            </span>
+                          )}
                         </div>
                       </div>
 
-                    </div>
-                  ))}
-                </div>
-              )}
+                      {/* Client Col */}
+                      <div>
+                        {client ? (
+                           <div className="flex items-center gap-2">
+                             <div className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-500 border border-slate-200 dark:border-slate-700">
+                               {client.company_name?.charAt(0) || client.first_name?.charAt(0) || "?"}
+                             </div>
+                             <div>
+                               <p className="text-[13px] font-bold text-slate-700 dark:text-slate-300">{client.company_name || client.first_name}</p>
+                               <p className="text-[10px] text-slate-400">{client.email || 'No email'}</p>
+                             </div>
+                           </div>
+                        ) : (
+                          <span className="text-[12px] font-mono text-slate-400 truncate block w-full">{pr.client_id}</span>
+                        )}
+                      </div>
 
-              {/* PAGINATION */}
-              <div className="mt-8 flex items-center justify-between border-t border-slate-200 dark:border-slate-700 pt-6">
-                <div className="text-sm text-slate-500 dark:text-slate-400">
-                  Showing{" "}
-                  <span className="font-bold text-slate-900 dark:text-white">
-                    {projects.length}
-                  </span>{" "}
-                  of{" "}
-                  <span className="font-bold text-slate-900 dark:text-white">
-                    {totalItems}
-                  </span>{" "}
-                  results
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    disabled={currentPage === 1}
-                    className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    <ChevronLeft className="w-5 h-5" />
-                  </button>
-                  <div className="flex items-center gap-1">
-                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                      let pageNum;
-                      if (totalPages <= 5) {
-                        pageNum = i + 1;
-                      } else if (currentPage <= 3) {
-                        pageNum = i + 1;
-                      } else if (currentPage >= totalPages - 2) {
-                        pageNum = totalPages - 4 + i;
-                      } else {
-                        pageNum = currentPage - 2 + i;
-                      }
+                      {/* Status Col */}
+                      <div>
+                        <span className={`px-2.5 py-1 rounded-md text-[11px] font-bold border ${getStatusColor(pr.status || "Development")}`}>
+                          {pr.status || "Development"}
+                        </span>
+                      </div>
 
-                      return (
+                      {/* Value Col */}
+                      <div className="flex items-center gap-1.5">
+                        <div className={`w-6 h-6 rounded-full flex items-center justify-center ${pr.total_cost > 0 ? 'bg-emerald-50 dark:bg-emerald-900/20' : 'bg-slate-100 dark:bg-slate-800'}`}>
+                          <DollarSign className={`w-3.5 h-3.5 ${pr.total_cost > 0 ? 'text-emerald-500' : 'text-slate-400'}`} />
+                        </div>
+                        <span className={`text-[13px] font-bold ${pr.total_cost > 0 ? 'text-slate-900 dark:text-white' : 'text-slate-400'}`}>
+                          {pr.total_cost > 0 ? pr.total_cost.toLocaleString() : "Set Price"}
+                        </span>
+                      </div>
+
+                      {/* Date Col */}
+                      <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
+                        <Calendar className="w-3.5 h-3.5 opacity-70" />
+                        <span className="text-[12px] font-medium">
+                          {pr.start_date ? new Date(pr.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : "N/A"}
+                        </span>
+                      </div>
+
+                      {/* Actions Col */}
+                      <div className="flex justify-end items-center">
                         <button
-                          key={pageNum}
-                          onClick={() => handlePageChange(pageNum)}
-                          className={`w-10 h-10 rounded-lg text-sm font-bold transition-colors ${currentPage === pageNum
-                            ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/20"
-                            : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
-                            }`}
+                          onClick={(e) => handleDelete(e, pr.id)}
+                          className="p-1.5 rounded-md text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"
                         >
-                          {pageNum}
+                          <Trash2 className="w-4 h-4"/>
                         </button>
-                      );
-                    })}
-                  </div>
-                  <button
-                    onClick={() => handlePageChange(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                    className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    <ChevronRight className="w-5 h-5" />
-                  </button>
-                </div>
-              </div>
-            </>
-          )}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 py-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30 flex justify-between items-center text-[11px] text-slate-400 font-semibold">
+               <span>Showing {filtered.length} projects</span>
+               <span>Sorted by: Newest First</span>
+            </div>
+
+          </div>
         </div>
       </div>
     </div>

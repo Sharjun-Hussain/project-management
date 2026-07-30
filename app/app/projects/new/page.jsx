@@ -18,6 +18,7 @@ export default function CreateProjectPage() {
     status: "Development",
     description: "",
     start_date: "",
+    total_cost: "0",
     domain_name: "",
     vps_id: "",
     db_host: "localhost",
@@ -53,6 +54,7 @@ export default function CreateProjectPage() {
     try {
       await addDoc(collection(db, "projects"), {
         ...formData,
+        total_cost: parseFloat(formData.total_cost) || 0,
         created_at: serverTimestamp(),
         updated_at: serverTimestamp()
       });
@@ -72,6 +74,7 @@ export default function CreateProjectPage() {
       <div className="bg-white dark:bg-[#161B27] border-b border-slate-200 dark:border-slate-800 px-8 py-4 flex items-center justify-between sticky top-0 z-20 shadow-sm">
         <div className="flex items-center gap-4">
           <button 
+            type="button"
             onClick={() => router.back()}
             className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors"
           >
@@ -105,7 +108,7 @@ export default function CreateProjectPage() {
             </h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div>
+              <div className="md:col-span-2">
                 <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Project Name *</label>
                 <input 
                   name="name" value={formData.name} onChange={handleChange} required
@@ -125,6 +128,15 @@ export default function CreateProjectPage() {
                     <option key={client.id} value={client.id}>{client.company_name}</option>
                   ))}
                 </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Total Project Value (Rs)</label>
+                <input 
+                  type="number" step="0.01" name="total_cost" value={formData.total_cost} onChange={handleChange} required
+                  placeholder="e.g. 50000"
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm outline-none focus:border-[#2C79F5] focus:ring-2 focus:ring-[#2C79F5]/20"
+                />
               </div>
 
               <div>
