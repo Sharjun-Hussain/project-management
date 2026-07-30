@@ -72,6 +72,9 @@ export default function ProjectDashboardPage() {
   const balanceRemaining = totalValue - totalPaid;
   const totalExpenses = expenses.reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
   
+  const netProfit = totalValue - totalExpenses;
+  const availableBalance = totalPaid - totalExpenses;
+  
   // Handlers
   const handleAddPayment = async (e) => {
     e.preventDefault();
@@ -239,6 +242,29 @@ export default function ProjectDashboardPage() {
              <p className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
                <span className="text-lg text-slate-400 font-medium mr-1">Rs</span>{totalExpenses.toLocaleString()}
              </p>
+          </div>
+          
+          {/* Net Balance & Available Cash */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-white dark:bg-[#161B27] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-4 relative overflow-hidden group hover:border-blue-200 dark:hover:border-blue-900/50 transition-colors">
+               <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
+               <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                 <Wallet className="w-3.5 h-3.5 text-blue-400"/> Available Cash
+               </h3>
+               <p className={`text-xl font-extrabold tracking-tight ${availableBalance < 0 ? 'text-red-500' : 'text-slate-900 dark:text-white'}`}>
+                 <span className="text-sm font-medium mr-1 opacity-50 text-slate-500">Rs</span>{availableBalance.toLocaleString()}
+               </p>
+            </div>
+            
+            <div className="bg-white dark:bg-[#161B27] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-4 relative overflow-hidden group hover:border-emerald-200 dark:hover:border-emerald-900/50 transition-colors">
+               <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500"></div>
+               <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400"/> Net Profit
+               </h3>
+               <p className={`text-xl font-extrabold tracking-tight ${netProfit < 0 ? 'text-red-500' : 'text-slate-900 dark:text-white'}`}>
+                 <span className="text-sm font-medium mr-1 opacity-50 text-slate-500">Rs</span>{netProfit.toLocaleString()}
+               </p>
+            </div>
           </div>
           
           {/* Project Metatdata */}
