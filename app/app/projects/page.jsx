@@ -7,7 +7,7 @@ import { db } from "@/lib/firebase";
 import { collection, getDocs, doc, deleteDoc, orderBy, query } from "firebase/firestore";
 import { 
   Plus, Search, Briefcase, Trash2, Loader2, Database, Globe, Calendar, DollarSign,
-  LayoutGrid, List, Settings, X, GripVertical, Edit3
+  LayoutGrid, List, Settings, X, GripVertical, Edit3, Server
 } from "lucide-react";
 import { updateDoc, setDoc } from "firebase/firestore";
 import Link from "next/link";
@@ -18,7 +18,9 @@ export default function ProjectsPage() {
   const router = useRouter();
   const [projects, setProjects] = useState([]);
   const [clients, setClients] = useState({});
+  const [vpsMap, setVpsMap] = useState({});
   const [loading, setLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState(null);
   const [search, setSearch] = useState("");
   const [activeStage, setActiveStage] = useState("All");
   const [viewMode, setViewMode] = useState("table"); // "table" or "kanban"
@@ -46,6 +48,14 @@ export default function ProjectsPage() {
       });
       setClients(clientsMap);
 
+      // 3. Fetch VPS for mapping
+      const vpsSnap = await getDocs(collection(db, "vps"));
+      const vData = {};
+      vpsSnap.docs.forEach(doc => {
+        vData[doc.id] = doc.data();
+      });
+      setVpsMap(vData);
+
       // Fetch Projects
       const snap = await getDocs(query(collection(db, "projects"), orderBy("created_at", "desc")));
       setProjects(snap.docs.map(d => ({ id: d.id, ...d.data() })));
@@ -64,12 +74,17 @@ export default function ProjectsPage() {
   const handleDelete = async (e, id) => {
     e.stopPropagation();
     if (!window.confirm("Delete this project completely? This action cannot be undone.")) return;
+    
+    setDeletingId(id);
+    const toastId = toast.loading("Deleting project...");
     try {
       await deleteDoc(doc(db, "projects", id));
-      toast.success("Project deleted");
+      toast.success("Project deleted", { id: toastId });
       fetchData();
-    } catch (e) {
-      toast.error("Failed to delete project: " + e.message);
+    } catch (err) {
+      toast.error("Failed to delete project: " + err.message, { id: toastId });
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -262,6 +277,11 @@ export default function ProjectsPage() {
                                 <Globe className="w-3.5 h-3.5 text-slate-400" /> {pr.domain_name}
                               </span>
                             )}
+                            {pr.vps_id && vpsMap[pr.vps_id] && (
+                              <span className="flex items-center gap-1 text-[11px] text-slate-500 font-medium">
+                                <Server className="w-3.5 h-3.5 text-slate-400" /> {vpsMap[pr.vps_id].name}
+                              </span>
+                            )}
                             {pr.db_name && (
                               <span className="flex items-center gap-1 text-[11px] text-slate-500 font-medium">
                                 <Database className="w-3.5 h-3.5 text-slate-400" /> {pr.db_name}
@@ -326,9 +346,10 @@ export default function ProjectsPage() {
                           </button>
                           <button
                             onClick={(e) => handleDelete(e, pr.id)}
-                            className="p-1.5 rounded-md text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all opacity-0 group-hover:opacity-100"
+                            disabled={deletingId === pr.id}
+                            className="p-1.5 rounded-md text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all opacity-0 group-hover:opacity-100 disabled:opacity-50"
                           >
-                            <Trash2 className="w-4 h-4"/>
+                            {deletingId === pr.id ? <Loader2 className="w-4 h-4 animate-spin"/> : <Trash2 className="w-4 h-4"/>}
                           </button>
                         </div>
                       </div>
@@ -376,12 +397,21 @@ export default function ProjectsPage() {
                           >
                             <div className="flex justify-between items-start mb-2">
                                <h4 className="font-bold text-slate-900 dark:text-white text-sm">{pr.name}</h4>
-                               <button 
-                                 onClick={(e) => { e.stopPropagation(); router.push(`/app/projects/new?edit=${pr.id}`) }}
-                                 className="text-slate-400 hover:text-[#2C79F5] opacity-0 group-hover:opacity-100 transition-all p-1 -mt-1 -mr-1"
-                               >
-                                 <Edit3 className="w-3.5 h-3.5" />
-                               </button>
+                              <div className="flex gap-1.5">
+                                <button 
+                                  onClick={(e) => { e.stopPropagation(); router.push(`/app/projects/new?edit=${pr.id}`) }}
+                                  className="text-slate-400 hover:text-[#2C79F5] opacity-0 group-hover:opacity-100 transition-all p-1"
+                                >
+                                  <Edit3 className="w-3.5 h-3.5" />
+                                </button>
+                                <button 
+                                  onClick={(e) => { e.stopPropagation(); handleDelete(e, pr.id) }}
+                                  disabled={deletingId === pr.id}
+                                  className="text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all p-1 disabled:opacity-50"
+                                >
+                                  {deletingId === pr.id ? <Loader2 className="w-3.5 h-3.5 animate-spin"/> : <Trash2 className="w-3.5 h-3.5" />}
+                                </button>
+                              </div>
                             </div>
                             
                             {client && (
@@ -390,6 +420,13 @@ export default function ProjectsPage() {
                                   {client.company_name?.charAt(0) || client.first_name?.charAt(0) || "?"}
                                 </span>
                                 <span className="text-xs text-slate-600 dark:text-slate-400 truncate">{client.company_name || client.first_name}</span>
+                              </div>
+                            )}
+
+                            {pr.vps_id && vpsMap[pr.vps_id] && (
+                              <div className="flex items-center gap-1.5 mb-2 mt-[-4px]">
+                                <Server className="w-3 h-3 text-slate-400" />
+                                <span className="text-[10px] text-slate-500 font-medium truncate">{vpsMap[pr.vps_id].name}</span>
                               </div>
                             )}
 

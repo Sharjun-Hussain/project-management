@@ -26,6 +26,10 @@ export default function ProjectDashboardPage() {
   const [isAddingPayment, setIsAddingPayment] = useState(false);
   const [isAddingExpense, setIsAddingExpense] = useState(false);
 
+  const [isSubmittingPayment, setIsSubmittingPayment] = useState(false);
+  const [isSubmittingExpense, setIsSubmittingExpense] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
+
   // Forms
   const [paymentForm, setPaymentForm] = useState({ amount: "", method: "Bank Transfer", note: "", date: new Date().toISOString().split('T')[0] });
   const [expenseForm, setExpenseForm] = useState({ amount: "", category: "Hosting / Domain", note: "", date: new Date().toISOString().split('T')[0] });
@@ -73,6 +77,7 @@ export default function ProjectDashboardPage() {
     e.preventDefault();
     if (!paymentForm.amount || parseFloat(paymentForm.amount) <= 0) return toast.error("Enter a valid amount");
     
+    setIsSubmittingPayment(true);
     try {
       await addDoc(collection(doc(db, "projects", id), "payments"), {
         amount: parseFloat(paymentForm.amount),
@@ -87,6 +92,8 @@ export default function ProjectDashboardPage() {
       fetchData();
     } catch (err) {
       toast.error(err.message);
+    } finally {
+      setIsSubmittingPayment(false);
     }
   };
 
@@ -94,6 +101,7 @@ export default function ProjectDashboardPage() {
     e.preventDefault();
     if (!expenseForm.amount || parseFloat(expenseForm.amount) <= 0) return toast.error("Enter a valid amount");
 
+    setIsSubmittingExpense(true);
     try {
       await addDoc(collection(doc(db, "projects", id), "expenses"), {
         amount: parseFloat(expenseForm.amount),
@@ -108,17 +116,24 @@ export default function ProjectDashboardPage() {
       fetchData();
     } catch (err) {
       toast.error(err.message);
+    } finally {
+      setIsSubmittingExpense(false);
     }
   };
 
   const handleDeleteSubDoc = async (subCollection, docId) => {
     if (!window.confirm("Are you sure you want to delete this record?")) return;
+    
+    setDeletingId(docId);
+    const toastId = toast.loading(`Deleting ${subCollection === "payments" ? "payment" : "expense"}...`);
     try {
       await deleteDoc(doc(db, "projects", id, subCollection, docId));
-      toast.success("Deleted successfully");
+      toast.success("Deleted successfully", { id: toastId });
       fetchData();
     } catch(err) {
-      toast.error(err.message);
+      toast.error(err.message, { id: toastId });
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -322,7 +337,10 @@ export default function ProjectDashboardPage() {
                           </select>
                         </div>
                         <div className="md:col-span-3">
-                          <button type="submit" className="w-full py-2 bg-emerald-500 text-white text-sm font-bold rounded-lg shadow-sm hover:bg-emerald-600 transition-colors">Confirm Payment</button>
+                          <button type="submit" disabled={isSubmittingPayment} className="w-full py-2 bg-emerald-500 text-white text-sm font-bold rounded-lg shadow-sm hover:bg-emerald-400 active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2">
+                            {isSubmittingPayment && <Loader2 className="w-4 h-4 animate-spin" />}
+                            Confirm Payment
+                          </button>
                         </div>
                         <div className="md:col-span-12">
                           <input type="text" value={paymentForm.note} onChange={e => setPaymentForm(p => ({...p, note: e.target.value}))} placeholder="Optional reference note or invoice ID..." className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-medium shadow-xs focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none"/>
@@ -359,8 +377,12 @@ export default function ProjectDashboardPage() {
                               <td className="px-6 py-4 text-sm text-slate-500 italic max-w-[200px] truncate">{pay.note || "-"}</td>
                               <td className="px-6 py-4 text-sm font-bold text-slate-900 dark:text-white text-right">Rs {parseFloat(pay.amount).toLocaleString()}</td>
                               <td className="px-6 py-4 text-right">
-                                <button onClick={() => handleDeleteSubDoc("payments", pay.id)} className="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-all opacity-0 group-hover:opacity-100">
-                                  <Trash2 className="w-4 h-4"/>
+                                <button 
+                                  onClick={() => handleDeleteSubDoc("payments", pay.id)} 
+                                  disabled={deletingId === pay.id}
+                                  className="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-all opacity-0 group-hover:opacity-100 disabled:opacity-50"
+                                >
+                                  {deletingId === pay.id ? <Loader2 className="w-4 h-4 animate-spin"/> : <Trash2 className="w-4 h-4"/>}
                                 </button>
                               </td>
                             </tr>
@@ -409,7 +431,10 @@ export default function ProjectDashboardPage() {
                           </select>
                         </div>
                         <div className="md:col-span-3">
-                          <button type="submit" className="w-full py-2 bg-red-500 text-white text-sm font-bold rounded-lg shadow-sm hover:bg-red-600 transition-colors">Save Expense</button>
+                          <button type="submit" disabled={isSubmittingExpense} className="w-full py-2 bg-red-500 text-white text-sm font-bold rounded-lg shadow-sm hover:bg-red-400 active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2">
+                            {isSubmittingExpense && <Loader2 className="w-4 h-4 animate-spin" />}
+                            Save Expense
+                          </button>
                         </div>
                         <div className="md:col-span-12">
                           <input type="text" value={expenseForm.note} onChange={e => setExpenseForm(p => ({...p, note: e.target.value}))} placeholder="Explanation or vendor name..." required className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-medium shadow-xs focus:ring-2 focus:ring-red-500/20 focus:border-red-500 outline-none"/>
@@ -446,8 +471,12 @@ export default function ProjectDashboardPage() {
                               <td className="px-6 py-4 text-sm text-slate-500 italic max-w-[200px] truncate">{exp.note}</td>
                               <td className="px-6 py-4 text-sm font-bold text-slate-900 dark:text-white text-right">Rs {parseFloat(exp.amount).toLocaleString()}</td>
                               <td className="px-6 py-4 text-right">
-                                <button onClick={() => handleDeleteSubDoc("expenses", exp.id)} className="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-all opacity-0 group-hover:opacity-100">
-                                  <Trash2 className="w-4 h-4"/>
+                                <button 
+                                  onClick={() => handleDeleteSubDoc("expenses", exp.id)} 
+                                  disabled={deletingId === exp.id}
+                                  className="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-all opacity-0 group-hover:opacity-100 disabled:opacity-50"
+                                >
+                                  {deletingId === exp.id ? <Loader2 className="w-4 h-4 animate-spin"/> : <Trash2 className="w-4 h-4"/>}
                                 </button>
                               </td>
                             </tr>
