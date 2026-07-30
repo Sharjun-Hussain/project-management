@@ -26,7 +26,15 @@ const securityHeaders = [
   },
   {
     key: 'Content-Security-Policy',
-    value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' http://localhost:5000 https://api.foreignemporium.lk; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data: http://localhost:5000 http://127.0.0.1:5000 https://api.foreignemporium.lk https://i.pravatar.cc https://ui-avatars.com https://lh3.googleusercontent.com; font-src 'self' data:; connect-src 'self' http://localhost:5000 http://127.0.0.1:5000 https://api.foreignemporium.lk;",
+    value: [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com",
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' blob: data: https://*.googleapis.com https://*.googleusercontent.com https://i.pravatar.cc https://ui-avatars.com https://firebasestorage.googleapis.com",
+      "font-src 'self' data:",
+      "connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://firestore.googleapis.com https://firebasestorage.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com wss://*.firebaseio.com http://localhost:5000 http://localhost:8000 http://127.0.0.1:5000 http://127.0.0.1:8000",
+      "frame-src https://concise-booking-316707.firebaseapp.com",
+    ].join('; '),
   },
 ];
 
