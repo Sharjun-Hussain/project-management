@@ -4,12 +4,13 @@ import { collection, getDocs, addDoc, serverTimestamp } from 'firebase/firestore
 import nodemailer from 'nodemailer';
 
 export async function GET(request) {
-  // Validate CRON_SECRET to protect the endpoint from unauthorized calls
-  // (You need to set CRON_SECRET in your Vercel Environment Variables)
-  const authHeader = request.headers.get('authorization');
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    console.warn("Unauthorized cron attempt:", authHeader);
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  // Validate CRON_SECRET in Production to protect the endpoint
+  if (process.env.NODE_ENV !== 'development') {
+    const authHeader = request.headers.get('authorization');
+    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+      console.warn("Unauthorized cron attempt:", authHeader);
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
   }
 
   try {
@@ -132,7 +133,7 @@ export async function GET(request) {
 
         const mailOptions = {
           from: `"${process.env.FALLBACK_EMAIL_NAME || 'System Alerts'}" <${process.env.FALLBACK_EMAIL_FROM}>`,
-          to: process.env.FALLBACK_EMAIL_FROM, // Send to yourself
+          to: process.env.ADMIN_ALERT_EMAIL || "mrjoon005@gmail.com", // Send to admin
           subject: `⚠️ [Action Required] ${alertsToCreate.length} Infrastructure Alerts Generated`,
           html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1e293b;">

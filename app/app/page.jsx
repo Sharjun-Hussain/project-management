@@ -86,19 +86,28 @@ export default function Dashboard() {
     ([url]) => fetcher(url)
   );
 
-  const { data: vpsList, error: vpsError, isLoading: vpsLoading } = useSWR(
-    session ? "dashboard-vps" : null,
-    async () => {
+  const [vpsList, setVpsList] = useState([]);
+  const [vpsLoading, setVpsLoading] = useState(true);
+
+  React.useEffect(() => {
+    let isMounted = true;
+    const fetchVps = async () => {
+      if (!session) return;
       try {
+        setVpsLoading(true);
         const snap = await getDocs(query(collection(db, "vps"), limit(5)));
-        return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      } catch (err) {
-        console.error("Error fetching VPS for dashboard:", err);
-        return [];
+        if (isMounted) {
+          setVpsList(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        }
+      } catch (error) {
+        console.error("Failed to fetch VPS widget data", error);
+      } finally {
+        if (isMounted) setVpsLoading(false);
       }
-    },
-    { revalidateOnFocus: false }
-  );
+    };
+    fetchVps();
+    return () => { isMounted = false; };
+  }, [session]);
 
   const stats = statsRes?.data || null;
   const recentOrders = ordersRes?.data || [];
