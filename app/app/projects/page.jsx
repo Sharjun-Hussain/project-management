@@ -7,7 +7,7 @@ import { db } from "@/lib/firebase";
 import { collection, getDocs, doc, deleteDoc, orderBy, query } from "firebase/firestore";
 import { 
   Plus, Search, Briefcase, Trash2, Loader2, Database, Globe, Calendar, DollarSign,
-  LayoutGrid, List, Settings, X, GripVertical
+  LayoutGrid, List, Settings, X, GripVertical, Edit3
 } from "lucide-react";
 import { updateDoc, setDoc } from "firebase/firestore";
 import Link from "next/link";
@@ -317,7 +317,13 @@ export default function ProjectsPage() {
                         </div>
 
                         {/* Actions Col */}
-                        <div className="flex justify-end items-center">
+                        <div className="flex justify-end items-center gap-1.5">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); router.push(`/app/projects/new?edit=${pr.id}`) }}
+                            className="p-1.5 rounded-md text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all opacity-0 group-hover:opacity-100"
+                          >
+                            <Edit3 className="w-4 h-4"/>
+                          </button>
                           <button
                             onClick={(e) => handleDelete(e, pr.id)}
                             className="p-1.5 rounded-md text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all opacity-0 group-hover:opacity-100"
@@ -368,7 +374,15 @@ export default function ProjectsPage() {
                             onClick={() => router.push(`/app/projects/${pr.id}`)}
                             className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-xs border border-slate-200 dark:border-slate-700 cursor-grab active:cursor-grabbing hover:border-[#2C79F5] transition-colors group"
                           >
-                            <h4 className="font-bold text-slate-900 dark:text-white text-sm mb-2">{pr.name}</h4>
+                            <div className="flex justify-between items-start mb-2">
+                               <h4 className="font-bold text-slate-900 dark:text-white text-sm">{pr.name}</h4>
+                               <button 
+                                 onClick={(e) => { e.stopPropagation(); router.push(`/app/projects/new?edit=${pr.id}`) }}
+                                 className="text-slate-400 hover:text-[#2C79F5] opacity-0 group-hover:opacity-100 transition-all p-1 -mt-1 -mr-1"
+                               >
+                                 <Edit3 className="w-3.5 h-3.5" />
+                               </button>
+                            </div>
                             
                             {client && (
                               <div className="flex items-center gap-1.5 mb-3">

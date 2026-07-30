@@ -4,14 +4,17 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { db } from "@/lib/firebase";
-import { collection, getDocs, addDoc, doc, getDoc, serverTimestamp } from "firebase/firestore";
-import { ArrowLeft, Save, Loader2, Database, Globe, Server, Briefcase, FileText, Calendar } from "lucide-react";
+import { collection, getDocs, addDoc, doc, getDoc, updateDoc, serverTimestamp } from "firebase/firestore";
+import { ArrowLeft, Save, Loader2, Database, Globe, Server, Briefcase, FileText, Calendar, Edit3 } from "lucide-react";
 
 export default function CreateProjectPage() {
   const router = useRouter();
   
   const [loading, setLoading] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editId, setEditId] = useState(null);
   const [clients, setClients] = useState([]);
+  const [vpsList, setVpsList] = useState([]);
   const [formData, setFormData] = useState({
     name: "",
     client_id: "",
@@ -40,17 +43,32 @@ export default function CreateProjectPage() {
 
         // Fetch custom stages
         const settingsDoc = await getDoc(doc(db, "settings", "projects"));
+        let custStages = stages;
         if (settingsDoc.exists() && settingsDoc.data().pipeline_stages) {
-          const custStages = settingsDoc.data().pipeline_stages;
+          custStages = settingsDoc.data().pipeline_stages;
           setStages(custStages);
-          if (custStages.length > 0) {
-             setFormData(prev => ({ ...prev, status: custStages[0] }));
-          }
         }
 
         // Fetch VPS
         const vpsSnap = await getDocs(collection(db, "vps"));
         setVpsList(vpsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+
+        // Check for edit mode
+        const params = new URLSearchParams(window.location.search);
+        const editSourceId = params.get('edit');
+        if (editSourceId) {
+          setIsEditMode(true);
+          setEditId(editSourceId);
+          console.log(editSourceId)
+          const projDoc = await getDoc(doc(db, "projects", editSourceId));
+          if (projDoc.exists()) {
+             setFormData({ ...projDoc.data() });
+          } else {
+             toast.error("Project not found for editing");
+          }
+        } else if (custStages.length > 0) {
+           setFormData(prev => ({ ...prev, status: custStages[0] }));
+        }
 
       } catch (err) {
         console.error("Error loading dependencies", err);
@@ -71,16 +89,24 @@ export default function CreateProjectPage() {
 
     setLoading(true);
     try {
-      await addDoc(collection(db, "projects"), {
+      const payload = {
         ...formData,
         total_cost: parseFloat(formData.total_cost) || 0,
-        created_at: serverTimestamp(),
         updated_at: serverTimestamp()
-      });
-      toast.success("Project created safely!");
-      router.push("/app/projects");
+      };
+
+      if (isEditMode) {
+        await updateDoc(doc(db, "projects", editId), payload);
+        toast.success("Project updated successfully!");
+        router.push(`/app/projects/${editId}`);
+      } else {
+        payload.created_at = serverTimestamp();
+        await addDoc(collection(db, "projects"), payload);
+        toast.success("Project created safely!");
+        router.push("/app/projects");
+      }
     } catch (e) {
-      toast.error("Error creating project: " + e.message);
+      toast.error(`Error ${isEditMode ? "updating" : "creating"} project: ` + e.message);
     } finally {
       setLoading(false);
     }
@@ -100,8 +126,12 @@ export default function CreateProjectPage() {
             <ArrowLeft className="w-4 h-4" />
           </button>
           <div>
-            <h1 className="text-lg font-extrabold text-slate-900 dark:text-white leading-none">New Project</h1>
-            <p className="text-xs text-slate-400 mt-1">Setup hosting, domains, and database credentials</p>
+            <h1 className="text-lg font-extrabold text-slate-900 dark:text-white leading-none">
+              {isEditMode ? "Edit Project" : "New Project"}
+            </h1>
+            <p className="text-xs text-slate-400 mt-1">
+              {isEditMode ? "Update hosting, domains, and CRM data" : "Setup hosting, domains, and database credentials"}
+            </p>
           </div>
         </div>
         <div>
@@ -110,8 +140,8 @@ export default function CreateProjectPage() {
             disabled={loading}
             className="flex items-center gap-2 px-5 py-2.5 bg-[#2C79F5] text-white text-sm font-bold rounded-lg shadow-sm hover:bg-[#1a6ae0] focus:ring-4 focus:ring-blue-500/20 transition-all disabled:opacity-50"
           >
-            {loading ? <Loader2 className="w-4 h-4 animate-spin"/> : <Save className="w-4 h-4" />}
-            Create Project
+            {loading ? <Loader2 className="w-4 h-4 animate-spin"/> : (isEditMode ? <Edit3 className="w-4 h-4" /> : <Save className="w-4 h-4" />)}
+            {isEditMode ? "Save Changes" : "Create Project"}
           </button>
         </div>
       </div>

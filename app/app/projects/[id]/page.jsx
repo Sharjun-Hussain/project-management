@@ -7,7 +7,7 @@ import { db } from "@/lib/firebase";
 import { doc, getDoc, collection, query, getDocs, addDoc, serverTimestamp, orderBy, deleteDoc } from "firebase/firestore";
 import { 
   ArrowLeft, Download, Plus, DollarSign, Wallet, FileText, 
-  Trash2, Loader2, Receipt, TrendingUp, Calendar, Hash, Globe, Database, Activity, CheckCircle2, LayoutDashboard
+  Trash2, Loader2, Receipt, TrendingUp, Calendar, Hash, Globe, Database, Activity, CheckCircle2, LayoutDashboard, Edit3
 } from "lucide-react";
 
 export default function ProjectDashboardPage() {
@@ -165,6 +165,11 @@ export default function ProjectDashboardPage() {
                Project Dashboard & Financial Overviews
              </p>
           </div>
+        </div>
+        <div>
+           <button onClick={() => router.push(`/app/projects/new?edit=${project.id}`)} className="p-2.5 bg-slate-100 dark:bg-slate-800 text-slate-500 flex items-center gap-2 hover:text-slate-900 dark:hover:text-white rounded-lg transition-colors border border-slate-200 dark:border-slate-700 font-bold text-sm">
+             <Edit3 className="w-4 h-4" /> Edit Project
+           </button>
         </div>
       </div>
 
