@@ -231,74 +231,74 @@ export default function ClientsPage() {
 
   // ─────────────────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-[#F5F7FA] dark:bg-[#0F1117] font-sans">
+    <div className="min-h-screen bg-[#F5F7FA] dark:bg-[#0F1117] font-sans pb-20">
 
       {/* ── Top Bar ── */}
-      <div ref={headerRef} className="bg-white dark:bg-[#161B27] border-b border-slate-200 dark:border-slate-800 px-8 py-4 flex items-center justify-between gap-4 sticky top-0 z-20 shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-[#2C79F5]/10 flex items-center justify-center">
+      <div ref={headerRef} className="bg-white dark:bg-[#161B27] border-b border-slate-200 dark:border-slate-800 px-8 py-4 flex items-center justify-between sticky top-0 z-20 shadow-sm h-20">
+        <div className="flex items-center gap-5">
+          <div className="w-10 h-10 rounded-xl bg-[#2C79F5]/10 flex items-center justify-center border border-[#2C79F5]/20">
             <Users className="w-5 h-5 text-[#2C79F5]" />
           </div>
           <div>
-            <h1 className="text-base font-extrabold text-slate-900 dark:text-white leading-none">Clients</h1>
-            <p className="text-[11px] text-slate-400 mt-0.5">{clients.length} total</p>
+            <h1 className="text-[22px] tracking-tight font-extrabold text-slate-900 dark:text-white leading-none mb-1">
+              Client Directory
+            </h1>
+            <p className="text-[12px] font-medium text-slate-400">
+              Manage agencies, customers, and partners
+            </p>
           </div>
         </div>
-        <div className="flex gap-2 items-center">
+        <div className="flex gap-3 items-center">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
             <input
               value={search} onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search…"
-              className="pl-9 pr-4 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:border-[#2C79F5] focus:ring-2 focus:ring-[#2C79F5]/20 dark:text-white w-52 transition-all"
+              placeholder="Search clients…"
+              className="pl-9 pr-4 py-2.5 text-[13px] font-bold bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:border-[#2C79F5] focus:ring-1 focus:ring-[#2C79F5]/50 dark:text-white w-64 transition-all"
             />
           </div>
-          <button className="flex items-center gap-1.5 px-3 py-2 text-sm font-semibold text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 transition-colors">
-            <SlidersHorizontal className="w-3.5 h-3.5" /> Filter
-          </button>
           <button
             onClick={() => openDrawer("create")}
-            className="flex items-center gap-1.5 px-4 py-2 text-sm font-bold text-white bg-[#2C79F5] hover:bg-[#1a6ae0] rounded-lg shadow-sm shadow-blue-500/30 transition-all active:scale-95">
-            <Plus className="w-4 h-4" /> Add client
+            className="flex items-center gap-2 px-5 py-2.5 text-[13px] font-extrabold text-white bg-[#2C79F5] hover:bg-[#1a6ae0] rounded-xl shadow-sm transition-all active:scale-95">
+            <Plus className="w-4 h-4" /> Add Client
           </button>
         </div>
       </div>
 
-      {/* ── Pipeline stage tabs ── */}
-      <div className="bg-white dark:bg-[#161B27] border-b border-slate-200 dark:border-slate-800 px-8">
-        <div className="flex gap-0">
+      <div className="max-w-[1400px] mx-auto mt-8 px-8 space-y-6">
+        {/* ── Pipeline stage tabs ── */}
+        <div className="flex gap-2">
           {stages.map((s) => {
             const cfg = STAGE_CONFIG[s] || {};
             return (
               <button
                 key={s}
                 onClick={() => setFilterStage(s)}
-                className={`relative flex items-center gap-2 px-4 py-3 text-[13px] font-semibold border-b-2 transition-colors ${
+                className={`relative flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-bold transition-all border ${
                   filterStage === s
-                    ? "border-[#2C79F5] text-[#2C79F5]"
-                    : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+                    ? "bg-white dark:bg-[#161B27] border-slate-300 dark:border-slate-600 shadow-sm text-slate-900 dark:text-white"
+                    : "bg-slate-50/50 dark:bg-[#0F1117] border-slate-200/50 dark:border-slate-800/50 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800/50"
                 }`}
               >
                 {s !== "All" && <span className={`w-2 h-2 rounded-full ${cfg.dot}`} />}
                 {s}
-                <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded-full ${filterStage === s ? "bg-[#2C79F5]/10 text-[#2C79F5]" : "bg-slate-100 dark:bg-slate-800 text-slate-500"}`}>
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-md ${filterStage === s ? "bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300" : "bg-slate-200/50 dark:bg-slate-800/30 text-slate-400"}`}>
                   {counts[s]}
                 </span>
               </button>
             );
           })}
         </div>
-      </div>
 
-      {/* ── Table ── */}
-      <div className="px-8 py-4">
-        {loading ? (
-          <div className="flex items-center justify-center py-32 gap-3">
-            <Loader2 className="w-8 h-8 animate-spin text-[#2C79F5]" />
-            <span className="text-slate-500 font-medium text-sm">Loading clients…</span>
-          </div>
-        ) : filtered.length === 0 ? (
-          <div className="py-24 text-center">
+        {/* ── Table ── */}
+        <div>
+          {loading ? (
+            <div className="flex items-center justify-center py-32 gap-3">
+              <Loader2 className="w-8 h-8 animate-spin text-[#2C79F5]" />
+              <span className="text-slate-500 font-medium text-sm">Loading clients…</span>
+            </div>
+          ) : filtered.length === 0 ? (
+          <div className="py-24 text-center bg-white dark:bg-[#161B27] rounded-3xl border border-slate-200 dark:border-slate-800">
             <Users className="w-12 h-12 mx-auto text-slate-300 dark:text-slate-700 mb-3" />
             <h3 className="text-base font-bold text-slate-600 dark:text-slate-400">
               {search || filterStage !== "All" ? "No matching clients" : "No clients yet"}
@@ -307,238 +307,218 @@ export default function ClientsPage() {
               {search || filterStage !== "All" ? "Try a different filter or search term." : "Add your first client to get started."}
             </p>
             {(!search && filterStage === "All") && (
-              <button onClick={() => openDrawer("create")} className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#2C79F5] text-white rounded-lg font-bold text-sm shadow hover:bg-[#1a6ae0] transition-all">
+              <button onClick={() => openDrawer("create")} className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#2C79F5] text-white rounded-xl font-bold text-[13px] shadow hover:bg-[#1a6ae0] transition-all">
                 <Plus className="w-4 h-4" /> Add First Client
               </button>
             )}
           </div>
-        ) : (
-          <div className="bg-white dark:bg-[#161B27] rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-            {/* Table head */}
-            <div className="grid grid-cols-[2fr_2fr_1.5fr_1fr_80px] gap-4 px-6 py-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/50">
-              {["Company", "Contact", "Industry", "Stage", ""].map((h, i) => (
-                <div key={i} className={`flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400 ${i === 4 ? "justify-end" : ""}`}>
-                  {h} {h && <ArrowUpDown className="w-3 h-3 opacity-40"/>}
+          ) : (
+            <div className="bg-white dark:bg-[#161B27] rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+              <table className="w-full text-left">
+                <thead className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-800">
+                  <tr>
+                    <th className="p-5 pl-8 text-xs font-bold text-slate-500 uppercase w-[5%]"></th>
+                    <th className="p-5 text-xs font-bold text-slate-500 uppercase w-[30%]">Company</th>
+                    <th className="p-5 text-xs font-bold text-slate-500 uppercase w-[25%]">Contact</th>
+                    <th className="p-5 text-xs font-bold text-slate-500 uppercase w-[15%]">Industry</th>
+                    <th className="p-5 text-xs font-bold text-slate-500 uppercase w-[15%]">Stage</th>
+                    <th className="p-5 pr-8 w-[10%]"></th>
+                  </tr>
+                </thead>
+                <tbody ref={tableRef} className="divide-y divide-slate-100 dark:divide-slate-800">
+                  {currentItems.map((client) => (
+                    <tr key={client.id} className="row-anim group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors duration-100 cursor-pointer">
+                      <td className="p-4 pl-8">
+                        <StarBtn
+                          starred={!!starred[client.id]}
+                          onToggle={() => setStarred((p) => ({ ...p, [client.id]: !p[client.id] }))}
+                        />
+                      </td>
+                      <td className="p-4">
+                        <div className="flex items-center gap-3">
+                          <Avatar name={client.company_name} />
+                          <div className="min-w-0">
+                            <div className="font-bold text-[14px] text-slate-900 dark:text-white truncate">
+                              {client.company_name}
+                            </div>
+                            {client.address && (
+                              <div className="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5 font-medium">
+                                <MapPin className="w-3 h-3 shrink-0" />
+                                <span className="truncate">{client.address}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-4">
+                        <div className="flex flex-col gap-0.5">
+                          <div className="text-[13px] font-bold text-slate-700 dark:text-slate-300">
+                            {client.contact_person || <span className="text-slate-300 dark:text-slate-600">—</span>}
+                          </div>
+                          {(client.email || client.phone) && (
+                            <div className="text-[11px] font-medium text-slate-400 mt-0.5 space-y-0.5">
+                              {client.email && <div>{client.email}</div>}
+                              {client.phone && <div>{client.phone}</div>}
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      <td className="p-4">
+                        <div className="text-[13px] font-semibold text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
+                          {client.industry ? (
+                            <><Briefcase className="w-3.5 h-3.5 text-slate-400"/> {client.industry}</>
+                          ) : "—"}
+                        </div>
+                      </td>
+                      <td className="p-4">
+                        <StatusBadge status={client.status || "Lead"} />
+                      </td>
+                      <td className="p-4 pr-8 text-right">
+                        <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={() => openDrawer("edit", client)}
+                            className="p-2 rounded-lg text-slate-400 hover:text-[#2C79F5] hover:bg-[#2C79F5]/10 font-bold text-[13px] transition-colors"
+                          >
+                            <Edit3 className="w-4 h-4"/>
+                          </button>
+                          <button
+                            onClick={() => handleDelete(client)}
+                            className="p-2 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 font-bold text-[13px] transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4"/>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              {/* Footer Pagination */}
+              {totalPages > 1 && (
+              <div className="px-6 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30 flex justify-between items-center">
+                <span className="text-[12px] text-slate-500 font-bold">
+                  Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filtered.length)} of {filtered.length} clients
+                </span>
+                <div className="flex items-center gap-2">
+                  <button 
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="px-4 py-1.5 text-xs font-bold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 transition-colors disabled:opacity-50"
+                  >
+                    Prev
+                  </button>
+                  <button 
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                    className="px-4 py-1.5 text-xs font-bold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 transition-colors disabled:opacity-50"
+                  >
+                    Next
+                  </button>
                 </div>
-              ))}
-            </div>
-
-            {/* Table body */}
-            <div ref={tableRef} className="divide-y divide-slate-100 dark:divide-slate-800">
-              {currentItems.map((client) => (
-                <div
-                  key={client.id}
-                  className="row-anim group grid grid-cols-[2fr_2fr_1.5fr_1fr_80px] gap-4 px-6 py-3 hover:bg-[#F0F5FF] dark:hover:bg-[#1e2740] transition-colors duration-100 items-center cursor-pointer"
-                >
-                  {/* Company */}
-                  <div className="flex items-center gap-3 min-w-0">
-                    <StarBtn
-                      starred={!!starred[client.id]}
-                      onToggle={() => setStarred((p) => ({ ...p, [client.id]: !p[client.id] }))}
-                    />
-                    <Avatar name={client.company_name} />
-                    <div className="min-w-0">
-                      <div className="font-bold text-[13px] text-slate-900 dark:text-white truncate group-hover:text-[#2C79F5] transition-colors">
-                        {client.company_name}
-                      </div>
-                      {client.address && (
-                        <div className="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5">
-                          <MapPin className="w-3 h-3 shrink-0" />
-                          <span className="truncate">{client.address}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Contact */}
-                  <div className="flex flex-col gap-0.5 min-w-0">
-                    <div className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 truncate">
-                      {client.contact_person || <span className="text-slate-300 dark:text-slate-600">—</span>}
-                    </div>
-                    <div className="space-y-0.5">
-                      {client.email && (
-                        <div className="text-[11px] text-slate-400 flex items-center gap-1.5 truncate">
-                          <Mail className="w-3 h-3 shrink-0"/>{client.email}
-                        </div>
-                      )}
-                      {client.phone && (
-                        <div className="text-[11px] text-slate-400 flex items-center gap-1.5">
-                          <Phone className="w-3 h-3 shrink-0"/>{client.phone}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Industry */}
-                  <div className="text-[13px] font-medium text-slate-600 dark:text-slate-400 truncate">
-                    {client.industry || "—"}
-                  </div>
-
-                  {/* Stage */}
-                  <div><StatusBadge status={client.status || "Lead"} /></div>
-
-                  {/* Actions */}
-                  <div className="flex items-center justify-end gap-1">
-                    <button
-                      onClick={() => openDrawer("edit", client)}
-                      className="p-1.5 rounded-md text-slate-400 hover:text-[#2C79F5] hover:bg-[#2C79F5]/10 transition-colors"
-                    >
-                      <Edit3 className="w-4 h-4"/>
-                    </button>
-                    <button
-                      onClick={() => handleDelete(client)}
-                      className="p-1.5 rounded-md text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                    >
-                      <Trash2 className="w-4 h-4"/>
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Footer Pagination */}
-            {totalPages > 1 && (
-            <div className="px-6 py-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30 flex justify-between items-center">
-              <span className="text-[11px] text-slate-400 font-semibold">
-                Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filtered.length)} of {filtered.length} clients
-              </span>
-              <div className="flex items-center gap-1">
-                <button 
-                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                  disabled={currentPage === 1}
-                  className="px-2.5 py-1 text-xs font-semibold rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-                >
-                  Prev
-                </button>
-                <button 
-                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                  disabled={currentPage === totalPages}
-                  className="px-2.5 py-1 text-xs font-semibold rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-                >
-                  Next
-                </button>
               </div>
+              )}
             </div>
-            )}
-            {totalPages <= 1 && (
-            <div className="px-6 py-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30 flex justify-between items-center">
-              <span className="text-[11px] text-slate-400 font-semibold">
-                {filtered.length} of {clients.length} clients
-              </span>
-              <span className="text-[11px] text-slate-400">Sorted by: newest first</span>
-            </div>
-            )}
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* ── Side Drawer ── */}
       {drawerOpen && (
-        <div className="fixed inset-0 z-50 overflow-hidden">
-          <div ref={overlayRef} className="absolute inset-0 bg-slate-900/30 backdrop-blur-[2px]" onClick={closeDrawer}/>
-          <div className="absolute inset-y-0 right-0 flex max-w-full pointer-events-none">
-            <div ref={drawerRef} className="pointer-events-auto w-screen max-w-[400px] bg-white dark:bg-[#161B27] shadow-2xl flex flex-col border-l border-slate-200 dark:border-slate-800">
+        <div className="fixed inset-0 z-50 overflow-hidden flex justify-end">
+          <div ref={overlayRef} className="absolute inset-0 bg-slate-900/20 backdrop-blur-sm" onClick={closeDrawer}/>
+          <div ref={drawerRef} className="relative w-full max-w-md bg-white dark:bg-[#161B27] shadow-2xl flex flex-col h-full border-l border-slate-200 dark:border-slate-800">
+            {/* Drawer header */}
+            <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-900/50">
+              <div>
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white">
+                  {formMode === "create" ? "Add new client" : "Edit client"}
+                </h2>
+              </div>
+              <button onClick={closeDrawer} className="p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 transition-colors">
+                <X className="w-5 h-5"/>
+              </button>
+            </div>
 
-              {/* Drawer header */}
-              <div className="px-6 pt-5 pb-4 border-b border-slate-100 dark:border-slate-800 flex items-start justify-between">
-                <div>
-                  <h2 className="text-base font-extrabold text-slate-900 dark:text-white">
-                    {formMode === "create" ? "Add new client" : "Edit client"}
-                  </h2>
-                  <p className="text-xs text-slate-400 mt-0.5">Fill in the CRM profile details</p>
-                </div>
-                <button onClick={closeDrawer} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 transition-colors">
-                  <X className="w-4 h-4"/>
+            {/* Stage selector strip */}
+            <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex gap-2">
+              {Object.entries(STAGE_CONFIG).map(([s, cfg]) => (
+                <button
+                  key={s}
+                  onClick={() => field("status", s)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-bold border transition-all ${
+                    formData.status === s
+                      ? `${cfg.color} ${cfg.bg} ${cfg.border} ring-2 ring-offset-1 ring-current/30`
+                      : "text-slate-400 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-slate-300"
+                  }`}
+                >
+                  <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`}/>{s}
                 </button>
-              </div>
+              ))}
+            </div>
 
-              {/* Stage selector strip */}
-              <div className="px-6 py-3 border-b border-slate-100 dark:border-slate-800 flex gap-2">
-                {Object.entries(STAGE_CONFIG).map(([s, cfg]) => (
-                  <button
-                    key={s}
-                    onClick={() => field("status", s)}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold border transition-all ${
-                      formData.status === s
-                        ? `${cfg.color} ${cfg.bg} ${cfg.border} ring-2 ring-offset-1 ring-current/30`
-                        : "text-slate-400 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-slate-300"
-                    }`}
-                  >
-                    <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`}/>{s}
-                  </button>
-                ))}
-              </div>
-
-              {/* Form */}
-              <form onSubmit={handleSave} className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
-
-                <FormField label="Company / Entity Name" icon={Building} required>
+            {/* Form */}
+            <form onSubmit={handleSave} className="flex-1 overflow-y-auto px-6 py-6 space-y-5 custom-tiny-scrollbar">
+              <FormField label="Company / Entity Name" icon={Building} required>
+                <input
+                  required value={formData.company_name} onChange={(e) => field("company_name", e.target.value)}
+                  placeholder="e.g. Acme Corp"
+                  className={inputCls()}
+                />
+              </FormField>
+              <FormField label="Contact Person" icon={User}>
+                <input
+                  value={formData.contact_person} onChange={(e) => field("contact_person", e.target.value)}
+                  placeholder="Full name"
+                  className={inputCls()}
+                />
+              </FormField>
+              <div className="grid grid-cols-2 gap-4">
+                <FormField label="Email" icon={Mail}>
                   <input
-                    required value={formData.company_name} onChange={(e) => field("company_name", e.target.value)}
-                    placeholder="e.g. Acme Corp"
+                    type="email" value={formData.email} onChange={(e) => field("email", e.target.value)}
+                    placeholder="email@company.com"
                     className={inputCls()}
                   />
                 </FormField>
-
-                <FormField label="Contact Person" icon={User}>
+                <FormField label="Phone" icon={Phone}>
                   <input
-                    value={formData.contact_person} onChange={(e) => field("contact_person", e.target.value)}
-                    placeholder="Full name"
+                    value={formData.phone} onChange={(e) => field("phone", e.target.value)}
+                    placeholder="+1 234 567 890"
                     className={inputCls()}
                   />
                 </FormField>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <FormField label="Email" icon={Mail}>
-                    <input
-                      type="email" value={formData.email} onChange={(e) => field("email", e.target.value)}
-                      placeholder="email@company.com"
-                      className={inputCls()}
-                    />
-                  </FormField>
-                  <FormField label="Phone" icon={Phone}>
-                    <input
-                      value={formData.phone} onChange={(e) => field("phone", e.target.value)}
-                      placeholder="+1 234 567 890"
-                      className={inputCls()}
-                    />
-                  </FormField>
-                </div>
-
-                <FormField label="Industry" icon={Briefcase}>
-                  <input
-                    value={formData.industry} onChange={(e) => field("industry", e.target.value)}
-                    placeholder="e.g. Retail, SaaS, Healthcare"
-                    className={inputCls()}
-                  />
-                </FormField>
-
-                <FormField label="Address" icon={MapPin} isTextArea>
-                  <textarea
-                    value={formData.address} onChange={(e) => field("address", e.target.value)}
-                    rows={2} placeholder="Street, City, Country…"
-                    className="w-full pl-9 pr-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm outline-none focus:border-[#2C79F5] focus:ring-2 focus:ring-[#2C79F5]/20 transition-all dark:text-white resize-none"
-                  />
-                </FormField>
-
-              </form>
-
-              {/* Drawer footer */}
-              <div className="px-6 py-4 border-t border-slate-100 dark:border-slate-800 flex gap-3">
-                <button type="button" onClick={closeDrawer}
-                  className="flex-1 py-2.5 text-sm font-bold rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                  Cancel
-                </button>
-                <button onClick={handleSave} disabled={!formData.company_name || saving}
-                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-bold rounded-lg text-white transition-all ${
-                    !formData.company_name || saving
-                      ? "bg-blue-300 cursor-not-allowed"
-                      : "bg-[#2C79F5] hover:bg-[#1a6ae0] shadow-sm shadow-blue-500/30 active:scale-95"
-                  }`}>
-                  {saving ? <><Loader2 className="w-4 h-4 animate-spin"/>Saving…</> : (formMode === "create" ? "Save client" : "Update client")}
-                </button>
               </div>
+              <FormField label="Industry" icon={Briefcase}>
+                <input
+                  value={formData.industry} onChange={(e) => field("industry", e.target.value)}
+                  placeholder="e.g. Retail, SaaS, Healthcare"
+                  className={inputCls()}
+                />
+              </FormField>
+              <FormField label="Address" icon={MapPin} isTextArea>
+                <textarea
+                  value={formData.address} onChange={(e) => field("address", e.target.value)}
+                  rows={3} placeholder="Street, City, Country…"
+                  className="w-full pl-9 pr-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm outline-none focus:border-[#2C79F5] focus:ring-2 focus:ring-[#2C79F5]/20 transition-all dark:text-white resize-none"
+                />
+              </FormField>
+            </form>
 
+            {/* Drawer footer */}
+            <div className="px-6 py-4 border-t border-slate-100 dark:border-slate-800 flex gap-3 bg-slate-50 dark:bg-slate-900/50">
+              <button type="button" onClick={closeDrawer}
+                className="flex-1 py-2.5 text-[13px] font-bold rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 transition-colors">
+                Cancel
+              </button>
+              <button onClick={handleSave} disabled={!formData.company_name || saving}
+                className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-[13px] font-bold rounded-xl text-white transition-all ${
+                  !formData.company_name || saving
+                    ? "bg-blue-300 cursor-not-allowed"
+                    : "bg-[#2C79F5] hover:bg-[#1a6ae0] shadow-sm shadow-blue-500/30 active:scale-95"
+                }`}>
+                {saving ? <><Loader2 className="w-4 h-4 animate-spin"/>Saving…</> : (formMode === "create" ? "Save client" : "Update client")}
+              </button>
             </div>
           </div>
         </div>
