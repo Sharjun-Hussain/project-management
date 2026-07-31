@@ -5,9 +5,10 @@ import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { db } from "@/lib/firebase";
 import { doc, getDoc, collection, query, getDocs, addDoc, serverTimestamp, orderBy, deleteDoc } from "firebase/firestore";
+import { Editor } from '@tinymce/tinymce-react';
 import { 
   ArrowLeft, Download, Plus, DollarSign, Wallet, FileText, 
-  Trash2, Loader2, Receipt, TrendingUp, Calendar, Hash, Globe, Database, Activity, CheckCircle2, LayoutDashboard, Edit3
+  Trash2, Loader2, Receipt, TrendingUp, Calendar, Hash, Globe, Database, Activity, CheckCircle2, LayoutDashboard, Edit3, Terminal, Copy
 } from "lucide-react";
 
 export default function ProjectDashboardPage() {
@@ -20,19 +21,23 @@ export default function ProjectDashboardPage() {
   // Ledgers
   const [payments, setPayments] = useState([]);
   const [expenses, setExpenses] = useState([]);
+  const [runbooks, setRunbooks] = useState([]);
   
   // UI State
-  const [activeTab, setActiveTab] = useState("payments");
+  const [activeTab, setActiveTab] = useState("runbooks");
   const [isAddingPayment, setIsAddingPayment] = useState(false);
   const [isAddingExpense, setIsAddingExpense] = useState(false);
+  const [isAddingRunbook, setIsAddingRunbook] = useState(false);
 
   const [isSubmittingPayment, setIsSubmittingPayment] = useState(false);
   const [isSubmittingExpense, setIsSubmittingExpense] = useState(false);
+  const [isSubmittingRunbook, setIsSubmittingRunbook] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
 
   // Forms
   const [paymentForm, setPaymentForm] = useState({ amount: "", method: "Bank Transfer", note: "", date: new Date().toISOString().split('T')[0] });
   const [expenseForm, setExpenseForm] = useState({ amount: "", category: "Hosting / Domain", note: "", date: new Date().toISOString().split('T')[0] });
+  const [runbookForm, setRunbookForm] = useState({ title: "", content: "" });
 
   const fetchData = async () => {
     try {
@@ -54,6 +59,10 @@ export default function ProjectDashboardPage() {
       // 3. Fetch Expenses
       const expSnap = await getDocs(query(collection(docRef, "expenses"), orderBy("created_at", "desc")));
       setExpenses(expSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+
+      // 4. Fetch Runbooks
+      const rbSnap = await getDocs(query(collection(docRef, "runbooks"), orderBy("created_at", "desc")));
+      setRunbooks(rbSnap.docs.map(d => ({ id: d.id, ...d.data() })));
     } catch (err) {
       console.error(err);
       toast.error("Failed to load project details");
@@ -121,6 +130,28 @@ export default function ProjectDashboardPage() {
       toast.error(err.message);
     } finally {
       setIsSubmittingExpense(false);
+    }
+  };
+
+  const handleAddRunbook = async (e) => {
+    e.preventDefault();
+    if (!runbookForm.title || !runbookForm.content) return toast.error("Title and content required");
+
+    setIsSubmittingRunbook(true);
+    try {
+      await addDoc(collection(doc(db, "projects", id), "runbooks"), {
+        title: runbookForm.title,
+        content: runbookForm.content,
+        created_at: serverTimestamp()
+      });
+      toast.success("Runbook / Commands saved!");
+      setIsAddingRunbook(false);
+      setRunbookForm({ title: "", content: "" });
+      fetchData();
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setIsSubmittingRunbook(false);
     }
   };
 
@@ -322,6 +353,12 @@ export default function ProjectDashboardPage() {
               >
                 <Receipt className={`w-4 h-4 inline-block mr-2 mb-0.5 ${activeTab === "expenses" ? "text-red-500" : ""}`} /> Expense Book
               </button>
+              <button 
+                onClick={() => setActiveTab("runbooks")}
+                className={`py-2 px-5 text-[13px] font-bold rounded-xl transition-all shadow-xs ${activeTab === "runbooks" ? "bg-white dark:bg-[#161B27] text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700" : "bg-transparent border border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"}`}
+              >
+                <Terminal className={`w-4 h-4 inline-block mr-2 mb-0.5 ${activeTab === "runbooks" ? "text-indigo-500" : ""}`} /> Runbooks & Commands
+              </button>
             </div>
 
             {/* Content Area */}
@@ -510,6 +547,108 @@ export default function ProjectDashboardPage() {
                         )}
                       </tbody>
                     </table>
+                  </div>
+                </div>
+              )}
+
+              {/* === RUNBOOKS TAB === */}
+              {activeTab === "runbooks" && (
+                <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+                  <div className="flex justify-between items-center mb-6">
+                    <div>
+                      <h2 className="text-base font-bold text-slate-900 dark:text-white">Runbooks & Ops Commands</h2>
+                      <p className="text-xs font-medium text-slate-400 mt-0.5">Deployment scripts, server configuration notes, rich-text instructions and credentials.</p>
+                    </div>
+                    <button 
+                      onClick={() => setIsAddingRunbook(!isAddingRunbook)}
+                      className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-[13px] font-bold rounded-xl flex items-center gap-2 transition-colors shadow-sm"
+                    >
+                      <Plus className="w-4 h-4" /> Add Runbook
+                    </button>
+                  </div>
+
+                  {isAddingRunbook && (
+                    <div className="mb-8 bg-white dark:bg-slate-800 p-1 rounded-2xl border border-indigo-200 dark:border-indigo-900/50 shadow-lg shadow-indigo-500/5">
+                      <form onSubmit={handleAddRunbook} className="card-bg p-5 rounded-[12px] flex flex-col gap-5 bg-indigo-50/30 dark:bg-indigo-900/10">
+                        
+                        <div>
+                          <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Runbook Title *</label>
+                          <input type="text" value={runbookForm.title} onChange={e => setRunbookForm(p => ({...p, title: e.target.value}))} required placeholder="e.g. Production Deployment Steps, Backend Configurations" className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-bold shadow-xs focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none text-indigo-600 dark:text-indigo-400 placeholder:opacity-50"/>
+                        </div>
+                        
+                        <div className="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm relative">
+                           <Editor
+                             tinymceScriptSrc="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.3/tinymce.min.js"
+                             init={{
+                               height: 400,
+                               menubar: false,
+                               plugins: 'advlist autolink lists link image charmap pre code table wordcount codesample highlight blockquote hr pagebreak',
+                               toolbar: 'undo redo | formatselect | bold italic codesample pre | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent',
+                               content_style: 'body { font-family:Inter,Helvetica,Arial,sans-serif; font-size:14px; }',
+                               skin: "oxide",
+                             }}
+                             value={runbookForm.content}
+                             onEditorChange={(content) => setRunbookForm(p => ({...p, content}))}
+                           />
+                        </div>
+
+                        <div className="flex justify-end gap-3 pt-2">
+                          <button type="button" onClick={() => setIsAddingRunbook(false)} className="px-5 py-2 text-sm font-bold text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">Cancel</button>
+                          <button type="submit" disabled={isSubmittingRunbook} className="px-5 py-2 bg-indigo-600 text-white text-sm font-bold rounded-lg shadow-sm hover:bg-indigo-500 active:scale-95 transition-all disabled:opacity-50 flex items-center gap-2">
+                            {isSubmittingRunbook && <Loader2 className="w-4 h-4 animate-spin" />}
+                            Save Configuration
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  )}
+
+                  <div className="space-y-4">
+                     {runbooks.length === 0 ? (
+                        <div className="py-12 bg-white dark:bg-[#161B27] rounded-xl border border-slate-200 dark:border-slate-800 text-center flex flex-col items-center">
+                           <Terminal className="w-8 h-8 text-slate-300 dark:text-slate-600 mb-3" />
+                           <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300">No configurations yet</h3>
+                           <p className="text-sm font-medium text-slate-500 mt-1">Add deployment commands, proxy setups, or environmental notes.</p>
+                        </div>
+                     ) : (
+                        runbooks.map(rb => (
+                           <div key={rb.id} className="bg-white dark:bg-[#161B27] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden group">
+                              <div className="px-5 py-3.5 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 flex justify-between items-center">
+                                 <h3 className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                                   <Terminal className="w-4 h-4 text-indigo-500" /> {rb.title}
+                                 </h3>
+                                 <div className="flex gap-2">
+                                     <button 
+                                        onClick={() => {
+                                          const el = document.createElement('div');
+                                          el.innerHTML = rb.content;
+                                          navigator.clipboard.writeText(el.innerText);
+                                          toast.success("Script copied to clipboard!");
+                                        }}
+                                        className="p-1.5 text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg transition-colors border border-transparent hover:border-indigo-100 dark:hover:border-indigo-800"
+                                        title="Copy raw text snippet"
+                                     >
+                                        <Copy className="w-4 h-4"/>
+                                     </button>
+                                     <button 
+                                        onClick={() => handleDeleteSubDoc("runbooks", rb.id)} 
+                                        disabled={deletingId === rb.id}
+                                        className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all disabled:opacity-50 border border-transparent hover:border-red-100 dark:hover:border-red-800"
+                                     >
+                                        {deletingId === rb.id ? <Loader2 className="w-4 h-4 animate-spin"/> : <Trash2 className="w-4 h-4"/>}
+                                     </button>
+                                 </div>
+                              </div>
+                              <div 
+                                className="p-6 prose prose-sm dark:prose-invert max-w-none text-slate-600 dark:text-slate-400 
+                                           prose-p:leading-relaxed prose-pre:bg-slate-900 prose-pre:text-slate-50 dark:prose-pre:bg-[#0F1117] 
+                                           prose-code:text-indigo-600 dark:prose-code:text-indigo-400 prose-code:bg-indigo-50 dark:prose-code:bg-indigo-900/30 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded
+                                           prose-a:text-indigo-500 prose-headings:text-slate-800 dark:prose-headings:text-slate-200 prose-pre:rounded-xl prose-pre:shadow-sm"
+                                dangerouslySetInnerHTML={{ __html: rb.content }} 
+                              />
+                           </div>
+                        ))
+                     )}
                   </div>
                 </div>
               )}

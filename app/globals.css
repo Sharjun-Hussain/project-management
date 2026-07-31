@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -44,14 +45,14 @@
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
-  
+
   /* Centralized Accent Color variables overriding Tailwind Indigo and Purple themes */
   --color-indigo-600: var(--accent-color, #6366f1);
   --color-indigo-500: var(--accent-hover, #4f46e5);
   --color-indigo-50: var(--accent-light, #eef2ff);
   --color-indigo-950: var(--accent-hover, #4f46e5);
   --color-indigo-900: var(--accent-hover, #4f46e5);
-  
+
   --color-purple-600: var(--accent-color, #6366f1);
   --color-purple-500: var(--accent-hover, #4f46e5);
   --color-purple-50: var(--accent-light, #eef2ff);
@@ -133,6 +134,10 @@
   body {
     @apply bg-background text-foreground;
   }
+  /* Hide the TinyMCE API Key Notification for local/dev use */
+  .tox-notifications-container {
+    display: none !important;
+  }
 }
 
 @layer utilities {
@@ -156,12 +161,22 @@
     animation: slideUp 0.6s ease-out forwards;
   }
 
-  .delay-100 { animation-delay: 100ms; }
-  .delay-200 { animation-delay: 200ms; }
-  .delay-300 { animation-delay: 300ms; }
-  .delay-400 { animation-delay: 400ms; }
-  .delay-500 { animation-delay: 500ms; }
-  
+  .delay-100 {
+    animation-delay: 100ms;
+  }
+  .delay-200 {
+    animation-delay: 200ms;
+  }
+  .delay-300 {
+    animation-delay: 300ms;
+  }
+  .delay-400 {
+    animation-delay: 400ms;
+  }
+  .delay-500 {
+    animation-delay: 500ms;
+  }
+
   /* Custom Tiny Scrollbar Utility */
   .custom-tiny-scrollbar::-webkit-scrollbar {
     width: 4px;
@@ -183,7 +198,7 @@
   .dark .custom-tiny-scrollbar::-webkit-scrollbar-thumb:hover {
     background: #475569;
   }
-  
+
   /* Firefox support */
   .custom-tiny-scrollbar {
     scrollbar-width: thin;
@@ -194,8 +209,12 @@
   }
 
   @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
   }
 
   @keyframes slideUp {
@@ -211,7 +230,9 @@
 
   /* Disable all animations on mobile devices */
   @media (max-width: 768px) {
-    *, ::before, ::after {
+    *,
+    ::before,
+    ::after {
       animation-duration: 0s !important;
       animation-delay: 0s !important;
       animation-name: none !important;

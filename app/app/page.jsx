@@ -31,9 +31,7 @@ import {
   Legend,
   ComposedChart
 } from "recharts";
-import useSWR from "swr";
 import { useSession } from "next-auth/react";
-import { fetcher as globalFetcher } from "../../lib/fetcher";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
@@ -69,58 +67,137 @@ export default function Dashboard() {
   const { data: session } = useSession();
   const [revenuePeriod, setRevenuePeriod] = useState("month");
 
-  const fetcher = (url) => globalFetcher(url, session?.accessToken);
-
-  const { data: statsRes, error: statsError, isLoading: statsLoading } = useSWR(
-    session?.accessToken ? [`${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/dashboard/stats`, session.accessToken] : null,
-    ([url]) => fetcher(url)
-  );
-
-  const { data: ordersRes, error: ordersError, isLoading: ordersLoading } = useSWR(
-    session?.accessToken ? [`${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/dashboard/recent-orders`, session.accessToken] : null,
-    ([url]) => fetcher(url)
-  );
-
-  const { data: trendsRes, error: trendsError, isLoading: trendsLoading } = useSWR(
-    session?.accessToken ? [`${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/dashboard/revenue-trends?period=${revenuePeriod}`, session.accessToken, revenuePeriod] : null,
-    ([url]) => fetcher(url)
-  );
+  const [dashboardData, setDashboardData] = useState({
+    stats: null,
+    recentOrders: [],
+    trendsData: [],
+    orderDistribution: [],
+  });
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [ordersLoading, setOrdersLoading] = useState(true);
+  const [trendsLoading, setTrendsLoading] = useState(true);
 
   const [vpsList, setVpsList] = useState([]);
   const [vpsLoading, setVpsLoading] = useState(true);
 
   React.useEffect(() => {
     let isMounted = true;
-    const fetchVps = async () => {
+    const fetchDashboard = async () => {
       if (!session) return;
       try {
+        setStatsLoading(true);
+        setOrdersLoading(true);
+        setTrendsLoading(true);
+
+        const now = new Date();
+        const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+        // Fetch VPS
         setVpsLoading(true);
-        const snap = await getDocs(query(collection(db, "vps"), limit(5)));
+        const vpsSnap = await getDocs(query(collection(db, "vps")));
+        let expiringCount = 0;
+        const vpsData = [];
+        vpsSnap.docs.forEach((doc, idx) => {
+           const data = doc.data();
+           if (idx < 5) vpsData.push({ id: doc.id, ...data });
+           
+           if (data.next_renewal_date) {
+               const d = new Date(data.next_renewal_date);
+               if (d <= thirtyDaysFromNow && d >= now) expiringCount++;
+           }
+        });
+        
+        // Fetch Domains for combined Expiration count
+        const domainsSnap = await getDocs(query(collection(db, "domains")));
+        domainsSnap.docs.forEach((doc) => {
+           const data = doc.data();
+           if (data.expiry_date) {
+               const d = new Date(data.expiry_date);
+               if (d <= thirtyDaysFromNow && d >= now) expiringCount++;
+           }
+        });
+        
         if (isMounted) {
-          setVpsList(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+          setVpsList(vpsData);
+          setVpsLoading(false);
+        }
+
+        // Fetch Clients
+        const clientsSnap = await getDocs(collection(db, "clients"));
+        let clientsCount = clientsSnap.size || 0;
+
+        // Fetch Projects
+        const projSnap = await getDocs(query(collection(db, "projects"), orderBy("created_at", "desc")));
+        let totalSpend = 0;
+        let activeProjectsCount = 0;
+        let statusCounts = {};
+        let monthlyData = {};
+        let recent = [];
+        
+        projSnap.docs.forEach((doc, idx) => {
+           let pr = doc.data();
+           let cDate = pr.created_at || new Date().toISOString();
+           if (idx < 5) recent.push({ id: doc.id, order_number: pr.name, date: cDate, amount: Number(pr.total_cost || 0), status: pr.status || 'Development' });
+           
+           if (pr.status !== "Completed" && pr.status !== "On Hold") {
+             activeProjectsCount++;
+           }
+           
+           totalSpend += (Number(pr.total_cost) || 0);
+
+           let st = pr.status || "Development";
+           statusCounts[st] = (statusCounts[st] || 0) + 1;
+           
+           // For trends (group by day or month)
+           let dateKey = pr.created_at ? new Date(pr.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "N/A";
+           if (dateKey !== "N/A") {
+             if (!monthlyData[dateKey]) monthlyData[dateKey] = { sales: 0, orders: 0 };
+             monthlyData[dateKey].sales += (Number(pr.total_cost) || 0);
+             monthlyData[dateKey].orders += 1;
+           }
+        });
+
+        const computedDistribution = Object.keys(statusCounts).map(k => ({ name: k, value: statusCounts[k] }));
+        const computedTrends = Object.keys(monthlyData).map(k => ({
+          name: k,
+          sales: monthlyData[k].sales,
+          orders: monthlyData[k].orders
+        })).slice(0, 30);
+        
+        // Reverse so that oldest is first in the chart
+        computedTrends.reverse();
+
+        if (isMounted) {
+          setDashboardData({
+            stats: {
+              revenue: { total: totalSpend, growth_rate: 0 },
+              orders: { total: activeProjectsCount },
+              customers: { new_30_days: clientsCount },
+              inventory: { low_stock_count: expiringCount }
+            },
+            recentOrders: recent,
+            trendsData: computedTrends,
+            orderDistribution: computedDistribution
+          });
         }
       } catch (error) {
-        console.error("Failed to fetch VPS widget data", error);
+        console.error("Failed to fetch dashboard data", error);
       } finally {
-        if (isMounted) setVpsLoading(false);
+        if (isMounted) {
+          setStatsLoading(false);
+          setOrdersLoading(false);
+          setTrendsLoading(false);
+        }
       }
     };
-    fetchVps();
+    fetchDashboard();
     return () => { isMounted = false; };
-  }, [session]);
+  }, [session, revenuePeriod]);
 
-  const stats = statsRes?.data || null;
-  const recentOrders = ordersRes?.data || [];
-  const trendsData = useMemo(() => {
-    if (!trendsRes?.data || !Array.isArray(trendsRes.data)) return [];
-    return trendsRes.data.map(item => ({
-      name: new Date(item.date).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-      sales: parseFloat(item.total || 0),
-      orders: parseInt(item.total_orders || 0)
-    }));
-  }, [trendsRes]);
-
-  const orderDistribution = stats?.order_distribution || [];
+  const stats = dashboardData.stats;
+  const recentOrders = dashboardData.recentOrders;
+  const trendsData = dashboardData.trendsData;
+  const orderDistribution = dashboardData.orderDistribution || [];
   const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
 
   const kpis = [
@@ -131,6 +208,7 @@ export default function Dashboard() {
       trend: stats?.revenue?.growth_rate >= 0 ? "up" : "down",
       icon: DollarSign,
       color: "bg-green-100 text-green-600",
+      link: "/app/projects"
     },
     {
       title: "Active Projects",
@@ -139,14 +217,16 @@ export default function Dashboard() {
       trend: "up",
       icon: ShoppingBag,
       color: "bg-blue-100 text-blue-600",
+      link: "/app/projects"
     },
     {
       title: "Managed Clients",
       value: stats?.customers?.new_30_days || "0",
-      change: "Last 30 days",
+      change: "Total count",
       trend: "up",
       icon: Users,
       color: "bg-purple-100 text-purple-600",
+      link: "/app/clients"
     },
     {
       title: "Expiring Assets",
@@ -155,6 +235,7 @@ export default function Dashboard() {
       trend: "down",
       icon: TrendingUp,
       color: "bg-orange-100 text-orange-600",
+      link: "/app/system-alerts"
     },
   ];
 
@@ -188,11 +269,11 @@ export default function Dashboard() {
 
         {/* CHARTS SKELETON */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm h-[400px] animate-pulse flex flex-col">
+          <div className="lg:col-span-2 bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm h-100 animate-pulse flex flex-col">
             <div className="h-6 w-40 bg-slate-200 dark:bg-slate-700 rounded mb-6"></div>
             <div className="flex-1 bg-slate-100 dark:bg-slate-700/50 rounded-xl"></div>
           </div>
-          <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm h-[400px] animate-pulse flex flex-col">
+          <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm h-100 animate-pulse flex flex-col">
             <div className="h-6 w-32 bg-slate-200 dark:bg-slate-700 rounded mb-6"></div>
             <div className="flex-1 bg-slate-100 dark:bg-slate-700/50 rounded-xl"></div>
           </div>
@@ -221,9 +302,10 @@ export default function Dashboard() {
       {/* 2. KPI GRID */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {kpis.map((kpi, idx) => (
-          <div
+          <Link
+            href={kpi.link}
             key={idx}
-            className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow"
+            className="block bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-md transition-all active:scale-[0.98] cursor-pointer"
           >
             <div className="flex justify-between items-start mb-4">
               <div className={`p-3 rounded-xl ${kpi.color}`}>
@@ -247,7 +329,7 @@ export default function Dashboard() {
               {kpi.title}
             </h3>
             <p className="text-2xl font-bold text-slate-900 dark:text-white">{kpi.value}</p>
-          </div>
+          </Link>
         ))}
       </div>
 
@@ -268,7 +350,7 @@ export default function Dashboard() {
             </select>
           </div>
 
-          <div className="h-[300px] w-full relative">
+          <div className="h-75 w-full relative">
             {trendsLoading && (
               <div className="absolute inset-0 z-10 bg-white/50 dark:bg-slate-800/50 flex items-center justify-center rounded-xl">
                 <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
@@ -300,7 +382,7 @@ export default function Dashboard() {
           <div className="flex items-center justify-between mb-6">
             <h3 className="font-bold text-slate-900 dark:text-white">Recent Deployments</h3>
           </div>
-          <div className="h-[300px] w-full relative">
+          <div className="h-75 w-full relative">
             {trendsLoading && (
               <div className="absolute inset-0 z-10 bg-white/50 dark:bg-slate-800/50 flex items-center justify-center rounded-xl">
                 <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
@@ -323,7 +405,7 @@ export default function Dashboard() {
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-bold text-slate-900 dark:text-white">Project Status</h3>
           </div>
-          <div className="flex-1 min-h-[300px] relative">
+          <div className="flex-1 min-h-75 relative">
             {statsLoading && (
               <div className="absolute inset-0 z-10 bg-white/50 dark:bg-slate-800/50 flex items-center justify-center rounded-xl">
                 <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
@@ -365,9 +447,7 @@ export default function Dashboard() {
                     onClick={() => {
                       const id = order.id ?? order.order_id;
                       if (id) {
-                        router.push(`/app/orders?order_id=${id}`);
-                      } else {
-                        router.push(`/app/orders?order_number=${order.order_number}`);
+                        router.push(`/app/projects/${id}`);
                       }
                     }}
                     className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors cursor-pointer group gap-4"

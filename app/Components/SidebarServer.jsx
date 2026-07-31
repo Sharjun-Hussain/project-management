@@ -48,15 +48,15 @@ const ALL_MENU_GROUPS = [
       // { title: "Staff", icon: "ShieldCheck", href: "/app/users", permission: "Admin User Index" },
     ],
   },
-  // {
-  //   label: "Administration",
-  //   items: [
-  //     { title: "Settings", icon: "Settings", href: "/app/settings", permission: "Setting Index" },
-  //     { title: "Activity Logs", icon: "History", href: "/app/logs", permission: "Activity Log Index" },
-  //     // { title: "Roles", icon: "ShieldCheck", href: "/app/roles", permission: "Role Index" },
-  //     // { title: "Permissions", icon: "Lock", href: "/app/permissions", permission: "Permission Index" },
-  //   ],
-  // },
+  {
+    label: "Administration",
+    items: [
+      { title: "Settings", icon: "Settings", href: "/app/settings", permission: "Setting Index" },
+      // { title: "Activity Logs", icon: "History", href: "/app/logs", permission: "Activity Log Index" },
+      // { title: "Roles", icon: "ShieldCheck", href: "/app/roles", permission: "Role Index" },
+      // { title: "Permissions", icon: "Lock", href: "/app/permissions", permission: "Permission Index" },
+    ],
+  },
 ];
 
 const SidebarServer = async ({ isOpen }) => {

@@ -99,8 +99,8 @@ export default function GlobalSearch() {
       case 'subCategories': return `/app/sub-categories`;
       case 'brand': return `/app/brand`;
       case 'coupons': return `/app/coupons`;
-      case 'orders': return `/app/orders`;
-      case 'customers': return `/app/customers`;
+      case 'orders': return `/app/projects`;
+      case 'customers': return `/app/clients`;
       case 'reviews': return `/app/reviews`;
       case 'contacts': return `/app/contacts`;
       case 'settings': return item.url || `/app/settings`;
