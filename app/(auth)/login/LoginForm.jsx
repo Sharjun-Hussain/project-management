@@ -87,8 +87,7 @@ const LoginForm = () => {
     <main className="relative min-h-screen w-full flex items-center justify-center overflow-hidden font-sans bg-[#F0EDEA]">
       {/* OUTER BACKGROUND LAYER (SYNCED SLIDER WITH DIAGONAL SPLIT) */}
       <div 
-         className="absolute inset-0 z-0 bg-black pointer-events-none" 
-         style={{ clipPath: 'polygon(0 0, 70% 0, 50% 100%, 0 100%)' }}
+         className="absolute inset-0 z-0 bg-black pointer-events-none [clip-path:polygon(0_0,100%_0,100%_100%,0_100%)] lg:[clip-path:polygon(0_0,70%_0,50%_100%,0_100%)]" 
       >
          <div className="absolute inset-0">
            {slides.map((src, index) => (
@@ -105,13 +104,12 @@ const LoginForm = () => {
       </div>
 
       {/* MAIN WHITE CARD */}
-      <div className="relative z-10 w-[95%] max-w-[1200px] h-[90vh] max-h-[850px] bg-white rounded-[40px] shadow-2xl flex overflow-hidden">
+      <div className="relative z-10 w-[95%] max-w-300 h-auto min-h-162.5 lg:h-[90vh] lg:max-h-212.5 bg-white rounded-[32px] lg:rounded-[40px] shadow-2xl flex flex-col lg:flex-row overflow-hidden my-6 lg:my-0">
         
         {/* LEFT PANEL (INNER IMAGE SLIDER) */}
-        {/* We absolutely position it so the container is flush, and give it padding margins with left/top/bottom */}
+        {/* We absolutely position it so the container is flush on desktop, but relatively stacked on mobile */}
         <div 
-          className="absolute left-3 top-3 bottom-3 lg:left-4 lg:top-4 lg:bottom-4 z-10 overflow-hidden rounded-[32px] shadow-2xl bg-black"
-          style={{ width: '56%', clipPath: 'polygon(0 0, 85% 0, 100% 100%, 0 100%)' }}
+          className="relative lg:absolute m-2 lg:m-0 lg:left-4 lg:top-4 lg:bottom-4 z-10 overflow-hidden rounded-[24px] lg:rounded-[32px] shadow-2xl bg-black h-65 lg:h-auto w-[calc(100%-16px)] lg:w-[56%] [clip-path:polygon(0_0,100%_0,100%_100%,0_100%)] lg:[clip-path:polygon(0_0,85%_0,100%_100%,0_100%)] shrink-0"
         >
             {/* Sliding images */}
             <div className="absolute inset-0">
@@ -128,44 +126,44 @@ const LoginForm = () => {
 
             {/* Left Inner Panel Content */}
             {/* Placed carefully to avoid the clipped right region. 20% on the right translates to slightly left of the diagonal cut. */}
-            <div className="absolute top-8 left-8 right-[20%] flex justify-between items-center text-white z-10">
-              <div className="font-bold tracking-wide">My Personal Dashboard</div>
+            <div className="absolute top-6 lg:top-8 left-6 lg:left-8 right-[5%] lg:right-[20%] flex justify-between items-center text-white z-10">
+              <div className="font-bold tracking-wide text-sm lg:text-base drop-shadow-md">My Personal Dashboard</div>
             </div>
 
-            <div className="absolute bottom-8 left-8 right-8 flex justify-between items-end z-10">
+            <div className="absolute bottom-4 lg:bottom-8 left-6 lg:left-8 right-6 lg:right-8 flex flex-col md:flex-row gap-4 md:gap-0 justify-between items-start md:items-end z-10">
               <div className="flex items-center gap-3">
-                <img src="/vercel.svg" alt="Profile" className="w-12 h-12 rounded-full border-2 border-white/20 shadow-lg object-cover bg-white p-2" />
+                <img src="/vercel.svg" alt="Profile" className="w-10 h-10 lg:w-12 lg:h-12 rounded-full border-2 border-white/20 shadow-lg object-cover bg-white p-2" />
                 <div className="text-white">
-                    <div className="font-bold text-lg leading-tight">Joon</div>
-                    <div className="text-xs text-white/80 font-medium">Software Engineer</div>
+                    <div className="font-bold text-base lg:text-lg leading-tight drop-shadow-md">Joon</div>
+                    <div className="text-[11px] lg:text-xs text-white/90 font-medium drop-shadow-md">Software Engineer</div>
                 </div>
               </div>
               
-              <div className="flex gap-2">
-                <button onClick={prevSlide} className="w-10 h-10 rounded-full border border-white/40 flex items-center justify-center text-white hover:bg-white/20 backdrop-blur-md transition-all shadow-md active:scale-95">
-                  <ArrowLeft className="w-4 h-4" />
+              <div className="flex gap-2 self-end">
+                <button onClick={prevSlide} className="w-8 h-8 lg:w-10 lg:h-10 rounded-full border border-white/40 flex items-center justify-center text-white hover:bg-white/20 backdrop-blur-md transition-all shadow-md active:scale-95">
+                  <ArrowLeft className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
                 </button>
-                <button onClick={nextSlide} className="w-10 h-10 rounded-full border border-white/40 flex items-center justify-center text-white hover:bg-white/20 backdrop-blur-md transition-all shadow-md active:scale-95">
-                  <ArrowRight className="w-4 h-4" />
+                <button onClick={nextSlide} className="w-8 h-8 lg:w-10 lg:h-10 rounded-full border border-white/40 flex items-center justify-center text-white hover:bg-white/20 backdrop-blur-md transition-all shadow-md active:scale-95">
+                  <ArrowRight className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
                 </button>
               </div>
             </div>
         </div>
 
         {/* RIGHT PANEL (FORM CONTAINER) */}
-        {/* It's positioned on the right half, absolutely filling it. Text is centered safely away from the slope */}
-        <div className="absolute right-0 top-0 bottom-0 z-0 flex flex-col justify-center px-6 lg:px-[5%]" style={{ width: '51%' }}>
+        {/* Stacked below on mobile, positioned absolute right on desktop. Text is centered safely away from the slope */}
+        <div className="relative lg:absolute right-0 top-0 bottom-0 z-0 flex flex-1 flex-col justify-center px-6 py-6 lg:py-0 lg:px-[5%] w-full lg:w-[51%]">
            
-           <div className="absolute top-8 left-8 right-8 flex justify-between items-center z-10">
-              <div className="font-black text-[18px] tracking-widest text-slate-900 uppercase">
+           <div className="absolute top-4 lg:top-8 left-6 lg:left-8 right-8 flex justify-between items-center z-10">
+              <div className="font-black text-[16px] lg:text-[18px] tracking-widest text-slate-900 uppercase">
                 Dashboard
               </div>
            </div>
 
-           <div className="w-full max-w-90 mx-auto mt-12 animate-slide-up relative z-10">
-              <div className="text-center mb-10">
-                <h1 className="text-[44px] font-black tracking-tight text-slate-900 mb-3">Hi Joon</h1>
-                <p className="text-slate-500 font-medium text-[15px]">Welcome to Personal Dashboard</p>
+           <div className="w-full max-w-90 mx-auto mt-12 lg:mt-12 relative z-10">
+              <div className="text-center mb-8 lg:mb-10">
+                <h1 className="text-4xl lg:text-[44px] font-black tracking-tight text-slate-900 mb-2 lg:mb-3">Hi Joon</h1>
+                <p className="text-slate-500 font-medium text-sm lg:text-[15px]">Welcome to Personal Dashboard</p>
               </div>
 
               <form onSubmit={onSubmit} className="space-y-4">
