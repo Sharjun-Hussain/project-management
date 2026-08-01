@@ -28,7 +28,9 @@ import {
   History,
   Lock,
   Mail,
-  Smile
+  Smile,
+  RefreshCw,
+  Bell
 } from "lucide-react";
 
 import { useGlobalSettings } from "../app/context/GlobalSettingsContext";
@@ -54,6 +56,8 @@ const IconMap = {
   Lock,
   Mail,
   Smile,
+  RefreshCw,
+  Bell,
 };
 
 // --- FLOATING TOOLTIP COMPONENT ---
