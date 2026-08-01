@@ -68,6 +68,7 @@ export default function ReloadsContent() {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [formMode, setFormMode] = useState("create");
   const [selectedItem, setSelectedItem] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // --- REFS ---
   const formOverlayRef = useRef(null);
@@ -214,7 +215,7 @@ export default function ReloadsContent() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    setIsSubmitting(true);
     try {
       const url = formMode === "edit"
         ? `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/reloads/${selectedItem.id}`
@@ -243,12 +244,12 @@ export default function ReloadsContent() {
         toast.error(error.message || "An unexpected error occurred");
       }
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
   const handleDeleteConfirm = async () => {
-    setLoading(true);
+    setIsSubmitting(true);
     try {
       const data = await globalFetcher(`${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/reloads/${selectedItem.id}`, session?.accessToken, {
         method: "DELETE",
@@ -263,7 +264,7 @@ export default function ReloadsContent() {
     } catch (error) {
       toast.error(error.message || "An error occurred while deleting reload");
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -353,10 +354,69 @@ export default function ReloadsContent() {
 
         <div className="relative min-h-[400px] mt-6">
           {loading ? (
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
-              <div className="relative"><Loader2 className="w-10 h-10 text-indigo-500 animate-spin" /></div>
-              <p className="text-slate-400 font-bold text-sm animate-pulse tracking-widest uppercase">Loading reloads...</p>
-            </div>
+            viewMode === "grid" ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {[...Array(8)].map((_, i) => (
+                  <div key={i} className="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-100 dark:border-slate-700/80 shadow-xs flex flex-col h-[210px] animate-pulse">
+                    <div className="flex items-start gap-4 mb-4">
+                      <div className="w-12 h-12 rounded-xl bg-slate-200 dark:bg-slate-700 shrink-0"></div>
+                      <div className="flex-1 space-y-2 py-1">
+                        <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-3/4"></div>
+                        <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded w-1/2"></div>
+                      </div>
+                    </div>
+                    <div className="flex-1 space-y-3 mb-4 mt-2">
+                      <div className="h-7 bg-slate-100 dark:bg-slate-700/50 rounded-lg w-full"></div>
+                      <div className="h-7 bg-slate-100 dark:bg-slate-700/50 rounded-lg w-full"></div>
+                    </div>
+                    <div className="flex items-center justify-between pt-4 border-t border-slate-100/80 dark:border-slate-700/50 mt-auto">
+                      <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded w-1/3"></div>
+                      <div className="flex gap-2">
+                        <div className="w-7 h-7 rounded-xl bg-slate-200 dark:bg-slate-700"></div>
+                        <div className="w-7 h-7 rounded-xl bg-slate-200 dark:bg-slate-700"></div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700 overflow-hidden shadow-sm">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-slate-50 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50">
+                       <th className="p-4 pl-8"><div className="h-3 bg-slate-200 dark:bg-slate-700 rounded w-20"></div></th>
+                       <th className="p-4"><div className="h-3 bg-slate-200 dark:bg-slate-700 rounded w-24"></div></th>
+                       <th className="p-4"><div className="h-3 bg-slate-200 dark:bg-slate-700 rounded w-16"></div></th>
+                       <th className="p-4"><div className="h-3 bg-slate-200 dark:bg-slate-700 rounded w-20"></div></th>
+                       <th className="p-4"><div className="h-3 bg-slate-200 dark:bg-slate-700 rounded w-16"></div></th>
+                       <th className="p-4 pr-8"><div className="h-3 bg-slate-200 dark:bg-slate-700 rounded w-12 ml-auto"></div></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[...Array(6)].map((_, i) => (
+                      <tr key={i} className="border-b border-slate-50 dark:border-slate-700/50 animate-pulse">
+                        <td className="p-4 pl-8">
+                          <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 rounded-xl bg-slate-200 dark:bg-slate-700"></div>
+                            <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-32"></div>
+                          </div>
+                        </td>
+                        <td className="p-4"><div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-24"></div></td>
+                        <td className="p-4"><div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-16"></div></td>
+                        <td className="p-4"><div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-20"></div></td>
+                        <td className="p-4"><div className="h-5 bg-slate-200 dark:bg-slate-700 rounded-md w-16"></div></td>
+                        <td className="p-4 pr-8">
+                          <div className="flex justify-end gap-2">
+                            <div className="w-8 h-8 rounded-lg bg-slate-200 dark:bg-slate-700"></div>
+                            <div className="w-8 h-8 rounded-lg bg-slate-200 dark:bg-slate-700"></div>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )
           ) : sortedItems.length === 0 ? (
             <div className="animate-header flex flex-col items-center justify-center py-20 bg-white dark:bg-slate-800 rounded-3xl border border-dashed border-slate-300 dark:border-slate-700 shadow-sm text-center px-6">
               <div className="w-20 h-20 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 rounded-full flex items-center justify-center mb-6 shadow-inner">
@@ -375,56 +435,62 @@ export default function ReloadsContent() {
                   {sortedItems.map((item) => {
                     const isExpiring = item.expiry_date && new Date(item.expiry_date) <= new Date(new Date().getTime() + 7 * 24 * 60 * 60 * 1000); // within 7 days
                     return (
-                      <div key={item.id} className="item-card group relative bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-100 dark:border-slate-700/80 hover:border-indigo-500/20 dark:hover:border-indigo-500/30 shadow-xs hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col h-full">
-                        <div className="flex items-start gap-4 mb-4">
-                          <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${getGradient(item.name)} text-white flex items-center justify-center text-xl font-bold shadow-xs shrink-0 transform transition-transform duration-300 group-hover:scale-105`}>
+                      <div key={item.id} className="item-card group relative bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-100 dark:border-slate-700/80 hover:border-indigo-200 dark:hover:border-slate-600 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col h-full">
+                        <div className="flex justify-between items-start mb-4">
+                          <div className={`w-12 h-12 rounded-[14px] bg-linear-to-br ${getGradient(item.name)} text-white flex items-center justify-center text-xl font-bold shadow-sm shrink-0`}>
                             {item.name.trim().charAt(0).toUpperCase() || "?"}
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex flex-col gap-1">
-                              <div className="flex items-center gap-1.5 flex-wrap">
-                                {isExpiring && (
-                                  <span className="bg-red-500/10 text-red-600 dark:text-red-400 px-1.5 py-0.5 rounded-md text-[9px] font-bold border border-red-200/20 dark:border-red-900/20 animate-pulse">
-                                    Expiring Soon
-                                  </span>
-                                )}
-                                <span className={`px-1.5 py-0.5 rounded-md text-[9px] font-bold border ${item.is_active ? "bg-green-500/10 text-green-600 dark:text-green-400 border-green-200/20 dark:border-green-900/20" : "bg-slate-500/10 text-slate-500 dark:text-slate-400 border-slate-200/20 dark:border-slate-700/20"}`}>
-                                  {item.is_active ? "Active" : "Inactive"}
-                                </span>
-                              </div>
-                              <h3 className="text-base font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors break-words leading-tight">{item.name}</h3>
+                          <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                            {isExpiring && (
+                              <span className="bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400 px-2 py-0.5 rounded-md text-[11px] font-medium border border-red-100 dark:border-red-800/50">
+                                Expiring
+                              </span>
+                            )}
+                            <span className={`px-2 py-0.5 rounded-md text-[11px] font-medium border ${item.is_active ? "bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800/50" : "bg-slate-50 text-slate-500 border-slate-200/50 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700/50"}`}>
+                              {item.is_active ? "Active" : "Inactive"}
+                            </span>
+                          </div>
+                        </div>
+                        
+                        <div className="mb-5 flex-1 pl-1">
+                          <h3 className="text-base font-semibold text-slate-900 dark:text-indigo-50 transition-colors leading-tight mb-1 line-clamp-2">
+                            {item.name}
+                          </h3>
+                          <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 mt-1">
+                            <CreditCard className="w-3.5 h-3.5" />
+                            <span className="text-[13px] truncate">{item.account_number || "No Account #"}</span>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3 mb-5 mt-auto">
+                          <div className="bg-slate-50/80 dark:bg-slate-900/40 rounded-xl p-3 border border-slate-100 dark:border-slate-800/60 transition-colors group-hover:bg-indigo-50/30">
+                            <div className="text-[12px] text-slate-500 dark:text-slate-400 font-medium mb-0.5 flex items-center gap-1">
+                              <DollarSign className="w-3.5 h-3.5" /> Amount
                             </div>
-                            <div className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400 mt-1 min-w-0 font-medium">
-                              <CreditCard className="w-3 h-3 text-slate-450 shrink-0" />
-                              <span className="truncate">{item.account_number || "No Account #"}</span>
+                            <div className="font-semibold text-slate-800 dark:text-slate-200 text-base">
+                              Rs {item.amount || "0.00"}
+                            </div>
+                          </div>
+                          <div className={`rounded-xl p-3 border transition-colors ${isExpiring ? 'bg-red-50/50 border-red-100 dark:bg-red-900/10 dark:border-red-900/30' : 'bg-slate-50/80 dark:bg-slate-900/40 border-slate-100 dark:border-slate-800/60 group-hover:bg-indigo-50/30'}`}>
+                            <div className={`text-[12px] font-medium mb-0.5 flex items-center gap-1 ${isExpiring ? 'text-red-500' : 'text-slate-500 dark:text-slate-400'}`}>
+                              <Calendar className="w-3.5 h-3.5" /> Expiry
+                            </div>
+                            <div className={`font-semibold text-base ${isExpiring ? "text-red-600 dark:text-red-400" : "text-slate-800 dark:text-slate-200"}`}>
+                              {item.expiry_date ? new Date(item.expiry_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : "N/A"}
                             </div>
                           </div>
                         </div>
-                        <div className="flex-1 space-y-2 mb-4 mt-2">
-                          <div className="flex items-center justify-between text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-2 px-3">
-                              <div className="text-slate-500 dark:text-slate-400 font-medium flex gap-1 items-center">
-                                <DollarSign className="w-3 h-3" /> Amount
-                              </div>
-                              <div className="font-bold text-slate-800 dark:text-white">${item.amount || "0.00"}</div>
+
+                        <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800/60">
+                          <div className="flex items-center gap-1.5 text-[12px] text-slate-400 dark:text-slate-500">
+                            <Tag className="w-3.5 h-3.5" />
+                            <span>Last reload: {item.last_reloaded_date ? new Date(item.last_reloaded_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : "-"}</span>
                           </div>
-                          <div className="flex items-center justify-between text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-2 px-3">
-                              <div className="text-slate-500 dark:text-slate-400 font-medium flex gap-1 items-center">
-                                <Calendar className="w-3 h-3" /> Expiry
-                              </div>
-                              <div className={`font-bold ${isExpiring ? "text-red-500" : "text-slate-800 dark:text-white"}`}>
-                                {item.expiry_date ? new Date(item.expiry_date).toLocaleDateString() : "N/A"}
-                              </div>
-                          </div>
-                        </div>
-                        <div className="flex items-center justify-between pt-4 border-t border-slate-100/80 dark:border-slate-700/50 mt-auto">
-                          <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500">
-                            Last reload: {item.last_reloaded_date ? new Date(item.last_reloaded_date).toLocaleDateString() : "-"}
-                          </span>
-                          <div className="flex gap-1">
-                            <button onClick={() => handleOpenEdit(item)} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:text-indigo-400 dark:hover:bg-slate-700/50 rounded-xl transition-all">
+                          <div className="flex items-center gap-1">
+                            <button onClick={(e) => { e.preventDefault(); handleOpenEdit(item); }} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-slate-100 dark:hover:text-indigo-400 dark:hover:bg-slate-700/50 rounded-lg transition-all">
                               <Edit3 className="w-4 h-4" />
                             </button>
-                            <button onClick={() => handleOpenDelete(item)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:text-red-400 dark:hover:bg-slate-700/50 rounded-xl transition-all">
+                            <button onClick={(e) => { e.preventDefault(); handleOpenDelete(item); }} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:text-red-400 dark:hover:bg-slate-700/50 rounded-lg transition-all">
                               <Trash2 className="w-4 h-4" />
                             </button>
                           </div>
@@ -460,8 +526,8 @@ export default function ReloadsContent() {
                           <td className="p-4 text-sm text-slate-500 dark:text-slate-400 font-medium">
                             {item.account_number || "-"}
                           </td>
-                           <td className="p-4 text-sm font-bold text-slate-800 dark:text-white">
-                            ${item.amount || "0.00"}
+                           <td className="p-4 text-sm font-semibold text-slate-800 dark:text-white">
+                            Rs {item.amount || "0.00"}
                           </td>
                           <td className="p-4 text-sm text-slate-500 dark:text-slate-400 font-medium">
                             {item.expiry_date ? new Date(item.expiry_date).toLocaleDateString() : "-"}
@@ -618,8 +684,8 @@ export default function ReloadsContent() {
                 <button type="button" onClick={closeFormWithAnim} className="flex-1 py-3 px-4 rounded-xl font-bold text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
                   Cancel
                 </button>
-                <button onClick={handleSubmit} type="button" disabled={!formData.name || loading} className={`flex items-center justify-center gap-2 flex-2 py-3 px-4 rounded-xl font-bold text-sm text-white transition-all transform active:scale-95 ${(!formData.name || loading) ? "bg-indigo-400 cursor-not-allowed" : "bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-500/30"}`}>
-                  {loading ? (
+                <button onClick={handleSubmit} type="button" disabled={!formData.name || isSubmitting} className={`flex items-center justify-center gap-2 flex-2 py-3 px-4 rounded-xl font-bold text-sm text-white transition-all transform active:scale-95 ${(!formData.name || isSubmitting) ? "bg-indigo-400 cursor-not-allowed" : "bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-500/30"}`}>
+                  {isSubmitting ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
                       <span>{formMode === "create" ? "Creating..." : "Saving..."}</span>
@@ -649,8 +715,8 @@ export default function ReloadsContent() {
               <button onClick={closeDeleteWithAnim} className="flex-1 py-3 rounded-xl font-bold text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
                 Cancel
               </button>
-              <button onClick={handleDeleteConfirm} disabled={loading} className="flex-1 py-3 rounded-xl font-bold text-sm bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-500/30 transition-all flex items-center justify-center gap-2 disabled:opacity-50">
-                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Delete"}
+              <button onClick={handleDeleteConfirm} disabled={isSubmitting} className="flex-1 py-3 rounded-xl font-bold text-sm bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-500/30 transition-all flex items-center justify-center gap-2 disabled:opacity-50">
+                {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Delete"}
               </button>
             </div>
           </div>
