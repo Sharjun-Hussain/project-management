@@ -1,37 +1,53 @@
 "use client";
 
-import React, { useRef, useState } from "react";
-import { Mail, Lock, ArrowRight } from "lucide-react";
+import React, { useRef, useState, useEffect } from "react";
+import { ArrowRight, ArrowLeft, Globe, Facebook, Twitter, Linkedin, Instagram } from "lucide-react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
-import AuthInput from "../../../components/auth/AuthInput";
+
+const slides = [
+  "/slide1.jpg",
+  "/slide2.jpg",
+  "/slide3.jpg"
+];
 
 const LoginForm = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
+  const [currentSlide, setCurrentSlide] = useState(0);
   
-  // Using refs as requested to avoid re-renders on every keystroke
   const emailRef = useRef(null);
   const passwordRef = useRef(null);
 
-  // Show message if session expired
-  React.useEffect(() => {
+  useEffect(() => {
     if (searchParams.get("expired") === "1") {
       toast.warning("Your session has expired. Please log in again to continue.", {
         duration: 5000,
-        id: "session-expired", // prevent duplicate toasts
+        id: "session-expired",
       });
-      
-      // Clear the stale NextAuth session from the client cookies
-      // redirect: false ensures we stay on the login page
       import("next-auth/react").then(({ signOut }) => {
         signOut({ redirect: false });
       });
     }
   }, [searchParams]);
 
+  // Autoplay functionality for the slides
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev === slides.length - 1 ? 0 : prev + 1));
+    }, 4500); // 4.5 seconds
+    return () => clearInterval(interval);
+  }, []);
+
+  const nextSlide = () => {
+    setCurrentSlide((prev) => (prev === slides.length - 1 ? 0 : prev + 1));
+  };
+
+  const prevSlide = () => {
+    setCurrentSlide((prev) => (prev === 0 ? slides.length - 1 : prev - 1));
+  };
 
   async function onSubmit(e) {
     e.preventDefault();
@@ -68,80 +84,143 @@ const LoginForm = () => {
   }
 
   return (
-    <div className="max-w-md w-full">
-      <div className="mb-10 text-center lg:text-left animate-slide-up">
-        <h2 className="text-3xl font-bold text-foreground mb-2">
-          Log in to your account
-        </h2>
-        <p className="text-muted-foreground">
-          Welcome back! Please enter your details.
-        </p>
+    <main className="relative min-h-screen w-full flex items-center justify-center overflow-hidden font-sans bg-[#F0EDEA]">
+      {/* OUTER BACKGROUND LAYER (SYNCED SLIDER WITH DIAGONAL SPLIT) */}
+      <div 
+         className="absolute inset-0 z-0 bg-black pointer-events-none" 
+         style={{ clipPath: 'polygon(0 0, 70% 0, 50% 100%, 0 100%)' }}
+      >
+         <div className="absolute inset-0">
+           {slides.map((src, index) => (
+             <div 
+               key={index} 
+               className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${currentSlide === index ? 'opacity-100' : 'opacity-0'}`}
+             >
+               <img src={src} alt="Outer Bg" className="w-full h-full object-cover opacity-[0.85]" />
+             </div>
+           ))}
+         </div>
+         {/* Premium overlay to slightly blur/darken the outer background like in the reference */}
+         <div className="absolute inset-0 bg-black/40 backdrop-blur-[6px]" /> 
       </div>
 
-      <div className="space-y-6 animate-slide-up delay-100">
-        <form className="space-y-5" onSubmit={onSubmit}>
-          <AuthInput
-            ref={emailRef}
-            label="Email"
-            type="email"
-            placeholder="Enter your email"
-            icon={Mail}
-            required
-            autoComplete="email"
-          />
-
-          <AuthInput
-            ref={passwordRef}
-            label="Password"
-            type="password"
-            placeholder="••••••••"
-            icon={Lock}
-            required
-            autoComplete="current-password"
-          />
-
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="relative flex items-center">
-                <input
-                  type="checkbox"
-                  id="remember"
-                  className="peer h-4 w-4 appearance-none rounded border border-input checked:bg-indigo-600 checked:border-indigo-600 transition-colors cursor-pointer"
-                />
-                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 text-primary-foreground opacity-0 peer-checked:opacity-100 pointer-events-none" />
-              </div>
-              <label
-                htmlFor="remember"
-                className="text-sm font-medium text-muted-foreground cursor-pointer select-none"
-              >
-                Remember for 30 days
-              </label>
+      {/* MAIN WHITE CARD */}
+      <div className="relative z-10 w-[95%] max-w-[1200px] h-[90vh] max-h-[850px] bg-white rounded-[40px] shadow-2xl flex overflow-hidden">
+        
+        {/* LEFT PANEL (INNER IMAGE SLIDER) */}
+        {/* We absolutely position it so the container is flush, and give it padding margins with left/top/bottom */}
+        <div 
+          className="absolute left-3 top-3 bottom-3 lg:left-4 lg:top-4 lg:bottom-4 z-10 overflow-hidden rounded-[32px] shadow-2xl bg-black"
+          style={{ width: '56%', clipPath: 'polygon(0 0, 85% 0, 100% 100%, 0 100%)' }}
+        >
+            {/* Sliding images */}
+            <div className="absolute inset-0">
+              {slides.map((src, index) => (
+                <div 
+                  key={index} 
+                  className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${currentSlide === index ? 'opacity-100' : 'opacity-0'}`}
+                >
+                  <img src={src} alt="Art space" className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-black/30" />
+                </div>
+              ))}
             </div>
-            <a
-              href="/forgot-password"
-              className="text-sm font-bold text-indigo-600 hover:text-indigo-500"
-            >
-              Forgot password?
-            </a>
-          </div>
 
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold h-12 rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20 transition-all active:scale-[0.98] group disabled:opacity-70 disabled:cursor-not-allowed"
-          >
-            {isLoading ? (
-              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            ) : (
-              <>
-                Sign In
-                <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
-              </>
-            )}
-          </button>
-        </form>
+            {/* Left Inner Panel Content */}
+            {/* Placed carefully to avoid the clipped right region. 20% on the right translates to slightly left of the diagonal cut. */}
+            <div className="absolute top-8 left-8 right-[20%] flex justify-between items-center text-white z-10">
+              <div className="font-bold tracking-wide">My Personal Dashboard</div>
+            </div>
+
+            <div className="absolute bottom-8 left-8 right-8 flex justify-between items-end z-10">
+              <div className="flex items-center gap-3">
+                <img src="/vercel.svg" alt="Profile" className="w-12 h-12 rounded-full border-2 border-white/20 shadow-lg object-cover bg-white p-2" />
+                <div className="text-white">
+                    <div className="font-bold text-lg leading-tight">Joon</div>
+                    <div className="text-xs text-white/80 font-medium">Software Engineer</div>
+                </div>
+              </div>
+              
+              <div className="flex gap-2">
+                <button onClick={prevSlide} className="w-10 h-10 rounded-full border border-white/40 flex items-center justify-center text-white hover:bg-white/20 backdrop-blur-md transition-all shadow-md active:scale-95">
+                  <ArrowLeft className="w-4 h-4" />
+                </button>
+                <button onClick={nextSlide} className="w-10 h-10 rounded-full border border-white/40 flex items-center justify-center text-white hover:bg-white/20 backdrop-blur-md transition-all shadow-md active:scale-95">
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+        </div>
+
+        {/* RIGHT PANEL (FORM CONTAINER) */}
+        {/* It's positioned on the right half, absolutely filling it. Text is centered safely away from the slope */}
+        <div className="absolute right-0 top-0 bottom-0 z-0 flex flex-col justify-center px-6 lg:px-[5%]" style={{ width: '51%' }}>
+           
+           <div className="absolute top-8 left-8 right-8 flex justify-between items-center z-10">
+              <div className="font-black text-[18px] tracking-widest text-slate-900 uppercase">
+                Dashboard
+              </div>
+           </div>
+
+           <div className="w-full max-w-90 mx-auto mt-12 animate-slide-up relative z-10">
+              <div className="text-center mb-10">
+                <h1 className="text-[44px] font-black tracking-tight text-slate-900 mb-3">Hi Joon</h1>
+                <p className="text-slate-500 font-medium text-[15px]">Welcome to Personal Dashboard</p>
+              </div>
+
+              <form onSubmit={onSubmit} className="space-y-4">
+                 <div className="space-y-1">
+                   <input 
+                     type="email" 
+                     ref={emailRef}
+                     placeholder="Email" 
+                     autoComplete="email"
+                     required
+                     className="w-full h-14 bg-white border border-slate-300 text-slate-900 rounded-xl px-5 font-semibold focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-all placeholder:text-slate-400 placeholder:font-normal"
+                   />
+                 </div>
+
+                 <div className="space-y-1">
+                   <input 
+                     type="password" 
+                     ref={passwordRef}
+                     placeholder="Password"
+                     autoComplete="current-password"
+                     required 
+                     className="w-full h-14 bg-white border border-slate-300 text-slate-900 rounded-xl px-5 font-semibold focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-all placeholder:text-slate-400 placeholder:font-normal"
+                   />
+                 </div>
+
+                 <div className="flex justify-end pt-2 pb-2">
+                    <a href="#" className="text-xs font-extrabold text-[#eb4a36] hover:text-red-700 transition-colors">Forgot password ?</a>
+                 </div>
+
+                 <div className="pt-2">
+                   <button 
+                     type="submit" 
+                     disabled={isLoading}
+                     className="w-full h-[52px] bg-[#eb4a36] hover:bg-[#d63f2d] text-white rounded-[14px] font-bold text-[15px] transition-all shadow-lg shadow-red-500/20 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                   >
+                     {isLoading ? (
+                       <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                     ) : (
+                       "Login"
+                     )}
+                   </button>
+                 </div>
+              </form>
+
+              {/* Socials at bottom */}
+              <div className="mt-16 flex justify-center items-center gap-5">
+                <a href="#" className="w-10 h-10 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-all shadow-sm"><Facebook className="w-4 h-4 fill-current" /></a>
+                <a href="#" className="w-10 h-10 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-all shadow-sm"><Twitter className="w-4 h-4 fill-current" /></a>
+                <a href="#" className="w-10 h-10 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-all shadow-sm"><Linkedin className="w-4 h-4 fill-current" /></a>
+                <a href="#" className="w-10 h-10 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-all shadow-sm"><Instagram className="w-4 h-4" /></a>
+              </div>
+           </div>
+        </div>
       </div>
-    </div>
+    </main>
   );
 };
 
