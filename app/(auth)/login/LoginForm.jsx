@@ -189,10 +189,6 @@ const LoginForm = () => {
                    />
                  </div>
 
-                 <div className="flex justify-end pt-2 pb-2">
-                    <a href="#" className="text-xs font-extrabold text-[#eb4a36] hover:text-red-700 transition-colors">Forgot password ?</a>
-                 </div>
-
                  <div className="pt-2">
                    <button 
                      type="submit" 
